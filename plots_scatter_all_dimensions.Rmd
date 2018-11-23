@@ -24,9 +24,7 @@ library(billboard)
 
 
 #Akshay's spotify IDs
-Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
-
+##fill in 
 access_token <- get_spotify_access_token()
 
 #function for getting id
