@@ -1,0 +1,117 @@
+---
+title: "experiments_billboard"
+author: "Roberta Conrad"
+date: "19 11 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install the following libraries
+#devtools::install_github('charlie86/spotifyr')
+#install.packages('spotifyr')
+install.packages("billboard")
+
+#library(spotifyr)
+library(dplyr)
+library(tidyverse)
+library(httr)
+library(stringr)
+library(billboard)
+
+
+#Akshay's spotify IDs
+##fill in 
+access_token <- get_spotify_access_token()
+
+#function for getting id
+get_id <- function(track_name, artist_name) {
+  track_name = gsub(' ','%20',gsub("[^[:alnum:][:space:]]",'',track_name))
+  artist_name =gsub(' ','%20',gsub("[^[:alnum:][:space:]]",'',artist_name))
+  api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
+  result <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content 
+  try(return(result$tracks$items[[1]]$id))
+  # try(return(result))
+}
+
+test_id <- get_id('Smells like teen spirit', 'nirvana')
+
+#See Audio Features for input song
+res <- RETRY('GET', url = str_glue('https://api.spotify.com/v1/audio-features/{test_id}'), query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
+
+
+#billboard (top music charts dataframe)
+billboard::spotify_track_data
+```
+
+```{r}
+#install.packages("billboard")
+
+library(billboard)
+#billboard (top music charts dataframe)
+View(billboard::spotify_track_data)
+
+spotify_track_data
+```
+
+
+```{r}
+library(metricsgraphics)
+
+#create a function that takes in two dimensions and a year on which to create a scatterplott of all songs
+#
+'function(year,x_axis,y_axis){
+  
+}
+'
+mjs_plot(spotify_track_data[spotify_track_data$year=="1960"|spotify_track_data$year=="0" ,], x=danceability, y=energy, show_rollover_text = TRUE) %>%
+  mjs_point(color_accessor=loudness) %>%
+  mjs_labs(x="danceability", y="Energy")
+```
+
+```{r}
+library(tidyverse)
+library(plotly)
+
+
+
+#create a function that takes in two dimensions and a year on which to create a scatterplott of all songs
+
+#todo:
+#limits should adapt according to range of the variable
+
+plot <- ggplot(spotify_track_data[spotify_track_data$year=="1960"|spotify_track_data$year=="0"  ,], aes(energy, danceability)) +
+  geom_point(aes(text = track_name, artist= artist_name, color=explicit, size = loudness),alpha = 1/3) + theme_minimal() + 
+   xlim(0,1) + ylim (0,1)
+  
+ggplotly(plot, tooltip = c("text", "artist_name","energy","danceability" ))
+
+##user should be able to add a new song that is added to the database
+#when new song is added, we create a new dataframe that adds a column new = 0 everywhere apart from the newly added song 
+#use example track britney spears 
+
+spotify_track_data_modified <- spotify_track_data
+spotify_track_data_modified$new <- 0
+britney_track <- spotify_track_data_modified %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
+typeof(britney_track)
+
+# add that its new to allow coloring
+britney_track$new <- 1
+#delete year so we can always see
+britney_track$year <- 0
+spotify_track_data_modified <- rbind(spotify_track_data_modified,britney_track)
+
+
+
+#neuer plot mit modified datenbank
+plot <- ggplot(spotify_track_data_modified[spotify_track_data_modified$year=="1960"|spotify_track_data_modified$year=="0"  ,], aes(energy, danceability)) +
+  geom_point(aes(text = track_name, artist= artist_name, color=new, size = loudness),alpha = 1/3) + theme_minimal() + 
+   xlim(0,1) + ylim (0,1)
+  
+ggplotly(plot, tooltip = c("text", "artist_name","energy","danceability" ))
+
+```
+
