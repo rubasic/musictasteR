@@ -1,0 +1,132 @@
+---
+title: "Non-billboard Tracks"
+output: html_document
+---
+```{r}
+library(spotifyr)
+library(dplyr)
+library(tidyverse)
+library(httr)
+```
+
+```{r}
+#import dataset
+one_million_df <- read.csv('/Users/miraekim/workspace/coursework/map535r/group_project/r_group/one_million.csv', stringsAsFactors = FALSE)
+#one million df has duplicates based on artist and song
+one_million_df <- unique(one_million_df[c('artist','song')])
+```
+
+
+```{r}
+billboard::spotify_track_data
+```
+
+```{r}
+
+Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
+
+access_token <- get_spotify_access_token()
+
+#get ID for a song					 
+search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
+res <- RETRY('GET', url = str_glue(search),
+                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
+					 
+#get the audio feature for a song
+res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
+                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
+
+```
+
+```{r}
+get_artist_id <- function(row) {
+  track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['song']))
+  artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['artist']))
+  api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
+  access_token <- get_spotify_access_token()
+  result <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+    tryCatch({
+      final_id <- suppressWarnings(result$tracks$items[[1]]$id)
+      return (final_id)
+    }, error=function(error_cond) {
+      if (error_cond$message == 'subscript out of bounds') {
+        return('ERROR subscript')
+      }
+    }
+    , error=function(error_cond) {
+      if (error_cond$message =='$ operator is invalid for atomic vectors') {
+        access_token <- get_spotify_access_token()
+        result2 <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+        print(error_cond$message)
+        print(api)
+        return(result2$tracks$items[[1]]$id)
+      }
+      else {
+        print(error_cond$message)
+        return('ERROR mysterious')
+      }
+    }
+  )
+}
+
+```
+
+Main script wiht for loop
+```{r warnings=FALSE, echo=FALSE}
+# result
+try <- trial_df3
+
+for (i in 1:nrow(try)) {
+  if (i %% 500 == 0) {
+    print(i)
+  }
+  row <- try[i,]
+  value <- get_artist_id(row)
+  try[i,]$spotify_uri <- value
+}
+```
+
+```{r}
+
+# trial_df['spotify_uri'] %>% filter(!str_detect(spotify_uri,'Error'))
+
+#merge back to original df
+trial_df2 <- try[!is.na(try$spotify_uri),]
+complete_df <- merge(one_million_df, trial_df, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+
+#second trial
+complete_df2 <- merge(complete_df, trial_df2, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+
+```
+
+
+```{r}
+#take a random sample of rows in the big df
+trial_df2 <- complete_df[is.na(complete_df$spotify_uri),][sample(1:100000, 50000),colnames(complete_df)]
+trial_df3 <- complete_df2[is.na(complete_df2$spotify_uri),][sample(1:100000, 10000),colnames(complete_df2)]
+
+```
+
+```{r}
+#merge the try dataset back to the
+complete_df3 <- merge(#PUT LATEST DF, #PUT THE SUBSET DF, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+```
+
+```{r}
+
+#merge the final spotify_uri cols
+complete_df3[!is.na(complete_df3$spotify_uri.x),]
+
+complete_df3$spotify_uri <- ifelse(is.na(complete_df3$spotify_uri.x), complete_df3$spotify_uri.y, complete_df3$spotify_uri.x)
+complete_df3[!is.na(complete_df3$spotify_uri),]
+
+# complete_df3$spotify_uri.y <- NULL
+# complete_df3$spotify_uri.x <- NULL
+count_df <- complete_df3[!is.na(complete_df3$spotify_uri),]
+write_to_df <- count_df %>% filter(!str_detect(tolower(spotify_uri),'error'))
+write.csv(write_to_df, '/Users/miraekim/workspace/coursework/map535r/group_project/r_group/current_results.csv')
+
+```
+
+
