@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #install the following libraries
 #devtools::install_github('charlie86/spotifyr')
 #install.packages('spotifyr')
-install.packages("billboard")
+#install.packages("billboard")
 
 #library(spotifyr)
 library(dplyr)
@@ -61,11 +61,7 @@ spotify_track_data
 ```{r}
 library(metricsgraphics)
 
-#create a function that takes in two dimensions and a year on which to create a scatterplott of all songs
-#
-'function(year,x_axis,y_axis){
-  
-}
+
 '
 mjs_plot(spotify_track_data[spotify_track_data$year=="1960"|spotify_track_data$year=="0" ,], x=danceability, y=energy, show_rollover_text = TRUE) %>%
   mjs_point(color_accessor=loudness) %>%
@@ -77,6 +73,25 @@ library(tidyverse)
 library(plotly)
 
 
+#plot_cross takes in a year and two dimension and returns a plot of all songs from this year mapped onto the two dimensions
+#the data point added by the user will have year = 0
+plot_cross <- function(year,x_axis=energy,y_axis=danceability){
+  year <- enquo(year)
+  x_axis <- enquo(x_axis)
+  y_axis <- enquo(y_axis)
+  x_axis_name <- as.character(x_axis)
+  y_axis_name <- as.character(y_axis)
+  tracklist <- spotify_track_data %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis)
+  
+  plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
+    geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
+    xlim(0,1) + ylim (0,1)
+  
+   ggplotly(plot, tooltip = c("text", "artist",glue("{x_axis_name}"),glue("{y_axis_name}") ))
+}
+plot_cross(2014,energy,valence)
+#tests: does this function return 
+
 
 #create a function that takes in two dimensions and a year on which to create a scatterplott of all songs
 
@@ -87,7 +102,14 @@ plot <- ggplot(spotify_track_data[spotify_track_data$year=="1960"|spotify_track_
   geom_point(aes(text = track_name, artist= artist_name, color=explicit, size = loudness),alpha = 1/3) + theme_minimal() + 
    xlim(0,1) + ylim (0,1)
   
-ggplotly(plot, tooltip = c("text", "artist_name","energy","danceability" ))
+energy <- "energy" #we need to save the dimension as a character
+u <- as.character(energy)
+#tooltip takes as characters information that is available in the text = field 
+ggplotly(plot, tooltip = c("text", "artist",glue("{energy}"),"danceability" ))
+
+```
+
+```{r}
 
 ##user should be able to add a new song that is added to the database
 #when new song is added, we create a new dataframe that adds a column new = 0 everywhere apart from the newly added song 
