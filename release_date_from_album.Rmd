@@ -36,19 +36,46 @@ summary(one_million_df)
 head(one_million_df)
 ```
 
+```{r}
 
-Write function to pull in Album name and data
+Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
+
+access_token <- get_spotify_access_token()
+
+#get ID for a song					 
+search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
+res <- RETRY('GET', url = str_glue(search),
+                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
+					 
+#get the audio feature for a song
+res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
+                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
+
+```
+
+
+Write function to pull in Album name and Release - 
+
+Inputs : Track name and Artist name
+Output : Vector with Album name and Release Date
 
 ```{r}
-get_artist_id <- function(row) {
-  track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['song']))
-  artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['artist']))
+get_album_info <- function(song, artist) {
+  song <- tolower(song)
+  artist <- tolower(artist)
+  track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',song))
+  artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',artist))
   api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
   access_token <- get_spotify_access_token()
   result <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
     tryCatch({
-      final_id <- suppressWarnings(result$tracks$items[[1]]$id)
-      return (final_id)
+      rel_date <- as.character(suppressWarnings(result$tracks$items[[1]]$album$release_date))
+      rel_year <- ifelse(is.na(rel_date),rel_date,substr(rel_date,1,4))
+      album_name <- as.character(suppressWarnings(result$tracks$items[[1]]$album$name))
+      combined_response <- c(album_name,rel_year)
+      return (combined_response)
+      #return (rel_date)
     }, error=function(error_cond) {
       if (error_cond$message == 'subscript out of bounds') {
         return('ERROR subscript')
@@ -60,7 +87,12 @@ get_artist_id <- function(row) {
         result2 <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
         print(error_cond$message)
         print(api)
-        return(result2$tracks$items[[1]]$id)
+        rel_date2 <- as.character(suppressWarnings(result2$tracks$items[[1]]$album$release_date))
+        rel_year2 <- ifelse(is.na(rel_date2),rel_date2,substr(rel_date2,1,4))
+        album_name2 <- as.character(suppressWarnings(result$tracks$items[[1]]$album$name))
+        combined_response2 <- c(album_name2,rel_year2)
+        return (combined_response2)
+        #return (rel_date2)
       }
       else {
         print(error_cond$message)
@@ -70,5 +102,68 @@ get_artist_id <- function(row) {
   )
 }
 
+get_album_info("comfortably numb","pink floyd")
 ```
+
+Defining a Function that takes in a dataframe with the Track and Artist, and returns a data frame with the Album name and Release Year
+
+```{r}
+get_album_vec <- function(dfin){
+  artist <- as.vector(dfin[,1])
+  track <- as.vector(dfin[,2])
+  Album <- rep("Error",nrow(dfin))
+  Release <- rep("Error",nrow(dfin))
+  for (i in 1:nrow(dfin)) {
+    temp <- get_album_info(track[i,],artist[i,])
+    Album[i] <- temp[1]
+    Release[i] <- temp[2]
+  }
+  return(data.frame(Album,Release))
+}
+
+get_album_vec_timed <- function(dfin){
+  artist <- as.vector(dfin[,1])
+  track <- as.vector(dfin[,2])
+  Album <- rep("Error",nrow(dfin))
+  Release <- rep("Error",nrow(dfin))
+  for (i in 1:nrow(dfin)) {
+    temp <- get_album_info(track[i,],artist[i,])
+    Album[i] <- temp[1]
+    Release[i] <- temp[2]
+  }
+  Sys.sleep(0.3)
+  return(data.frame(Album,Release))
+}
+```
+
+
+Testing with a sample data frame -
+```{r}
+#Creating a 1000 Sample from the Million song dataframe
+
+sample_size <- 5000
+
+sample_n <- one_million_df[sample(nrow(one_million_df),sample_size),]
+
+a <- get_album_vec_timed(sample_n)
+a
+1-mean(is.na(a$Release)*1)
+```
+
+
+
+```{r}
+
+# trial_df['spotify_uri'] %>% filter(!str_detect(spotify_uri,'Error'))
+
+#merge back to original df
+trial_df2 <- try[!is.na(try$spotify_uri),]
+complete_df <- merge(one_million_df, trial_df, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+
+#second trial
+complete_df2 <- merge(complete_df, trial_df2, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+
+```
+
+
 
