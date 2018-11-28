@@ -1,0 +1,74 @@
+---
+title: "release_date_from_album"
+author: "Akshay Sundar"
+date: "11/28/2018"
+output: html_document
+---
+
+This code snippet is to extract the release date for each song from the Spotify API, using the album information.
+
+Approach and Process - 
+
+1. Pull in all albums corresponding to each song from the Spotify API. This will create a database with all songs and all their corresponding albums
+
+2. Select album with the earliest release date. Delete the other albums with respect to each song
+
+3. Process final database into the format of song - album - release_date
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(spotifyr)
+library(tidyverse)
+library(httr)
+```
+
+
+First step to import the song list - 
+
+```{r}
+
+one_million_df <- read_csv("~/Documents/R Programming/Group Assignment/Data/1mill_songs_db.csv")
+#one million df has duplicates based on artist and song
+one_million_df <- unique(one_million_df[c('artist','song')])
+
+summary(one_million_df)
+head(one_million_df)
+```
+
+
+Write function to pull in Album name and data
+
+```{r}
+get_artist_id <- function(row) {
+  track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['song']))
+  artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['artist']))
+  api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
+  access_token <- get_spotify_access_token()
+  result <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+    tryCatch({
+      final_id <- suppressWarnings(result$tracks$items[[1]]$id)
+      return (final_id)
+    }, error=function(error_cond) {
+      if (error_cond$message == 'subscript out of bounds') {
+        return('ERROR subscript')
+      }
+    }
+    , error=function(error_cond) {
+      if (error_cond$message =='$ operator is invalid for atomic vectors') {
+        access_token <- get_spotify_access_token()
+        result2 <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+        print(error_cond$message)
+        print(api)
+        return(result2$tracks$items[[1]]$id)
+      }
+      else {
+        print(error_cond$message)
+        return('ERROR mysterious')
+      }
+    }
+  )
+}
+
+```
+
