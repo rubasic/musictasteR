@@ -70,22 +70,22 @@ plot_cross <- function(database,year,x_axis=energy,y_axis=danceability){
   y_axis <- enquo(y_axis)
   x_axis_name <- as.character(x_axis)
   y_axis_name <- as.character(y_axis)
-  tracklist <- database %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis)
+  tracklist <- database %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis,new)
   
   #if we have a "new" element, we show this in a different color, otherwise we will simply display all points in grey
-  if("new" %in% colnames(database))
-    browse()
-  { message("there is a new track in our databse!")
-    color <- new}
-  else color = "red"
-  
+  if("new" %in% colnames(database)){
   plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
-    geom_point(aes(text = track_name, artist= artist_name, color=color, size = 0.1),alpha = 1/2) + theme_minimal() + 
+    geom_point(aes(text = track_name, artist=artist_name, color=new, size = 0.1),alpha = 1/2) + theme_minimal() + 
     xlim(0,1) + ylim (0,1)
-  
+  }
+  else{
+   plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
+    geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
+    xlim(0,1) + ylim (0,1)
+   }
    ggplotly(plot, tooltip = c("text", "artist",glue("{x_axis_name}"),glue("{y_axis_name}") ))
 }
-plot_cross(testdb ,2014,energy,valence)
+plot_cross(testdb,2010,energy,valence)
 #tests: does this function return a plotly element
 # what happens for invalid years
 
