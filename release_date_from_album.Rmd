@@ -155,5 +155,25 @@ complete_df2 <- merge(complete_df, trial_df2, by.x= c('artist', 'song'), by.y=c(
 
 ```
 
+Apply this to the non billboard tracks
+
+```{r}
+#Load Dataset
+songs_db <- read_csv("non_billboard_songs_1.csv")
+condensed <- songs_db %>%
+  select(artist,song)
+
+release_info <- get_album_vec_timed(condensed)
+
+combined <- data.frame(songs_db,release_info)
+
+write.csv(combined,"non_billboard_songs_update.csv")
+
+```
+
+Testing the number of songs without release info in this 16K dataset
+```{r}
+sum(is.na(combined$Release)*1)
+```
 
 
