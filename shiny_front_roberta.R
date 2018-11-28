@@ -10,10 +10,11 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      #selectInput("color",label="Color the graph", selected="pink",choices=c("pink","red","yellow","grey") ),
-      '   sliderInput("range", "Range:",
-      min = 1900, max = 2017,
-      value = c(1900,2017))'
+      selectInput("newsong",label="Add your own song", selected="Oops I did it again",choices=c("Oops I did it again","red","yellow","grey") ),
+      
+      sliderInput("year", "Select a year:",
+      min = 1960, max = 2015,
+      value = 2015,animate = TRUE,ticks=FALSE)
   ),
   
   mainPanel(
@@ -34,7 +35,7 @@ server <- function(input, output,session) {
   library(billboard)
   library(prenoms)
   
-  '  plot_cross <- function(database,year="1960",x_axis=energy,y_axis=danceability){
+ plot_cross <- function(database,year="1960",x_axis=energy,y_axis=danceability){
   year <- enquo(year)
   x_axis <- enquo(x_axis)
   y_axis <- enquo(y_axis)
@@ -48,18 +49,10 @@ server <- function(input, output,session) {
   geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
   xlim(0,1) + ylim (0,1)
   
-  #  ggplotly(plot, tooltip = c("text", "artist",glue::glue("{x_axis_name}"),glue::glue("{y_axis_name}") ))
+  ggplotly(plot, tooltip = c("text", "artist",glue::glue("{x_axis_name}"),glue::glue("{y_axis_name}") ))
   
-}'
+}
   
-  tracklist <- spotify_track_data %>% filter(year == "2015" | year == "0" ) %>% select(year,artist_name,track_name,danceability, energy)
-  
-  plot_test <- ggplot(tracklist, aes(danceability, energy))  +
-    geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
-    xlim(0,1) + ylim (0,1)
-  
-  plotly_test <-  ggplotly(plot_test, tooltip = c("text", "artist","danceability", "energy"))
-
 
   output$data  <- reactive({renderDataTable(prenoms %>% filter(name == input$name) )
   })
@@ -75,7 +68,7 @@ server <- function(input, output,session) {
   
   
   output$plot <- renderPlotly({
-    plotly_test 
+    plot_cross(spotify_track_data,year=input$year,x_axis=energy,y_axis=danceability)
   })
   
   output$event <- renderPrint({
