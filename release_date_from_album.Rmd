@@ -7,13 +7,6 @@ output: html_document
 
 This code snippet is to extract the release date for each song from the Spotify API, using the album information.
 
-Approach and Process - 
-
-1. Pull in all albums corresponding to each song from the Spotify API. This will create a database with all songs and all their corresponding albums
-
-2. Select album with the earliest release date. Delete the other albums with respect to each song
-
-3. Process final database into the format of song - album - release_date
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -36,21 +29,14 @@ summary(one_million_df)
 head(one_million_df)
 ```
 
+
+Initialize the Spotify Client IDs -
 ```{r}
 
 Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
 Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
 
 access_token <- get_spotify_access_token()
-
-#get ID for a song					 
-search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
-res <- RETRY('GET', url = str_glue(search),
-                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
-					 
-#get the audio feature for a song
-res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
-                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
 
 ```
 
@@ -121,6 +107,7 @@ get_album_vec <- function(dfin){
   return(data.frame(Album,Release))
 }
 
+#with timing 
 get_album_vec_timed <- function(dfin){
   artist <- as.vector(dfin[,1])
   track <- as.vector(dfin[,2])
@@ -128,10 +115,10 @@ get_album_vec_timed <- function(dfin){
   Release <- rep("Error",nrow(dfin))
   for (i in 1:nrow(dfin)) {
     temp <- get_album_info(track[i,],artist[i,])
-    Album[i] <- temp[1]
-    Release[i] <- temp[2]
+    Album[i] <- ifelse(is.null(temp[1]),"trigger",temp[1])
+    Release[i] <- ifelse(is.null(temp[2]),"trigger",temp[2])
   }
-  Sys.sleep(0.3)
+  #Sys.sleep(0.3)
   return(data.frame(Album,Release))
 }
 ```
@@ -139,20 +126,23 @@ get_album_vec_timed <- function(dfin){
 
 Testing with a sample data frame -
 ```{r}
-#Creating a 1000 Sample from the Million song dataframe
 
-sample_size <- 5000
+sample_size <- 10000
 
 sample_n <- one_million_df[sample(nrow(one_million_df),sample_size),]
 
-a <- get_album_vec_timed(sample_n)
-a
-1-mean(is.na(a$Release)*1)
+b <- get_album_vec_timed(sample_n)
+
+sample_n$album <- b[,1]
+sample_n$release <- b[,2]
+
+saved_data <- sample_n
+write_csv(saved_data,path = "album_info_test.csv")
 ```
 
 
-
-```{r}
+Don't run this bit just yet-
+```{r, eval=FALSE}
 
 # trial_df['spotify_uri'] %>% filter(!str_detect(spotify_uri,'Error'))
 
