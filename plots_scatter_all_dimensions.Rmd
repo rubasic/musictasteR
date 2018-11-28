@@ -61,6 +61,8 @@ spotify_track_data
 ```{r}
 library(tidyverse)
 library(plotly)
+library(magrittr)
+
 
 #plot_cross takes in a year and two dimension and returns a plot of all songs from this year mapped onto the two dimensions
 #the data point added by the user will have year = 0
@@ -83,7 +85,7 @@ plot_cross <- function(database,year,x_axis=energy,y_axis=danceability){
     geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
     xlim(0,1) + ylim (0,1)
    }
-   ggplotly(plot, tooltip = c("text", "artist",glue("{x_axis_name}"),glue("{y_axis_name}") ))
+   ggplotly(plot, tooltip = c("text", "artist",glue::glue("{x_axis_name}"),glue::glue("{y_axis_name}") ))
 }
 plot_cross(testdb,2010,energy,valence)
 #tests: does this function return a plotly element
@@ -113,7 +115,7 @@ add_a_song <- function(database,new_song){
 
 #test track britney
 #put this into a function that takes an existing song out of our database, and then compares the length of the old and new database with each other 
-britney_track <- spotify_track_data_modified %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
+britney_track <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 testdb <- add_a_song(spotify_track_data,britney_track)
 
 #compare your song plots plot cross but adds the new track
