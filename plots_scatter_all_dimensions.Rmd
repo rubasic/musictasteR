@@ -55,57 +55,41 @@ library(billboard)
 View(billboard::spotify_track_data)
 
 spotify_track_data
-```
 
-
-```{r}
-library(metricsgraphics)
-
-
-'
-mjs_plot(spotify_track_data[spotify_track_data$year=="1960"|spotify_track_data$year=="0" ,], x=danceability, y=energy, show_rollover_text = TRUE) %>%
-  mjs_point(color_accessor=loudness) %>%
-  mjs_labs(x="danceability", y="Energy")
 ```
 
 ```{r}
 library(tidyverse)
 library(plotly)
+library(magrittr)
 
 
 #plot_cross takes in a year and two dimension and returns a plot of all songs from this year mapped onto the two dimensions
 #the data point added by the user will have year = 0
-plot_cross <- function(year,x_axis=energy,y_axis=danceability){
+plot_cross <- function(database,year,x_axis=energy,y_axis=danceability){
   year <- enquo(year)
   x_axis <- enquo(x_axis)
   y_axis <- enquo(y_axis)
   x_axis_name <- as.character(x_axis)
   y_axis_name <- as.character(y_axis)
-  tracklist <- spotify_track_data %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis)
+  tracklist <- database %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis,new)
   
+  #if we have a "new" element, we show this in a different color, otherwise we will simply display all points in grey
+  if("new" %in% colnames(database)){
   plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
+    geom_point(aes(text = track_name, artist=artist_name, color=new, size = 0.1),alpha = 1/2) + theme_minimal() + 
+    xlim(0,1) + ylim (0,1)
+  }
+  else{
+   plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
     geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
     xlim(0,1) + ylim (0,1)
-  
-   ggplotly(plot, tooltip = c("text", "artist",glue("{x_axis_name}"),glue("{y_axis_name}") ))
+   }
+   ggplotly(plot, tooltip = c("text", "artist",glue::glue("{x_axis_name}"),glue::glue("{y_axis_name}") ))
 }
-plot_cross(2014,energy,valence)
-#tests: does this function return 
-
-
-#create a function that takes in two dimensions and a year on which to create a scatterplott of all songs
-
-#todo:
-#limits should adapt according to range of the variable
-
-plot <- ggplot(spotify_track_data[spotify_track_data$year=="1960"|spotify_track_data$year=="0"  ,], aes(energy, danceability)) +
-  geom_point(aes(text = track_name, artist= artist_name, color=explicit, size = loudness),alpha = 1/3) + theme_minimal() + 
-   xlim(0,1) + ylim (0,1)
-  
-energy <- "energy" #we need to save the dimension as a character
-u <- as.character(energy)
-#tooltip takes as characters information that is available in the text = field 
-ggplotly(plot, tooltip = c("text", "artist",glue("{energy}"),"danceability" ))
+plot_cross(testdb,2010,energy,valence)
+#tests: does this function return a plotly element
+# what happens for invalid years
 
 ```
 
@@ -115,16 +99,29 @@ ggplotly(plot, tooltip = c("text", "artist",glue("{energy}"),"danceability" ))
 #when new song is added, we create a new dataframe that adds a column new = 0 everywhere apart from the newly added song 
 #use example track britney spears 
 
-spotify_track_data_modified <- spotify_track_data
-spotify_track_data_modified$new <- 0
-britney_track <- spotify_track_data_modified %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
-typeof(britney_track)
+#add_a_song clones our database and adds a new column for our song
+#takes in a database and a track, returns a modified database including this track with "new=0" and "year=0"
+add_a_song <- function(database,new_song){
+  database_modif <- database
+  #initialize all songs we already know with new = 0
+  database_modif$new <- 0
+  #mark the track we added with a 1 so we can color by this 
+  new_song$new <- 1
+  #set year to zero so we can always see this point 
+  new_song$year <- 0
+  database_modif <- rbind(database_modif,new_song)
+  return(database_modif)
+}
 
-# add that its new to allow coloring
-britney_track$new <- 1
-#delete year so we can always see
-britney_track$year <- 0
-spotify_track_data_modified <- rbind(spotify_track_data_modified,britney_track)
+#test track britney
+#put this into a function that takes an existing song out of our database, and then compares the length of the old and new database with each other 
+britney_track <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
+testdb <- add_a_song(spotify_track_data,britney_track)
+
+#compare your song plots plot cross but adds the new track
+compare_your_song <- function(){
+  
+}
 
 
 
