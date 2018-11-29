@@ -10,12 +10,40 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      selectInput("newsong",label="Add your own song", selected="Oops I did it again",choices=c("Oops I did it again","red","yellow","grey") ),
+      ## add as next step fake typing in and match with list 
+      #once song is selected, it shows as selected song (little card) and can be deleted again
+      selectInput(
+        "newsong",
+        label = "Add your own song",
+        selected = "Oops I did it again",
+        choices = c("Oops I did it again", "red", "yellow", "grey")
+      ),
       
-      sliderInput("year", "Select a year:",
-      min = 1960, max = 2015,
-      value = 2015,animate = TRUE,ticks=FALSE)
-  ),
+      sliderInput(
+        "year",
+        "Select a year:",
+        min = 1960,
+        max = 2015,
+        value = 2015,
+        animate = TRUE,
+        ticks = FALSE
+      ),
+  
+    selectInput(
+      "x_axis",
+      label="X Axis",
+      selected = spotify_track_data[,7] %>% colnames(),
+      choices = spotify_track_data[,7:16] %>% colnames()
+    ),
+
+    selectInput(
+      "y_axis",
+      label="Y Axis",
+      selected  = spotify_track_data[,8] %>% colnames(),
+      choices = spotify_track_data[,7:16] %>% colnames()
+    )
+      
+    ),
   
   mainPanel(
     
@@ -26,7 +54,11 @@ ui <- fluidPage(
   )
   )
 
+
+
+
 server <- function(input, output,session) {
+  
   
   library(glue)
   library(tidyverse)
@@ -34,7 +66,7 @@ server <- function(input, output,session) {
   library(plotly)
   library(billboard)
   library(prenoms)
-  
+
  plot_cross <- function(database,year="1960",x_axis=energy,y_axis=danceability){
   year <- enquo(year)
   x_axis <- enquo(x_axis)
@@ -53,22 +85,9 @@ server <- function(input, output,session) {
   
 }
   
-
-  output$data  <- reactive({renderDataTable(prenoms %>% filter(name == input$name) )
-  })
-  
-  test <- unique(prenoms$name)
-  
-  observe({
-    updateSelectInput(session=session, 
-                      selected = "Vincent",
-                      inputId="dropdown_name",
-                      choices=test)
-  })
-  
-  
   output$plot <- renderPlotly({
-    plot_cross(spotify_track_data,year=input$year,x_axis=energy,y_axis=danceability)
+
+    plot_cross(spotify_track_data,year=input$year,input$x_axis,input$y_axis)
   })
   
   output$event <- renderPrint({
