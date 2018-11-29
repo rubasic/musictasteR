@@ -59,7 +59,8 @@ get_album_info <- function(song, artist) {
       rel_date <- as.character(suppressWarnings(result$tracks$items[[1]]$album$release_date))
       rel_year <- ifelse(is.na(rel_date),rel_date,substr(rel_date,1,4))
       album_name <- as.character(suppressWarnings(result$tracks$items[[1]]$album$name))
-      combined_response <- c(album_name,rel_year)
+      track_id <- as.character(suppressWarnings(result$tracks$items[[1]]$id))
+      combined_response <- c(album_name,rel_year,track_id)
       return (combined_response)
       #return (rel_date)
     }, error=function(error_cond) {
@@ -75,8 +76,9 @@ get_album_info <- function(song, artist) {
         print(api)
         rel_date2 <- as.character(suppressWarnings(result2$tracks$items[[1]]$album$release_date))
         rel_year2 <- ifelse(is.na(rel_date2),rel_date2,substr(rel_date2,1,4))
-        album_name2 <- as.character(suppressWarnings(result$tracks$items[[1]]$album$name))
-        combined_response2 <- c(album_name2,rel_year2)
+        album_name2 <- as.character(suppressWarnings(result2$tracks$items[[1]]$album$name))
+        track_id2 <- as.character(suppressWarnings(result2$tracks$items[[1]]$id))
+        combined_response2 <- c(album_name2,rel_year2,track_id2)
         return (combined_response2)
         #return (rel_date2)
       }
@@ -89,6 +91,7 @@ get_album_info <- function(song, artist) {
 }
 
 get_album_info("comfortably numb","pink floyd")
+
 ```
 
 Defining a Function that takes in a dataframe with the Track and Artist, and returns a data frame with the Album name and Release Year
@@ -99,12 +102,14 @@ get_album_vec <- function(dfin){
   track <- as.vector(dfin[,2])
   Album <- rep("Error",nrow(dfin))
   Release <- rep("Error",nrow(dfin))
+  Track_ID <- rep("Error",nrow(dfin))
   for (i in 1:nrow(dfin)) {
     temp <- get_album_info(track[i,],artist[i,])
     Album[i] <- temp[1]
     Release[i] <- temp[2]
+    Track_ID[i] <- temp[3]
   }
-  return(data.frame(Album,Release))
+  return(data.frame(Album,Release,Track_ID))
 }
 
 #with timing 
@@ -113,13 +118,15 @@ get_album_vec_timed <- function(dfin){
   track <- as.vector(dfin[,2])
   Album <- rep("Error",nrow(dfin))
   Release <- rep("Error",nrow(dfin))
+  Track_ID <- rep("Error",nrow(dfin))
   for (i in 1:nrow(dfin)) {
     temp <- get_album_info(track[i,],artist[i,])
     Album[i] <- ifelse(is.null(temp[1]),"trigger",temp[1])
     Release[i] <- ifelse(is.null(temp[2]),"trigger",temp[2])
+    Track_ID[i] <- ifelse(is.null(temp[3]),"trigger",temp[3])
   }
   #Sys.sleep(0.3)
-  return(data.frame(Album,Release))
+  return(data.frame(Album,Release,Track_ID))
 }
 ```
 
@@ -127,7 +134,7 @@ get_album_vec_timed <- function(dfin){
 Testing with a sample data frame -
 ```{r}
 
-sample_size <- 10000
+sample_size <- 100
 
 sample_n <- one_million_df[sample(nrow(one_million_df),sample_size),]
 
@@ -135,9 +142,10 @@ b <- get_album_vec_timed(sample_n)
 
 sample_n$album <- b[,1]
 sample_n$release <- b[,2]
+sample_n$track_id <- b[,3]
 
-saved_data <- sample_n
-write_csv(saved_data,path = "album_info_test.csv")
+#saved_data <- sample_n
+#write_csv(saved_data,path = "album_info_test.csv")
 ```
 
 
