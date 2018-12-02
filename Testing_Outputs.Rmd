@@ -14,7 +14,7 @@ library(tidyverse)
 This code is to test whether the sampling on the million song database is biased towards any year.
 
 ```{r}
-songs_db <- read_csv("non_billboard_songs_update.csv")
+songs_db <- read_csv("album_info_test_100k.csv")
 head(songs_db)
 ```
 
@@ -22,10 +22,10 @@ head(songs_db)
 grouped_db <- songs_db %>%
 #  group_by(Release) %>%
 #  summarise(No_of_Song = n()) %>%
-  filter(as.numeric(Release)>2000)
+  filter(as.numeric(release)>1980)
 
 #grouped_db
-ggplot(data=grouped_db, aes(x=Release)) + geom_bar() + coord_flip() 
+ggplot(data=grouped_db, aes(x=release)) + geom_bar() + coord_flip() 
 ```
 
 The data is skewed to around 2009.
