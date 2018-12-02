@@ -134,7 +134,7 @@ get_album_vec_timed <- function(dfin){
 Testing with a sample data frame -
 ```{r}
 
-sample_size <- 100
+sample_size <- 100000
 
 sample_n <- one_million_df[sample(nrow(one_million_df),sample_size),]
 
@@ -144,8 +144,8 @@ sample_n$album <- b[,1]
 sample_n$release <- b[,2]
 sample_n$track_id <- b[,3]
 
-#saved_data <- sample_n
-#write_csv(saved_data,path = "album_info_test.csv")
+saved_data <- sample_n
+write_csv(saved_data,path = "album_info_test_100k.csv")
 ```
 
 
@@ -184,4 +184,9 @@ Testing the number of songs without release info in this 16K dataset
 sum(is.na(combined$Release)*1)
 ```
 
+Pulling for sample of 100K songs
+```{r}
+
+
+```
 
