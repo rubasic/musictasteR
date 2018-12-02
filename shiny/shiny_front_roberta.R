@@ -1,12 +1,9 @@
 library(shiny)
-
 library(glue)
-library(tidyverse)
 library(tidyverse)
 library(plotly)
 library(billboard)
 library(prenoms)
-
 
 all_attributes <- c("danceability" ,"energy", "speechiness","acousticness", "instrumentalness" ,"liveness","valence")
 
@@ -66,35 +63,45 @@ ui <- fluidPage(
 
 server <- function(input, output,session) {
   
+  tracklist <- reactive({
+    t <- spotify_track_data %>% 
+      filter(year == {input$year} | year == "0" ) %>% select(artist_name,year,track_name,input$x,input$y)
+    })
   
- plot_cross <- function(database,year="1960",x_axis,y_axis)
+  x_axis <- reactive({
+    x_axis <- input$x
+  })
+  
+  y_axis <- reactive({
+    y_axis <- input$y
+  })
+  
+ plot_cross <- function(tracklist)
    {
-    year <- enquo(year)
-    x_axis <- enquo(x_axis)
-    y_axis <- enquo(y_axis)
-
-    x_axis_name <- as.character(x_axis)
-    y_axis_name <- as.character(y_axis)
-    tracklist <- database %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis)
    print(tracklist)
-    
+     ' year <- enquo(year)
+      x_axis <- enquo(x_axis)
+      y_axis <- enquo(y_axis)
+      x_axis_name <- as.character(x_axis)
+      y_axis_name <- as.character(y_axis)
+       print(tracklist())
+      '
     #if we have a "new" element, we show this in a different color, otherwise we will simply display all points in grey
     
-    plot <- ggplot(tracklist, aes(!!x_axis,!!y_axis))  +  geom_point(aes(text = track_name, artist= artist_name, size = 0.01),alpha = 1/2) + theme_minimal() + xlim(0,1) + ylim (0,1)
+    plot <- ggplot(tracklist[,4:5],x=x_axis(),y = y_axis()) +
+                     geom_point(aes_string( x=x_axis(),y = y_axis()),alpha = 1/2) + 
+                     theme_minimal() + xlim(0,1) + ylim (0,1)
     
-  
-    
+    }
   #  ggplotly(plot, tooltip = c("text", "artist",glue::glue("{~x_axis_name}"),glue::glue("{~y_axis_name}") ))
-   
-}
   
   output$plot <- renderPlotly({
-    plot_cross(spotify_track_data,year=input$year,danceability,energy)
+    plot_cross(tracklist())
   })
   
   output$event <- renderPrint({
     d <- event_data("plotly_hover")
-    if (is.null(d)) "Hover on a point!" else d
+    if (is.null(d)) "Hover to get information about songs" else d
   })
   
   }
