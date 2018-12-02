@@ -1,8 +1,15 @@
-
 library(shiny)
 
+library(glue)
+library(tidyverse)
+library(tidyverse)
+library(plotly)
+library(billboard)
+library(prenoms)
 
-# Define UI for application that draws a histogram
+
+all_attributes <- c("danceability" ,"energy", "speechiness","acousticness", "instrumentalness" ,"liveness","valence")
+
 ui <- fluidPage(
   includeCSS("www/styles.css"),
   
@@ -30,17 +37,17 @@ ui <- fluidPage(
       ),
   
     selectInput(
-      "x_axis",
+      "x",
       label="X Axis",
-      selected = spotify_track_data[,7] %>% colnames(),
-      choices = spotify_track_data[,7:16] %>% colnames()
+      selected = "energy",
+      choices = all_attributes
     ),
 
     selectInput(
-      "y_axis",
+      "y",
       label="Y Axis",
-      selected  = spotify_track_data[,8] %>% colnames(),
-      choices = spotify_track_data[,7:16] %>% colnames()
+      selected  = "danceability",
+      choices = all_attributes
     )
       
     ),
@@ -60,34 +67,29 @@ ui <- fluidPage(
 server <- function(input, output,session) {
   
   
-  library(glue)
-  library(tidyverse)
-  library(tidyverse)
-  library(plotly)
-  library(billboard)
-  library(prenoms)
+ plot_cross <- function(database,year="1960",x_axis,y_axis)
+   {
+    year <- enquo(year)
+    x_axis <- enquo(x_axis)
+    y_axis <- enquo(y_axis)
 
- plot_cross <- function(database,year="1960",x_axis=energy,y_axis=danceability){
-  year <- enquo(year)
-  x_axis <- enquo(x_axis)
-  y_axis <- enquo(y_axis)
-  x_axis_name <- as.character(x_axis)
-  y_axis_name <- as.character(y_axis)
-  tracklist <- database %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis)
+    x_axis_name <- as.character(x_axis)
+    y_axis_name <- as.character(y_axis)
+    tracklist <- database %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis)
+   print(tracklist)
+    
+    #if we have a "new" element, we show this in a different color, otherwise we will simply display all points in grey
+    
+    plot <- ggplot(tracklist, aes(!!x_axis,!!y_axis))  +  geom_point(aes(text = track_name, artist= artist_name, size = 0.01),alpha = 1/2) + theme_minimal() + xlim(0,1) + ylim (0,1)
+    
   
-  #if we have a "new" element, we show this in a different color, otherwise we will simply display all points in grey
-  
-  plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
-  geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
-  xlim(0,1) + ylim (0,1)
-  
-  ggplotly(plot, tooltip = c("text", "artist",glue::glue("{x_axis_name}"),glue::glue("{y_axis_name}") ))
-  
+    
+  #  ggplotly(plot, tooltip = c("text", "artist",glue::glue("{~x_axis_name}"),glue::glue("{~y_axis_name}") ))
+   
 }
   
   output$plot <- renderPlotly({
-
-    plot_cross(spotify_track_data,year=input$year,input$x_axis,input$y_axis)
+    plot_cross(spotify_track_data,year=input$year,danceability,energy)
   })
   
   output$event <- renderPrint({
