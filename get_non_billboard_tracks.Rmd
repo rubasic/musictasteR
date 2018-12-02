@@ -45,7 +45,7 @@ get_artist_id <- function(row) {
   artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['artist']))
   api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
   access_token <- get_spotify_access_token()
-  result <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+  result <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
     tryCatch({
       final_id <- suppressWarnings(result$tracks$items[[1]]$id)
       return (final_id)
@@ -56,8 +56,7 @@ get_artist_id <- function(row) {
     }
     , error=function(error_cond) {
       if (error_cond$message =='$ operator is invalid for atomic vectors') {
-        access_token <- get_spotify_access_token()
-        result2 <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+        result2 <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
         print(error_cond$message)
         print(api)
         return(result2$tracks$items[[1]]$id)
@@ -110,23 +109,230 @@ trial_df3 <- complete_df2[is.na(complete_df2$spotify_uri),][sample(1:100000, 100
 
 ```{r}
 #merge the try dataset back to the
-complete_df3 <- merge(#PUT LATEST DF, #PUT THE SUBSET DF, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+# complete_df3 <- merge(#PUT LATEST DF, #PUT THE SUBSET DF, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
 ```
 
 ```{r}
 
 #merge the final spotify_uri cols
-complete_df3[!is.na(complete_df3$spotify_uri.x),]
-
-complete_df3$spotify_uri <- ifelse(is.na(complete_df3$spotify_uri.x), complete_df3$spotify_uri.y, complete_df3$spotify_uri.x)
-complete_df3[!is.na(complete_df3$spotify_uri),]
+# complete_df3[!is.na(complete_df3$spotify_uri.x),]
+# 
+# complete_df3$spotify_uri <- ifelse(is.na(complete_df3$spotify_uri.x), complete_df3$spotify_uri.y, complete_df3$spotify_uri.x)
+# complete_df3[!is.na(complete_df3$spotify_uri),]
 
 # complete_df3$spotify_uri.y <- NULL
 # complete_df3$spotify_uri.x <- NULL
-count_df <- complete_df3[!is.na(complete_df3$spotify_uri),]
-write_to_df <- count_df %>% filter(!str_detect(tolower(spotify_uri),'error'))
-write.csv(write_to_df, '/Users/miraekim/workspace/coursework/map535r/group_project/r_group/current_results.csv')
+# count_df <- complete_df3[!is.na(complete_df3$spotify_uri),]
+# write_to_df <- count_df %>% filter(!str_detect(tolower(spotify_uri),'error'))
+# write.csv(write_to_df, '/Users/miraekim/workspace/coursework/map535r/group_project/r_group/current_results.csv',)
+
 
 ```
 
+get other attributes 
+```{r}
+# df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/non_billboard_songs_1.csv', stringsAsFactors = FALSE)
+get_spotify_refresh_access_token <- function(client_id = Sys.getenv('SPOTIFY_CLIENT_ID'), client_secret = Sys.getenv('SPOTIFY_CLIENT_SECRET')) {
+
+    post <- POST('https://accounts.spotify.com/api/authorize',
+                 accept_json(), authenticate(client_id, client_secret),
+                 body = list(grant_type = 'refresh_token'),
+                 encode = 'form', httr::config(http_version = 2)) %>% content
+
+    if (!is.null(post$error)) {
+        stop(str_glue('Could not authenticate with given Spotify credentials:\n\t{post$error_description}'))
+    }
+
+    access_token <- post$access_token
+
+    return(access_token)
+}
+get_spotify_refresh_access_token()
+
+make_api_call <- function(audio_features_api,access_token) {
+  analysis_result <- RETRY('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content 
+  # if (c("node","error") %in% names(analysis_result)) {
+  #   return(NULL)
+  # }
+  track_href <- analysis_result$track_href
+  analysis_result <- analysis_result[c('danceability',
+                                       'energy',
+                                       'key',
+                                       'loudness',
+                                       'mode',
+                                       'speechiness',
+                                       'acousticness',
+                                       'instrumentalness',
+                                       'liveness',
+                                       'valence',
+                                       'tempo',
+                                       'type',
+                                       'uri',
+                                       'track_href',
+                                       'analysis_url',
+                                       'duration_ms',
+                                       'time_signature')]
+  track_basic_trait_result <- RETRY('GET', url = track_href, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content 
+  analysis_result[['artist_name']] <- track_basic_trait_result$artists[[1]]$name
+  analysis_result[['artist_id']] <- track_basic_trait_result$artists[[1]]$id
+  analysis_result[['track_name']] <- track_basic_trait_result$name
+  return(analysis_result)
+}
+
+get_audio_features <- function(row) {
+  tryCatch({
+    track_uri <- row$spotify_uri
+    audio_features_api <- str_glue('https://api.spotify.com/v1/audio-features/{track_uri}')
+    access_token <- get_spotify_access_token()
+    analysis_result <- make_api_call(audio_features_api,access_token)
+  return(analysis_result)
+  
+    } , error=function(error_cond) {
+      print(error_cond$message)
+      access_token =get_spotify_access_token()
+      print(audio_features_api)
+      analysis_result <- make_api_call(audio_features_api,access_token)
+    if(error_cond$message =="$ operator is invalid for atomic vectors") {
+      return(NULL)
+    }
+      return(analysis_result)
+    }
+    )
+}
+```
+
+
+
+```{r warnings=FALSE}
+head_of_df <- df %>% head(500)
+# head_of_df <- head_of_df[100:190,]
+
+entire_df <- list()
+fail_list <- list()
+
+for (i in 1:nrow(head_of_df)) {
+  if (i %% 50 == 0) {
+    print(i)
+    # Sys.sleep(sample(seq(0.5, 2.5, 0.5), 1))
+  }
+  row <- head_of_df[i,]
+  value <- get_audio_features(row)
+  if (!is.null(value)) {
+    final_row <- cbind(head_of_df[i,],as.data.frame(value))
+  }
+  else {
+    fail_list <- append(fail_list,row$spotify_uri)
+  }
+  entire_df[[i]] <- final_row
+}
+fail_list
+# names(cbind(head_of_df[i,],as.data.frame(value))),
+# access_token <- get_spotify_access_token()
+result <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/7rAKdUk7EDHdKRc8BzLw73', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+# names(result)
+# result
+# "node" %in% names(result)
+# other_result <- RETRY('GET', url = 'https://api.spotify.com/v1/tracks/5GIWeGdWOfDfEOll1O4t4S', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 10) %>% content
+# result
+# result[['artist_name']] <- other_result$artists[[1]]$name
+# append(other_result$artists[[1]]$name, )
+# other_result$artists[[1]]$id
+# other_result$name
+
+# head_of_df[85:87]
+```
+
+```{r}
+do.call(rbind, entire_df)
+
+head_of_df[91,]
+```
+```{r}
+#get songs by hipster album then track
+access_token <- get_spotify_access_token()
+
+for (letter in letters[1:26]) {
+  for (year in 1960:2017) {
+    print (letter)
+  }
+}
+# %20tag:hipster
+'https://api.spotify.com/v1/search?q=track:bob%20year:1960&type=track'
+'https://api.spotify.com/v1/search?q=track:b*%20year:1960&limit=50&offset=20&type=album'
+album_query <- RETRY('GET', url = 'https://api.spotify.com/v1/search?q=album:a*%20year:1961%20&type=album', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+
+res <- album_query %>% .$albums %>% .$items
+res
+
+albums <- map_df(seq_len(length(res)), function(x) {
+            list(
+                # track_name = res[[x]]$name,
+                # track_uri = gsub('spotify:track:', '', res[[x]]$uri),
+                artist_name = res[[x]]$artists[[1]]$name,
+                artist_uri = res[[x]]$artists[[1]]$id,
+                album_name = res[[x]]$name,
+                album_id = res[[x]]$id,
+                album_year= res[[x]]$release_date,
+                album_tracks= res[[x]]$total_tracks
+            )
+        })
+
+album_id <- albums$album_id[1]
+
+
+track_query <-  RETRY('GET', url = str_glue('https://api.spotify.com/v1/albums/{album_id}'), query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+
+track_res <- track_query %>% .$tracks %>% .$items
+track_res[1]
+# [[1]]$artists
+tracks <- map_df(seq_len(length(track_res)), function(x) {
+            list(
+                album_name = 
+                track_name = track_res[[x]]$name,
+                track_uri =track_res[[x]]$uri,
+                artist_name = track_res[[x]]$artists[[1]]$name,
+                artist_uri = track_res[[x]]$artists[[1]]$id
+          )
+        })
+
+tracks
+```
+
+
+```{r}
+
+1+1
+#get songs just by track
+all_tracks <- list()
+for (letter in letters[1:26]) {
+  access_token <- get_spotify_access_token()
+  
+  for (year in 1960:2017) {
+    track_search <-  paste(letter,'*')
+    url_built <- str_glue('https://api.spotify.com/v1/search?q=track:{track_search}%20year:{year}&type=track')
+      res <- RETRY('GET', url = url_built, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+    
+    res <- res %>% .$tracks %>% .$items
+    all_tracks <- append(all_tracks,res)
+    break
+  }
+  break
+}
+
+# all_tracks
+
+ tracks <- map_df(seq_len(length(res)), function(x) {
+                list(
+                    track_name = res[[x]]$name,
+                    track_uri = gsub('spotify:track:', '', res[[x]]$uri),
+                    artist_name = res[[x]]$artists[[1]]$name,
+                    artist_uri = res[[x]]$artists[[1]]$id,
+                    album_name = res[[x]]$album$name,
+                    album_id = res[[x]]$album$id,
+                    album_year= res[[x]]$album$release_date
+                )
+            })
+    tracks
+    
+```
 
