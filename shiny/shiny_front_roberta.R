@@ -4,16 +4,21 @@ library(tidyverse)
 library(plotly)
 library(billboard)
 library(prenoms)
+library(shinyWidgets)
 
-all_attributes <- c("danceability" ,"energy", "speechiness","acousticness", "instrumentalness" ,"liveness","valence")
+all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
 
 ui <- fluidPage(
   includeCSS("www/styles.css"),
+  setBackgroundImage(src = "www/music_photo.jpg"),
+
   
   titlePanel("Analyze your song"),
   
+  
   sidebarLayout(
     sidebarPanel(
+      
       ## add as next step fake typing in and match with list 
       #once song is selected, it shows as selected song (little card) and can be deleted again
       selectInput(
@@ -79,29 +84,38 @@ server <- function(input, output,session) {
  plot_cross <- function(tracklist)
    {
    print(tracklist)
-     ' year <- enquo(year)
-      x_axis <- enquo(x_axis)
-      y_axis <- enquo(y_axis)
-      x_axis_name <- as.character(x_axis)
-      y_axis_name <- as.character(y_axis)
-       print(tracklist())
-      '
+
     #if we have a "new" element, we show this in a different color, otherwise we will simply display all points in grey
     
-    plot <- ggplot(tracklist[,4:5],x=x_axis(),y = y_axis()) +
-                     geom_point(aes_string( x=x_axis(),y = y_axis()),alpha = 1/2) + 
-                     theme_minimal() + xlim(0,1) + ylim (0,1)
+    plot <- ggplot(tracklist,x=x_axis(),y = y_axis()) +
+                     geom_point(aes_string(x=x_axis(),y = y_axis(),Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),alpha = 0.5) + 
+      ggtitle(glue::glue("Billboard Top 100 musical charts of {input$year}")) + 
+                     theme_minimal() + xlim(0,1) + ylim (0,1) 
+  
+      ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
     
-    }
-  #  ggplotly(plot, tooltip = c("text", "artist",glue::glue("{~x_axis_name}"),glue::glue("{~y_axis_name}") ))
+}
   
   output$plot <- renderPlotly({
     plot_cross(tracklist())
   })
   
+  text <- function(d){
+    
+    track_name <- tracklist[d,3]
+    artist_name <- tracklist[d,1]
+    print(track_name)
+    return("test")
+  }
+  
   output$event <- renderPrint({
     d <- event_data("plotly_hover")
-    if (is.null(d)) "Hover to get information about songs" else d
+    if (is.null(d)) {
+    "Hover to get information about songs" 
+    }
+    else {
+d
+    }
   })
   
   }
