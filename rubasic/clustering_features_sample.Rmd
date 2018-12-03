@@ -1,0 +1,41 @@
+---
+title: "Clustering using Features Sample"
+author: "Akshay Sundar"
+date: "12/3/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(FactoMineR)
+```
+
+Loading Sample Dataset with Features
+```{r}
+features_sample <- read_csv("~/Documents/R Programming/Group Assignment/rubasic/rubasic/working files/sample_music_features.csv")
+```
+
+Studying Dataset -
+```{r}
+summary(features_sample)
+
+#converting year to numeric
+features_sample$year <- as.numeric(features_sample$album_year_4dgt)
+features_sample <- features_sample %>% select(-album_year,-album_year_4dgt)
+```
+
+PCA for features first on 2018-
+```{r}
+f_2018 <- features_sample %>% filter(year==2017)
+
+res_pca <- PCA(f_2018,quanti.sup = 1, quali.sup = c(2:4,16:19,22:23))
+```
+
+Clustering through K-Means
+```{r}
+clust_features <- kmeans(f_2018,centers=20,iter.max = 1000, nstart = 100)
+
+```
+
