@@ -1,0 +1,325 @@
+---
+title: "Non-billboard Tracks"
+output: html_document
+---
+```{r}
+library(spotifyr)
+library(dplyr)
+library(tidyverse)
+library(httr)
+```
+
+```{r}
+#import dataset
+one_million_df <- read.csv('/Users/miraekim/workspace/coursework/map535r/group_project/r_group/one_million.csv', stringsAsFactors = FALSE)
+#one million df has duplicates based on artist and song
+one_million_df <- unique(one_million_df[c('artist','song')])
+```
+
+
+```{r}
+billboard::spotify_track_data
+```
+
+```{r}
+
+Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
+
+access_token <- get_spotify_access_token()
+
+#get ID for a song					 
+search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
+res <- RETRY('GET', url = str_glue(search),
+                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
+					 
+#get the audio feature for a song
+res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
+                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
+
+```
+
+Get track uri per song from the one million song database
+```{r}
+get_artist_id <- function(row) {
+  track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['song']))
+  artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['artist']))
+  api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
+  access_token <- get_spotify_access_token()
+  result <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+    tryCatch({
+      final_id <- suppressWarnings(result$tracks$items[[1]]$id)
+      return (final_id)
+    }, error=function(error_cond) {
+      if (error_cond$message == 'subscript out of bounds') {
+        return('ERROR subscript')
+      }
+    }
+    , error=function(error_cond) {
+      if (error_cond$message =='$ operator is invalid for atomic vectors') {
+        result2 <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+        print(error_cond$message)
+        print(api)
+        return(result2$tracks$items[[1]]$id)
+      }
+      else {
+        print(error_cond$message)
+        return('ERROR mysterious')
+      }
+    }
+  )
+}
+
+```
+
+Main script with for loop that gets spotify uri per song from one million song db
+```{r warnings=FALSE, echo=FALSE}
+# result
+try <- trial_df3
+
+for (i in 1:nrow(try)) {
+  if (i %% 500 == 0) {
+    print(i)
+  }
+  row <- try[i,]
+  value <- get_artist_id(row)
+  try[i,]$spotify_uri <- value
+}
+```
+
+```{r}
+#merge back to original df
+trial_df2 <- try[!is.na(try$spotify_uri),]
+complete_df <- merge(one_million_df, trial_df, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+
+#second trial
+complete_df2 <- merge(complete_df, trial_df2, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+
+```
+
+
+```{r}
+#take a random sample of rows in the big df
+trial_df2 <- complete_df[is.na(complete_df$spotify_uri),][sample(1:100000, 50000),colnames(complete_df)]
+trial_df3 <- complete_df2[is.na(complete_df2$spotify_uri),][sample(1:100000, 10000),colnames(complete_df2)]
+
+```
+
+```{r}
+#merge the try dataset back to the
+# complete_df3 <- merge(#PUT LATEST DF, #PUT THE SUBSET DF, by.x= c('artist', 'song'), by.y=c('artist', 'song'), all.x=TRUE)
+```
+
+```{r}
+
+#merge the final spotify_uri cols
+# complete_df3[!is.na(complete_df3$spotify_uri.x),]
+# 
+# complete_df3$spotify_uri <- ifelse(is.na(complete_df3$spotify_uri.x), complete_df3$spotify_uri.y, complete_df3$spotify_uri.x)
+# complete_df3[!is.na(complete_df3$spotify_uri),]
+
+# complete_df3$spotify_uri.y <- NULL
+# complete_df3$spotify_uri.x <- NULL
+# count_df <- complete_df3[!is.na(complete_df3$spotify_uri),]
+# write_to_df <- count_df %>% filter(!str_detect(tolower(spotify_uri),'error'))
+# write.csv(write_to_df, '/Users/miraekim/workspace/coursework/map535r/group_project/r_group/current_results.csv',)
+
+
+```
+
+get music attributes script
+```{r}
+# df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/non_billboard_songs_1.csv', stringsAsFactors = FALSE)
+
+make_api_call <- function(audio_features_api,access_token) {
+  analysis_result <- RETRY('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content 
+  # if (c("node","error") %in% names(analysis_result)) {
+  #   return(NULL)
+  # }
+  track_href <- analysis_result$track_href
+  analysis_result <- analysis_result[c('danceability',
+                                       'energy',
+                                       'key',
+                                       'loudness',
+                                       'mode',
+                                       'speechiness',
+                                       'acousticness',
+                                       'instrumentalness',
+                                       'liveness',
+                                       'valence',
+                                       'tempo',
+                                       'type',
+                                       'uri',
+                                       'track_href',
+                                       'analysis_url',
+                                       'duration_ms',
+                                       'time_signature')]
+  track_basic_trait_result <- RETRY('GET', url = track_href, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content 
+  analysis_result[['artist_name']] <- track_basic_trait_result$artists[[1]]$name
+  analysis_result[['artist_id']] <- track_basic_trait_result$artists[[1]]$id
+  analysis_result[['track_name']] <- track_basic_trait_result$name
+  return(analysis_result)
+}
+
+get_audio_features <- function(row) {
+  tryCatch({
+    track_uri <- as.character(row$track_uri)
+    audio_features_api <- str_glue('https://api.spotify.com/v1/audio-features/{track_uri}')
+    access_token <- get_spotify_access_token()
+    analysis_result <- make_api_call(audio_features_api,access_token)
+  return(analysis_result)
+  
+    } , error=function(error_cond) {
+      # print(error_cond$message)
+      access_token =get_spotify_access_token()
+      # print(audio_features_api)
+      analysis_result <- make_api_call(audio_features_api,access_token)
+    if(error_cond$message =="$ operator is invalid for atomic vectors") {
+      return(NULL)
+    }
+      return(analysis_result)
+    }
+    )
+}
+
+
+```
+
+
+
+```{r warnings=FALSE}
+head_of_df <- massive %>% head(5)
+# head_of_df <- head_of_df[100:190,]
+
+entire_df <- list()
+fail_list <- list()
+
+for (i in 1:nrow(head_of_df)) {
+  print(i)
+  if (i %% 50 == 0) {
+    Sys.sleep(sample(seq(0.5, 2.5, 0.5), 1))
+  }
+  row <- head_of_df[i,]
+  value <- get_audio_features(row)
+  if (!is.null(value)) {
+    final_row <- c(as.vector(row) ,value)
+    print(final_row)
+  }
+  else {
+    fail_list <- append(fail_list,row$spotify_uri)
+  }
+  entire_df <- append(entire_df,final_row)
+  break
+}
+as.data.frame(final_row)
+entire_df
+
+
+# names(cbind(head_of_df[i,],as.data.frame(value))),
+# access_token <- get_spotify_access_token()
+result <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/7rAKdUk7EDHdKRc8BzLw73', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+```
+
+Combine dataframes
+```{r}
+do.call(rbind, entire_df)
+
+
+```
+
+```{r}
+
+#get songs by hipster album then track
+access_token <- get_spotify_access_token()
+
+album_query <- RETRY('GET', url = 'https://api.spotify.com/v1/search?q=album:a*%20year:1961%20&type=album', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+
+res <- album_query %>% .$albums %>% .$items
+albums <- map_df(seq_len(length(res)), function(x) {
+            list(
+                # track_name = res[[x]]$name,
+                # track_uri = gsub('spotify:track:', '', res[[x]]$uri),
+                artist_name = res[[x]]$artists[[1]]$name,
+                artist_uri = res[[x]]$artists[[1]]$id,
+                album_name = res[[x]]$name,
+                album_id = res[[x]]$id,
+                album_year= res[[x]]$release_date,
+                album_tracks= res[[x]]$total_tracks
+            )
+        })
+album_id <- albums$album_id[1]
+
+track_query <-  RETRY('GET', url = str_glue('https://api.spotify.com/v1/albums/{album_id}'), query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+
+track_res <- track_query %>% .$tracks %>% .$items
+tracks <- map_df(seq_len(length(track_res)), function(x) {
+            list(
+                album_name = 
+                track_name = track_res[[x]]$name,
+                track_uri =track_res[[x]]$uri,
+                artist_name = track_res[[x]]$artists[[1]]$name,
+                artist_uri = track_res[[x]]$artists[[1]]$id
+          )
+        })
+tracks
+```
+
+Script that searches by year based on one letter string with wildcard  
+```{r}
+#get songs just by track
+all_tracks <- list()
+for (letter in letters[1:26]) {
+  access_token <- get_spotify_access_token()
+  for (year in 1960:2017) {
+    track_search <-  paste0(letter,'*')
+    # print(track_search)
+    url_built <- str_glue('https://api.spotify.com/v1/search?q=track:{track_search}%20year:{year}&limit=50&offset=60&type=track')
+    # print(url_built)
+      res <- RETRY('GET', url = url_built, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+    res <- (res %>% .$tracks %>% .$items)
+    all_tracks <- append(all_tracks,res)
+    # break
+  }
+  # break
+}
+
+#transforms list of results into a dataframe
+tracks_df <- map_df(seq_len(length(all_tracks)), function(x) {
+                list(
+                    track_name = all_tracks[[x]]$name,
+                    track_uri = gsub('spotify:track:', '', all_tracks[[x]]$uri),
+                    artist_name = all_tracks[[x]]$artists[[1]]$name,
+                    artist_uri = all_tracks[[x]]$artists[[1]]$id,
+                    album_name = all_tracks[[x]]$album$name,
+                    album_id = all_tracks[[x]]$album$id,
+                    album_year= all_tracks[[x]]$album$release_date
+                )
+            })
+
+tracks_df
+tracks_df$track_uri
+    
+    tracks_df %>% mutate(album_year_4dgt=substr(album_year,1,4) ) %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+
+# create field with album year and count how maany songs per year
+massive  %>% mutate(album_year_4dgt=substr(album_year,1,4)) %>% ggplot(aes(x=album_year_4dgt)) + geom_histogram(stat='count')
+    
+sample_by_year <- tracks_df %>% mutate(album_year_4dgt=substr(album_year,1,4) ) %>% group_by(album_year_4dgt)
+
+# write.csv(sample_by_year,'/Users/miraekim/workspace/coursework/map535r/rubasic/avg_songs.csv')
+
+```
+```{r}
+#load avg songs
+df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/avg_songs.csv', stringsAsFactors = FALSE)
+```
+
+```{r}
+#combine with 
+massive <- rbind(df[c("track_name","track_uri", "artist_name","artist_uri","album_name","album_id","album_year")],tracks_df)
+
+#dedup on track uri 
+massive = massive[!duplicated((massive)$track_uri), ]
+
+```
+
