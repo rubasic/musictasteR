@@ -149,9 +149,57 @@ artist_freq <- sampled_songs_worded %>%
 
 artist_freq$recalc_songs=ifelse(artist_freq$freq>5,5,artist_freq$freq)
 
+#Total songs in 
 artist_freq %>%
+  ungroup() %>%
   summarise(tots=sum(recalc_songs))
 
+
 ggplot(data=artist_freq, aes(x=freq)) + geom_histogram(bins=30) 
+```
+
+Restricting to 7 songs per artist per year, to prevent over-sampling from one artist. Selection of song will be random
+```{r}
+sample_songs_edit <- sampled_songs_worded %>%
+  select(-album_year) %>%
+  distinct() %>%
+  arrange(album_year_4dgt,artist_name) %>%
+  group_by(album_year_4dgt,artist_name) %>%
+  slice(1:7) %>%
+  ungroup()
+
+sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
+
+sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+```
+
+Max cap at 3000 songs per year
+```{r}
+sample_songs_edit <- sample_songs_edit %>%
+  arrange(album_year_4dgt,artist_name)
+
+#First keep as many unique artists as possible
+sample_songs_edit$count=1
+
+for(i in 2:nrow(sample_songs_edit)){
+  if(sample_songs_edit$artist_name[i]==sample_songs_edit$artist_name[i-1]&sample_songs_edit$album_year_4dgt[i]==sample_songs_edit$album_year_4dgt[i-1]){
+    sample_songs_edit$count[i]=sample_songs_edit$count[i-1]+1
+  }
+}
+
+sample_songs_edit <- sample_songs_edit %>%
+  arrange(album_year_4dgt,artist_name,count) %>%
+  group_by(album_year_4dgt) %>%
+  slice(1:3000) %>%
+  ungroup()
+
+sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
+
+sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+```
+
+Export database -
+```{r}
+write_csv(sample_songs_edit,'/working files/sample_songs_processed.csv')
 ```
 
