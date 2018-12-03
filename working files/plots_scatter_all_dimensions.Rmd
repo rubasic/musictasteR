@@ -12,10 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 #install the following libraries
 #devtools::install_github('charlie86/spotifyr')
-#install.packages('spotifyr')
-#install.packages("billboard")
+install.packages('spotifyr')
+install.packages("billboard")
 
-#library(spotifyr)
+library(spotifyr)
 library(dplyr)
 library(tidyverse)
 library(httr)
@@ -87,7 +87,7 @@ plot_cross <- function(database,year,x_axis=energy,y_axis=danceability){
    }
    ggplotly(plot, tooltip = c("text", "artist",glue::glue("{x_axis_name}"),glue::glue("{y_axis_name}") ))
 }
-plot_cross(testdb,2010,energy,valence)
+plot_cross(spotify_track_data,2010,energy,valence)
 #tests: does this function return a plotly element
 # what happens for invalid years
 
@@ -131,6 +131,9 @@ plot <- ggplot(spotify_track_data_modified[spotify_track_data_modified$year=="19
    xlim(0,1) + ylim (0,1)
   
 ggplotly(plot, tooltip = c("text", "artist_name","energy","danceability" ))
+
+
+
 
 ```
 
