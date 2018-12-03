@@ -200,6 +200,6 @@ sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggp
 
 Export database -
 ```{r}
-write_csv(sample_songs_edit,'/working files/sample_songs_processed.csv')
+write_csv(sample_songs_edit,'sample_songs_processed.csv')
 ```
 
