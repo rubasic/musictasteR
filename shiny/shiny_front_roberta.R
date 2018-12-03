@@ -10,7 +10,7 @@ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Spee
 
 ui <- fluidPage(
   includeCSS("www/styles.css"),
-  setBackgroundImage(src = "www/music_photo.jpg"),
+ # setBackgroundImage(src = "www/music_photo.jpg"),
 
   
   titlePanel("Analyze your song"),
@@ -35,7 +35,9 @@ ui <- fluidPage(
         max = 2015,
         value = 2015,
         animate = TRUE,
-        ticks = FALSE
+        round = TRUE,
+        ticks = FALSE,
+        sep = ""
       ),
   
     selectInput(
@@ -92,7 +94,10 @@ server <- function(input, output,session) {
       ggtitle(glue::glue("Billboard Top 100 musical charts of {input$year}")) + 
                      theme_minimal() + xlim(0,1) + ylim (0,1) 
   
-      ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+      ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white", 
+                                                                                                                                                                  font = list(family = "sans serif", 
+                                                                                                                                                                              size = 12, 
+                                                                                                                                                                              color = "black")))
     
 }
   
