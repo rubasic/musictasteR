@@ -237,6 +237,8 @@ for (i in 1:nrow(head_of_df)) {
   }
 }
 
+names(final_list[[1]])
+
 map_df(seq_len(length(final_list)), function(x) {
                 list(
                   track_name = final_list[[x]]["track_name"],
@@ -269,6 +271,46 @@ map_df(seq_len(length(final_list)), function(x) {
 # result <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/7rAKdUk7EDHdKRc8BzLw73', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
 ```
 
+```{r}
+final_list_copy <- final_list
+length(names(final_list_copy[[1]]))
+```
+```{r}
+?filter
+final_list_filter <- sapply(final_list_copy, function(x) {if (length(names(x)) == 24) {return(x)}})
+length(final_list_filter)
+(final_list_copy[[]])
+
+final_list_copy.filter(function(x) {if (length(names(x)) == 24) {return(x)}})
+
+final_df <- map_df(seq_len(length(final_list[1:6000])), function(x) {
+                list(
+                  track_name = final_list[1:6000][[x]]["track_name"],
+                  track_uri = final_list[1:6000][[x]]["track_uri"],
+                  album_name = final_list[1:6000][[x]]["album_name"],
+                  album_year = final_list[1:6000][[x]]["album_year"],
+                  album_year_4dgt = final_list[1:6000][[x]]["album_year_4dgt"],
+                  danceability = final_list[1:6000][[x]]["danceability"],
+                  energy = final_list[1:6000][[x]]["energy"],
+                  key = final_list[1:6000][[x]]["key"],
+                  loudness = final_list[1:6000][[x]]["loudness"],
+                  mode = final_list[1:6000][[x]]["mode"],
+                  speechiness = final_list[1:6000][[x]]["speechiness"],
+                  acousticness = final_list[1:6000][[x]]["acousticness"],
+                  instrumentalness = final_list[1:6000][[x]]["instrumentalness"],
+                  liveness = final_list[1:6000][[x]]["liveness"],
+                  valence = final_list[1:6000][[x]]["valence"],
+                  tempo = final_list[1:6000][[x]]["tempo"],
+                  type = final_list[1:6000][[x]]["type"],
+                  uri = final_list[1:6000][[x]]["uri"],
+                  track_href = final_list[1:6000][[x]]["track_href"],
+                  analysis_url = final_list[1:6000][[x]]["analysis_url"],
+                  duration_ms = final_list[1:6000][[x]]["duration_ms"],
+                  time_signature = final_list[1:6000][[x]]["time_signature"],
+                  artist_name = final_list[1:6000][[x]]["artist_name"],
+                  artist_id = final_list[1:6000][[x]]["artist_uri"]
+                )})
+```
 
 
 
