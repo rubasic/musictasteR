@@ -1,0 +1,5 @@
+usethis::use_build_ignore("devtools_history.R")
+options(usethis.full_name = "Clara Dionet")
+usethis::use_mit_license()
+usethis::use_testthat()
+usethis::use_vignette("musictasteR")
