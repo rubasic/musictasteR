@@ -86,35 +86,72 @@ write_csv(sample_by_year,'sampled_songs.csv')
 #df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/avg_songs.csv', stringsAsFactors = FALSE)
 ```
 
-Script that searches by year based on two letter string with wildcard  
+Load List of Top Words in Song Titles
 ```{r}
-#get songs just by track
-all_tracks <- list()
-addition <- data.frame("temp","temp",stringsAsFactors = FALSE)
-colnames(addition) <- c("year","letter")
-for (letter in letters[1:26]) {
-  for (i in letters[1:26]) {
-    #Sys.sleep(0.5)
+top_words <- read_csv("top_words_in_titles.csv")
+```
+
+
+Script that searches by year based on top words in song titles
+```{r}
+
+all_tracks_upd <- list()
+for (i in 1:98) {
   for (year in 1960:2019) {
-    #access_token <- get_spotify_access_token()
-    track_search <-  paste0('*',letter,i,'*')
-    # print(track_search)
+    track_search <-  paste0('*',top_words[i,],'*')
     url_built <- str_glue('https://api.spotify.com/v1/search?q=track:{track_search}%20year:{year}&limit=50&offset=60&type=track')
-    # print(url_built)
       res <- RETRY('GET', url = url_built, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
-    #if(length(res==list())==0){
     if((!is.null(names(res)))){
     res <- res %>% .$tracks %>% .$items
-    addition <- rbind(addition,data.frame(year,letter))
-    all_tracks <- append(all_tracks,res)
-    # break
+    all_tracks_upd <- append(all_tracks_upd,res)
     }
   }
-  }
-  # break
-  print(letter)
+  print(top_words[i,])
 }
 
 ```
 
+```{r}
+#transforms list of results into a dataframe
+tracks_df_upd <- map_df(seq_len(length(all_tracks_upd)), function(x) {
+                list(
+                    track_name = all_tracks_upd[[x]]$name,
+                    track_uri = gsub('spotify:track:', '', all_tracks_upd[[x]]$uri),
+                    artist_name = all_tracks_upd[[x]]$artists[[1]]$name,
+                    artist_uri = all_tracks_upd[[x]]$artists[[1]]$id,
+                    album_name = all_tracks_upd[[x]]$album$name,
+                    album_id = all_tracks_upd[[x]]$album$id,
+                    album_year= all_tracks_upd[[x]]$album$release_date
+                )
+            })
+
+
+
+    tracks_df_upd %>% mutate(album_year_4dgt=substr(album_year,1,4) ) %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+
+# create field with album year and count how maany songs per year
+#massive  %>% mutate(album_year_4dgt=substr(album_year,1,4)) %>% ggplot(aes(x=album_year_4dgt)) + geom_histogram(stat='count')
+    
+sample_by_year_upd <- tracks_df_upd %>% mutate(album_year_4dgt=substr(album_year,1,4) ) 
+
+write_csv(sample_by_year_upd,'sampled_songs_worded.csv')
+
+```
+
+Test for artist frequency
+```{r}
+
+sampled_songs_worded <- read_csv("sampled_songs_worded.csv")
+
+artist_freq <- sampled_songs_worded %>%
+  group_by(artist_name,album_year_4dgt) %>%
+  summarise(freq=n()) 
+
+artist_freq$recalc_songs=ifelse(artist_freq$freq>5,5,artist_freq$freq)
+
+artist_freq %>%
+  summarise(tots=sum(recalc_songs))
+
+ggplot(data=artist_freq, aes(x=freq)) + geom_histogram(bins=30) 
+```
 
