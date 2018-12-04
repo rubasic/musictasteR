@@ -11,13 +11,17 @@ library(purrr)
 ```
 
 ```{r}
-get_album_data()
 #import dataset
-one_million_df <- read.csv('/Users/miraekim/workspace/coursework/map535r/group_project/r_group/one_million.csv', stringsAsFactors = FALSE)
+# one_million_df <- read.csv('/Users/miraekim/workspace/coursework/map535r/group_project/r_group/one_million.csv', stringsAsFactors = FALSE)
 #one million df has duplicates based on artist and song
-one_million_df <- unique(one_million_df[c('artist','song')])
+# one_million_df <- unique(one_million_df[c('artist','song')])
+sample_song <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/sample_songs_processed.csv')
 ```
 
+```{r}
+dim(sample_song)
+sample_song
+```
 
 ```{r}
 billboard::spotify_track_data
@@ -230,14 +234,12 @@ for (i in 1:nrow(head_of_df)) {
       print(paste('Other kind of error in id', i))
       print(api_result$message)
     }
-    ##put other error handling here
-    
+    ## put other error handling here
   } else {
     final_row <- c(unlist(row[c("track_name", "track_uri", "album_name", "album_year", "album_year_4dgt", "artist_name", "artist_uri")]), unlist(api_result$result))
     final_list[[i]] <- final_row
   }
 }
-
 
 final_list_filtered <- Filter(Negate(is.null), final_list)
 
@@ -269,9 +271,7 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
                   artist_id = final_list_filtered[[x]]["artist_uri"]
                 )})
 
-massive
-
-
+write.csv(massive, '/Users/miraekim/workspace/coursework/map535r/rubasic/working files/sample_music_features.csv')
 
 # result <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/7rAKdUk7EDHdKRc8BzLw73', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
 ```
@@ -304,7 +304,6 @@ track_query <-  RETRY('GET', url = str_glue('https://api.spotify.com/v1/albums/{
 track_res <- track_query %>% .$tracks %>% .$items
 tracks <- map_df(seq_len(length(track_res)), function(x) {
             list(
-                album_name = 
                 track_name = track_res[[x]]$name,
                 track_uri =track_res[[x]]$uri,
                 artist_name = track_res[[x]]$artists[[1]]$name,
@@ -365,6 +364,15 @@ massive <- rbind(df[c("track_name","track_uri", "artist_name","artist_uri","albu
 
 #dedup on track uri 
 massive = massive[!duplicated((massive)$track_uri), ]
+```
 
+```{r}
+trial <- head_of_df[1:1000,]
+trial %>% group_by(album_year_4dgt, artist_name) %>% summarise(count=n()) %>% arrange(desc(count))
+
+#code to take only 2 from each album_year, artist name group
+head_of_df %>% 
+  group_by(album_year_4dgt, artist_name) %>% 
+  slice(1:2) %>% filter(artist_name == "The Beatles")
 ```
 
