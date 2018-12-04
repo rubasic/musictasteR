@@ -38,4 +38,6 @@ Imports:
     reshape,
     dplyr,
     ggplot2,
-    stats
+    stats,
+    spotifyr,
+    billboard

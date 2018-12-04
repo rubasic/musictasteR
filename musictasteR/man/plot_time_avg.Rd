@@ -22,5 +22,5 @@ a plot
 Title
 }
 \examples{
-plot_time_avg(df, c("danceability","valence"),FALSE,2010:2015)
+plot_time_avg(df, c("danceability","valence"),FALSE,c(2010,2015))
 }

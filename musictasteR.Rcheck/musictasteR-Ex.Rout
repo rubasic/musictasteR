@@ -69,7 +69,7 @@ Type 'q()' to quit R.
 > 
 > ### ** Examples
 > 
-> plot_time_avg(df, c("danceability","valence"),FALSE,2010:2015)
-Error in x(...) : argument "x" is missing, with no default
-Calls: plot_time_avg -> aggregate -> df -> data.frame -> x
+> plot_time_avg(df, c("danceability","valence"),FALSE,c(2010,2015))
+Error in is_quosure(e2) : argument "e2" is missing, with no default
+Calls: plot_time_avg -> aggregate -> Ops.quosure -> is_quosure
 Execution halted

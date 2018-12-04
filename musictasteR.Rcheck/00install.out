@@ -11,6 +11,8 @@
 [31m●[39m Refer to functions with [90m`reshape::fun()`[39m
 [31m●[39m Refer to functions with [90m`ggplot2::fun()`[39m
 [31m●[39m Refer to functions with [90m`stats::fun()`[39m
+[31m●[39m Refer to functions with [90m`billboard::fun()`[39m
+[32m✔[39m Adding [34m'^plot_time_avg\\.R$'[39m to [34m'.Rbuildignore'[39m
 ** help
 *** installing help indices
 ** building package indices

@@ -30,9 +30,9 @@ LazyData: true
 Suggests: testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
-Imports: magrittr, reshape, dplyr, ggplot2, stats
+Imports: magrittr, reshape, dplyr, ggplot2, stats, spotifyr, billboard
 NeedsCompilation: no
-Packaged: 2018-12-04 22:06:35 UTC; claradionet
+Packaged: 2018-12-04 23:23:22 UTC; claradionet
 Author: Roberta Conrad [aut, cre],
   Clara Dionet [aut, ctb],
   Mirae Kim [aut, ctb],

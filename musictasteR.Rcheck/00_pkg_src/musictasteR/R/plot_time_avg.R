@@ -13,23 +13,24 @@
 #' @importFrom reshape melt
 #' @import ggplot2
 #' @importFrom stats aggregate
+#' @import billboard
 #' @examples
-#' plot_time_avg(df, c("danceability","valence"),FALSE,2010:2015)
+#' plot_time_avg(df, c("danceability","valence"),FALSE,c(2010,2015))
 plot_time_avg <- function(df, vars, boxplot, timerange) {
-  df <- as.data.frame(df)
-  if(boxplot == FALSE) {
+  vars <- enquo(vars)
+  if(length(boxplot) <2 && boxplot == FALSE) {
     # get mean for each attribute
-    df_avg <- aggregate(df()[,vars], list(df$year), mean)
+    df_avg <- aggregate(df[,!!!vars], list(df$year), mean)
     colnames(df_avg)[1] <- "year"
     # reshape function for plot
     df_melt <- melt(as.data.frame(df_avg), id = "year")
     # year should be continuous
     df_melt$year <- as.numeric(as.character(df_melt$year))
-    ggplot(df_melt, aes(x=year, y=value, color=variable)) + ylim(0,1)  + geom_line(size=1) + xlim(input$timerange)
+    ggplot(df_melt, aes(x=year, y=value, color=variable)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
   }
   else {
     df_time <- as.data.frame(df) %>% filter(year %in% timerange[1]:timerange[2])
-    df_box_melt <- melt(df_time,id.vars="year", measure.vars=vars)
+    df_box_melt <- melt(df_time,id.vars="year", measure.vars=!!vars)
     ggplot(df_box_melt) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)
   }
 }

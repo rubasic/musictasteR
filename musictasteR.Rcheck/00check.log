@@ -38,9 +38,8 @@
 plot_time_avg: no visible binding for global variable ‘year’
 plot_time_avg: no visible binding for global variable ‘value’
 plot_time_avg: no visible binding for global variable ‘variable’
-plot_time_avg: no visible binding for global variable ‘input’
 Undefined global functions or variables:
-  input value variable year
+  value variable year
 * checking Rd files ... OK
 * checking Rd metadata ... OK
 * checking Rd line widths ... OK
@@ -63,9 +62,9 @@ The error most likely occurred in:
 > 
 > ### ** Examples
 > 
-> plot_time_avg(df, c("danceability","valence"),FALSE,2010:2015)
-Error in x(...) : argument "x" is missing, with no default
-Calls: plot_time_avg -> aggregate -> df -> data.frame -> x
+> plot_time_avg(df, c("danceability","valence"),FALSE,c(2010,2015))
+Error in is_quosure(e2) : argument "e2" is missing, with no default
+Calls: plot_time_avg -> aggregate -> Ops.quosure -> is_quosure
 Execution halted
 * checking for unstated dependencies in ‘tests’ ... OK
 * checking tests ... OK
