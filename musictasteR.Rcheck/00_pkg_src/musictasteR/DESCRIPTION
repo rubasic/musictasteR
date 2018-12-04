@@ -27,15 +27,15 @@ Depends: R (>= 3.5.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Suggests: 
-    testthat,
-    knitr,
-    rmarkdown
+Suggests: testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
-Imports: 
-    magrittr,
-    reshape,
-    dplyr,
-    ggplot2,
-    stats
+Imports: magrittr, reshape, dplyr, ggplot2, stats
+NeedsCompilation: no
+Packaged: 2018-12-04 22:06:35 UTC; claradionet
+Author: Roberta Conrad [aut, cre],
+  Clara Dionet [aut, ctb],
+  Mirae Kim [aut, ctb],
+  Jorgen Lund [aut, ctb],
+  Akshay Sundar [aut, ctb]
+Maintainer: Roberta Conrad <roberta.conrad@polytechnique.edu>
