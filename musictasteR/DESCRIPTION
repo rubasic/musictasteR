@@ -33,3 +33,11 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
+Imports: 
+    magrittr,
+    reshape,
+    dplyr,
+    ggplot2,
+    stats,
+    spotifyr,
+    billboard
