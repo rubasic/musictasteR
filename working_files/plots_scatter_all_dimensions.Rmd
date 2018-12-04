@@ -52,7 +52,7 @@ billboard::spotify_track_data
 
 library(billboard)
 #billboard (top music charts dataframe)
-View(billboard::spotify_track_data)
+#View(billboard::spotify_track_data)
 
 spotify_track_data
 
@@ -66,28 +66,28 @@ library(magrittr)
 
 #plot_cross takes in a year and two dimension and returns a plot of all songs from this year mapped onto the two dimensions
 #the data point added by the user will have year = 0
-plot_cross <- function(database,year,x_axis=energy,y_axis=danceability){
-  year <- enquo(year)
+plot_cross <- function(database,filtered_year,x_axis=energy,y_axis=danceability,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
+  #enquo all the columns that we need to use
   x_axis <- enquo(x_axis)
   y_axis <- enquo(y_axis)
-  x_axis_name <- as.character(x_axis)
-  y_axis_name <- as.character(y_axis)
-  tracklist <- database %>% filter(year == {!!year} | year == "0" ) %>% select(year,artist_name,track_name,!!x_axis,!!y_axis,new)
+  artist_name <- enquo(artist_name)
+  track_name <- enquo(track_name)
+
+  tracklist <- database %>% filter(year == filtered_year | year == "0" ) %>%
+    select(year,!!artist_name,!!track_name,!!x_axis,!!y_axis)
   
-  #if we have a "new" element, we show this in a different color, otherwise we will simply display all points in grey
-  if("new" %in% colnames(database)){
-  plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
-    geom_point(aes(text = track_name, artist=artist_name, color=new, size = 0.1),alpha = 1/2) + theme_minimal() + 
-    xlim(0,1) + ylim (0,1)
-  }
-  else{
+
    plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
-    geom_point(aes(text = track_name, artist= artist_name, size = 0.1),alpha = 1/2) + theme_minimal() + 
-    xlim(0,1) + ylim (0,1)
+    geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) + 
+     ggtitle(glue::glue("{title}{filtered_year}")) + 
+     theme_minimal() +xlim(0,1) + ylim (0,1)
+   
+   plot_with_hover <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
+   
+   return(plot_with_hover)
    }
-   ggplotly(plot, tooltip = c("text", "artist",glue::glue("{x_axis_name}"),glue::glue("{y_axis_name}") ))
-}
-plot_cross(spotify_track_data,2010,energy,valence)
+
+plot_cross(spotify_track_data,2010,energy,danceability,track_name,artist_name)
 #tests: does this function return a plotly element
 # what happens for invalid years
 
