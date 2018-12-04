@@ -15,15 +15,19 @@ library(purrr)
 one_million_df <- read.csv('/Users/miraekim/workspace/coursework/map535r/group_project/r_group/one_million.csv', stringsAsFactors = FALSE)
 #one million df has duplicates based on artist and song
 one_million_df <- unique(one_million_df[c('artist','song')])
+
 ```
 
 
 ```{r}
 billboard::spotify_track_data
+sample_df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/sample_songs_processed.csv', stringsAsFactors = FALSE)
+```
+```{r}
+sample_df = sample_df[!duplicated((sample_df)$track_uri), ]
 ```
 
 ```{r}
-
 Sys.setenv(SPOTIFY_CLIENT_ID = '76b887bef35c47c3a2f163b4ef96ad06')
 Sys.setenv(SPOTIFY_CLIENT_SECRET = '14a6cf275d804cd5983ac7a3a7b1531a')
 
@@ -204,16 +208,21 @@ is.null(thing$error)
 
 ```
 
+```{r}
+final_list[[-1]]
+sample_df[43404:dim(sample_df)[1],]
+```
+
 
 
 ```{r warnings=FALSE}
-head_of_df <- df
+head_of_df <- sample_df[43404:dim(sample_df)[1],]
 
 final_list <- list()
 fail_list <- list()
 
 for (i in 1:nrow(head_of_df)) {
-  if (i %% 20 == 0) {
+  if (i %% 50 == 0) {
     print(i)
     Sys.sleep(sample(seq(0.5, 2.5, 0.5), 1))
   }
@@ -222,7 +231,7 @@ for (i in 1:nrow(head_of_df)) {
   #error hndling
   if (is.null(api_result$result)) {
     #wrong url
-    if (api_result$message == "Must specify at least one of url or handle") {
+    if (api_result$message == "Must specify at least one of url or handle"){
       print(paste("Error in id", i))
       # return("URL misinput error")
     } else {
@@ -236,37 +245,14 @@ for (i in 1:nrow(head_of_df)) {
     final_list[[i]] <- final_row
   }
 }
+length(final_list_filtered)
 
-names(final_list[[1]])
+as.data.frame(sapply((sapply(final_list, is.null)), as.numeric))
+plot(sapply((sapply(final_list, is.null)), as.numeric))
 
-map_df(seq_len(length(final_list)), function(x) {
-                list(
-                  track_name = final_list[[x]]["track_name"],
-                  track_uri = final_list[[x]]["track_uri"],
-                  album_name = final_list[[x]]["album_name"],
-                  album_year = final_list[[x]]["album_year"],
-                  album_year_4dgt = final_list[[x]]["album_year_4dgt"],
-                  danceability = final_list[[x]]["danceability"],
-                  energy = final_list[[x]]["energy"],
-                  key = final_list[[x]]["key"],
-                  loudness = final_list[[x]]["loudness"],
-                  mode = final_list[[x]]["mode"],
-                  speechiness = final_list[[x]]["speechiness"],
-                  acousticness = final_list[[x]]["acousticness"],
-                  instrumentalness = final_list[[x]]["instrumentalness"],
-                  liveness = final_list[[x]]["liveness"],
-                  valence = final_list[[x]]["valence"],
-                  tempo = final_list[[x]]["tempo"],
-                  type = final_list[[x]]["type"],
-                  uri = final_list[[x]]["uri"],
-                  track_href = final_list[[x]]["track_href"],
-                  analysis_url = final_list[[x]]["analysis_url"],
-                  duration_ms = final_list[[x]]["duration_ms"],
-                  time_signature = final_list[[x]]["time_signature"],
-                  artist_name = final_list[[x]]["artist_name"],
-                  artist_id = final_list[[x]]["artist_uri"]
-                )})
-
+final_list_filtered <- Filter(Negate(is.null), final_list)
+length(final_list_filtered)
+write.csv(final_df, '/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/akshay_100k.csv')
 
 # result <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/7rAKdUk7EDHdKRc8BzLw73', query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
 ```
@@ -282,33 +268,33 @@ length(final_list_filter)
 (final_list_copy[[]])
 
 final_list_copy.filter(function(x) {if (length(names(x)) == 24) {return(x)}})
-
-final_df <- map_df(seq_len(length(final_list[1:6000])), function(x) {
+dim(final_df)
+final_df <- map_df(seq_len(length(final_list_filtered)), function(x) {
                 list(
-                  track_name = final_list[1:6000][[x]]["track_name"],
-                  track_uri = final_list[1:6000][[x]]["track_uri"],
-                  album_name = final_list[1:6000][[x]]["album_name"],
-                  album_year = final_list[1:6000][[x]]["album_year"],
-                  album_year_4dgt = final_list[1:6000][[x]]["album_year_4dgt"],
-                  danceability = final_list[1:6000][[x]]["danceability"],
-                  energy = final_list[1:6000][[x]]["energy"],
-                  key = final_list[1:6000][[x]]["key"],
-                  loudness = final_list[1:6000][[x]]["loudness"],
-                  mode = final_list[1:6000][[x]]["mode"],
-                  speechiness = final_list[1:6000][[x]]["speechiness"],
-                  acousticness = final_list[1:6000][[x]]["acousticness"],
-                  instrumentalness = final_list[1:6000][[x]]["instrumentalness"],
-                  liveness = final_list[1:6000][[x]]["liveness"],
-                  valence = final_list[1:6000][[x]]["valence"],
-                  tempo = final_list[1:6000][[x]]["tempo"],
-                  type = final_list[1:6000][[x]]["type"],
-                  uri = final_list[1:6000][[x]]["uri"],
-                  track_href = final_list[1:6000][[x]]["track_href"],
-                  analysis_url = final_list[1:6000][[x]]["analysis_url"],
-                  duration_ms = final_list[1:6000][[x]]["duration_ms"],
-                  time_signature = final_list[1:6000][[x]]["time_signature"],
-                  artist_name = final_list[1:6000][[x]]["artist_name"],
-                  artist_id = final_list[1:6000][[x]]["artist_uri"]
+                  track_name = final_list_filtered[[x]]["track_name"],
+                  track_uri = final_list_filtered[[x]]["track_uri"],
+                  album_name = final_list_filtered[[x]]["album_name"],
+                  album_year = final_list_filtered[[x]]["album_year"],
+                  album_year_4dgt = final_list_filtered[[x]]["album_year_4dgt"],
+                  danceability = final_list_filtered[[x]]["danceability"],
+                  energy = final_list_filtered[[x]]["energy"],
+                  key = final_list_filtered[[x]]["key"],
+                  loudness = final_list_filtered[[x]]["loudness"],
+                  mode = final_list_filtered[[x]]["mode"],
+                  speechiness = final_list_filtered[[x]]["speechiness"],
+                  acousticness = final_list_filtered[[x]]["acousticness"],
+                  instrumentalness = final_list_filtered[[x]]["instrumentalness"],
+                  liveness = final_list_filtered[[x]]["liveness"],
+                  valence = final_list_filtered[[x]]["valence"],
+                  tempo = final_list_filtered[[x]]["tempo"],
+                  type = final_list_filtered[[x]]["type"],
+                  uri = final_list_filtered[[x]]["uri"],
+                  track_href = final_list_filtered[[x]]["track_href"],
+                  analysis_url = final_list_filtered[[x]]["analysis_url"],
+                  duration_ms = final_list_filtered[[x]]["duration_ms"],
+                  time_signature = final_list_filtered[[x]]["time_signature"],
+                  artist_name = final_list_filtered[[x]]["artist_name"],
+                  artist_id = final_list_filtered[[x]]["artist_uri"]
                 )})
 ```
 
@@ -399,15 +385,41 @@ sample_by_year <- tracks_df %>% mutate(album_year_4dgt=substr(album_year,1,4) ) 
 
 ```{r}
 #load avg songs
-df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/avg_songs.csv', stringsAsFactors = FALSE)
+df1 <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/sample_music_features.csv', stringsAsFactors = FALSE)
+df2 <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/akshay_43k.csv', stringsAsFactors = FALSE)
+df3 <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/akshay_100k.csv', stringsAsFactors = FALSE)
 ```
 
 ```{r}
+colnames(df1)
+colnames(df2)
+colnames(df3)
 #combine with 
-massive <- rbind(df[c("track_name","track_uri", "artist_name","artist_uri","album_name","album_id","album_year")],tracks_df)
+massive <- rbind(df2,df3)
+dim(massive)
 
 #dedup on track uri 
 massive = massive[!duplicated((massive)$track_uri), ]
+write.csv(massive,'/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/150k_sample.csv')
+
+dim(massive)
+massive %>% ggplot(aes(x=album_year_4dgt)) + geom_histogram(stat='count')
+massive %>% group_by(album_year_4dgt) %>% summarise(n())
+
+subset_of_massive <- massive %>% 
+group_by(album_year_4dgt, artist_name,album_name) %>% 
+slice(1:2) 
+
+subset_of_massive_2 <- subset_of_massive %>% group_by(album_year_4dgt, artist_name, album_name) %>% slice(1:2)
+subset_of_massive_2 %>% group_by(album_year_4dgt) %>% summarise(n())
+
+massive %>% ggplot(aes(x=album_year_4dgt)) + geom_histogram(stat='count')
+sample_df%>% ggplot(aes(x=album_year_4dgt)) + geom_histogram(stat='count')
+dim(sample_df)
+
+
+
+
 
 ```
 
