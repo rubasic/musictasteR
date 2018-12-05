@@ -1,11 +1,12 @@
 usethis::use_build_ignore("devtools_history.R")
 options(usethis.full_name = "Clara Dionet")
 usethis::use_mit_license()
-usethis::use_package("magrittr")
+'usethis::use_package("magrittr")
 usethis::use_package("dplyr")
 usethis::use_package("reshape")
 usethis::use_package("ggplot2")
 usethis::use_package("stats")
-usethis::use_package("billboard")
+usethis::use_package("billboard")'
 usethis::use_build_ignore("plot_time_avg.R")
 #devtools::load_all(".")
+usethis::use_pipe

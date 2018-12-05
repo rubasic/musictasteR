@@ -40,4 +40,6 @@ Imports:
     ggplot2,
     stats,
     spotifyr,
-    billboard
+    billboard,
+    plotly,
+    glue
