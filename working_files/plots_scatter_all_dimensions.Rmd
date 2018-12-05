@@ -66,7 +66,7 @@ library(magrittr)
 
 #plot_cross takes in a year and two dimension and returns a plot of all songs from this year mapped onto the two dimensions
 #the data point added by the user will have year = 0
-plot_cross <- function(database,filtered_year,x_axis=energy,y_axis=danceability,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
+hover_plot <- function(database,filtered_year,x_axis=energy,y_axis=danceability,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
   #enquo all the columns that we need to use
   x_axis <- enquo(x_axis)
   y_axis <- enquo(y_axis)
@@ -87,7 +87,7 @@ plot_cross <- function(database,filtered_year,x_axis=energy,y_axis=danceability,
    return(plot_with_hover)
    }
 
-plot_cross(spotify_track_data,2010,energy,danceability,track_name,artist_name)
+hover_plot(spotify_track_data,2010,energy,danceability,track_name,artist_name)
 #tests: does this function return a plotly element
 # what happens for invalid years
 
