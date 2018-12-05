@@ -12,13 +12,14 @@ ui <- shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      textInput("track", "0. Name a track"),
+      textInput("track", "Name a track"),
       htmlOutput("albumImage"),
-      selectInput("selectTrack", label = "3. Select a track", choices = NULL),
-      actionButton("add", label = "Add track"),
-      textInput("artist", "1. Name an artist:"),
-      htmlOutput("artistImage"),
-      selectInput("selectArtist", label = "2. Choose an artist", choices = NULL)
+      # selectInput("selectTrack", label = "3. Select a track", choices = NULL),
+      # textInput("artist", "1. Name an artist:"),
+      # htmlOutput("artistImage"),
+      # selectInput("selectArtist", label = "2. Choose an artist", choices = NULL),
+      checkboxGroupInput("selectTracks", label = "Select tracks", choices = NULL),
+      actionButton("addTracks", label = "Add tracks")
     ),
     
     mainPanel(
@@ -67,24 +68,30 @@ server <- shinyServer(function(input, output, session) {
     tags$img(src = image_url, height = 200, width = 200)
   })
   
-  # Showing image of the first potential Artist match
-  output$artistImage <- renderUI({
-    image_url <- artists()$artist_img[1]
-    tags$img(src = image_url, height = 200, width = 200)
-  })
-  
-  # Updating dropdown manu with potential matches on Track
+  # Updating the checkboxes that lets the user choose tracks 
   observeEvent(input$track, {
     choices <- tracks()$track_name
-    updateSelectInput(session, "selectTrack", choices = choices)
+    artist <- tracks()$artist_name
+    updateCheckboxGroupInput(session = session, inputId = "selectTracks", choices = choices[1:5])
   })
+  
+  # Showing image of the first potential Artist match
+  # output$artistImage <- renderUI({
+  #   image_url <- artists()$artist_img[1]
+  #   tags$img(src = image_url, height = 200, width = 200)
+  # })
+  
+  # Updating dropdown manu with potential matches on Track
+  # observeEvent(input$track, {
+  #   choices <- tracks()$track_name
+  #   updateSelectInput(session, "selectTrack", choices = choices)
+  # })
   
   # Updating dropdown manu with potential matches on Artist
-  observeEvent(input$artist, {
-    choices <- artists()$artist_name
-    updateSelectInput(session, "selectArtist", choices = choices)
-  })
-  
+  # observeEvent(input$artist, {
+  #   choices <- artists()$artist_name
+  #   updateSelectInput(session, "selectArtist", choices = choices)
+  # })
 })
 
 # Run the application 
