@@ -1,19 +1,47 @@
+all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
+
+
 library(shiny)
-# Define UI for application that draws a histogram
+
+
 shinyUI(fluidPage(
-  # Application title
-  titlePanel("Old Faithful Geyser Data"),
-  # Sidebar with a slider input for number of bins
+  titlePanel("musictasteR"),
   sidebarLayout(
     sidebarPanel(
-      sliderInput("bins",
-                  "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
+      sliderInput(
+        "year",
+        "Select a year:",
+        min = 1960,
+        max = 2015,
+        value = 2015,
+        animate = TRUE,
+        round = TRUE,
+        ticks = FALSE,
+        sep = ""
+      ),
+
+      selectInput(
+        "x",
+        label="X Axis",
+        selected = "energy",
+        choices = all_attributes
+      ),
+
+      selectInput(
+        "y",
+        label="Y Axis",
+        selected  = "danceability",
+        choices = all_attributes
+      )
+
     ),
-    # Show a plot of the generated distribution
+
     mainPanel(
-      plotOutput("distPlot")
-    ) )
+
+      plotlyOutput("plot"),
+      verbatimTextOutput("event")
+
+    )
+  )
+
 ))

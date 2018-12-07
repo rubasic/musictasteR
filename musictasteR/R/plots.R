@@ -22,7 +22,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' hover_plot(billboard::spotify_track_data,"1999",energy,danceability,track_name,artist_name,"Charts")
+#' hover.plot(spotify_track_data,"1999",year,energy,danceability,track_name,artist_name,"Charts")
 #' }
 hover.plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
   #enquo all the columns that we need to use
@@ -46,4 +46,40 @@ hover.plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name 
 }
 
 
+#' Hover Plot Shiny
+#'
+#' @description specific function for the shiny app
+#'
+#' @param data a dataframe
+#' @param x the x variable to be displayed in the plot
+#' @param y the y variable to be displayed in the plot
+#' @param chosen_year the year for which we
+#'
+#' @return a plotly plot
+#'
+#' @import dplyr
+#' @import graphics
+#' @import glue
+#' @import plotly
+#' @import ggplot2
+#'
+#' @examples
+#' \dontrun{
+#' hover.plot.shiny(spotify_track_data, input$x,input$y,input$year)
+#' }
+hover.plot.shiny <- function(data,x,y,chosen_year)
+{
+  tracklist <- data %>%
+    filter(year == chosen_year | year == "0" ) %>% select(artist_name,year,track_name,x,y)
 
+  plot <- ggplot(tracklist,x=x,y =y) +
+    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),alpha = 0.5) +
+    ggtitle(glue::glue("Billboard Top 100 musical charts of {chosen_year}")) +
+    theme_minimal() + xlim(0,1) + ylim (0,1)
+
+  hover.plot <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",
+                                                                                                                                                                            font = list(family = "sans serif",
+                                                                                                                                                                                        size = 12,
+                                                                                                                                                                                        color = "black")));
+  return(hover.plot)
+}

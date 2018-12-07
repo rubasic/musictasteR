@@ -1,4 +1,4 @@
-xlibrary(shiny)
+library(shiny)
 library(glue)
 library(tidyverse)
 library(plotly)
@@ -119,7 +119,7 @@ server <- function(input, output,session) {
     "Hover to get information about songs"
     }
     else {
-d
+      d
     }
   })
 
