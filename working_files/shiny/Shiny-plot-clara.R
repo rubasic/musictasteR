@@ -45,18 +45,6 @@ server <- function(input, output) {
   library(stringr)
   library(billboard)
   library(reshape)
-  #function for getting id
-  get_id <- function(track_name, artist_name) {
-    track_name = gsub(' ','%20',gsub("[^[:alnum:][:space:]]",'',track_name))
-    artist_name =gsub(' ','%20',gsub("[^[:alnum:][:space:]]",'',artist_name))
-    api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
-    result <- RETRY('GET', url = api, query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content 
-    try(return(result$tracks$items[[1]]$id))
-    # try(return(result))
-  }
-
-  df <- billboard::spotify_track_data
-   # install.packages("prenoms")
 
   plot_avg <- function(vars, boxplot, timerange) {
     if(boxplot == FALSE) {
