@@ -15,21 +15,11 @@
 #' kid_a <- get_tracks(artist_name = "Radiohead", track_name = "Kid A", return_closest_track = TRUE)
 #' }
 
-get_tracks <- function(track_name, artist_name = NULL, album_name = NULL, return_closest_track = FALSE, access_token = get_spotify_access_token()) {
-  
-  string_search <- track_name
-  
-  if (!is.null(artist_name)) {
-    string_search <- paste(string_search, artist_name)
-  }
-  
-  if (!is.null(album_name)) {
-    string_search <- paste(string_search, album_name)
-  }
+get_tracks <- function(track_name, access_token = get_spotify_access_token()) {
   
   # Search Spotify API for track name
   res <- GET('https://api.spotify.com/v1/search',
-             query = list(q = string_search,
+             query = list(q = track_name,
                           type = 'track',
                           access_token = access_token)
   ) %>% content
@@ -47,13 +37,10 @@ get_tracks <- function(track_name, artist_name = NULL, album_name = NULL, return
         album_name = res[[x]]$album$name,
         album_id = res[[x]]$album$id,
         album_img = res[[x]]$album$images[[1]]$url, # Album image URL
+        release_date = res[[x]]$album$release_date, # Album release date
         track_artist = paste(res[[x]]$name, res[[x]]$artists[[1]]$name, sep = " - ") # Track and artist name, separated by " - "
       )
     })
-    
-    if (return_closest_track == TRUE) {
-      tracks <- slice(tracks, 1)
-    }
     
   } else {
     tracks <- tibble()
