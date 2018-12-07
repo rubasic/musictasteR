@@ -55,11 +55,22 @@ server <- shinyServer(function(input, output, session) {
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
   master_df <- data_frame()
   
+  # Adding tracks to the master data frame 
   observeEvent(input$addTracks, {
+    
+    # Filtering the data frame with track information based on the tracks the user has selected
     filtered_tracks <- tracks() %>% filter(track_artist %in% input$selectTracks)
+    
+    # Removing duplicate tracks  
     filtered_tracks_unique <- subset(filtered_tracks, !duplicated(filtered_tracks[,1]))
+    
+    # Pulling audio features for the selected tracks from Spotify 
     track_features <- get_track_audio_features(tracks(), access_token = access_token)
+    
+    # Merging the track information and the audio features 
     tracks_joined <- left_join(x = filtered_tracks_unique, y = track_features, by = "track_uri")
+    
+    # Adding the merged data frame to the master data frame 
     master_df <<- bind_rows(master_df, tracks_joined)
     
     # Displaying the output data frame
@@ -72,6 +83,9 @@ server <- shinyServer(function(input, output, session) {
   # Clearing the data frame with saved tracks
   observeEvent(input$clearTracks, {
     master_df <<- tibble()
+    
+    # Displaying the output data frame
+    # Remove for final Shiny
     output$masterDF <- renderTable({
       master_df
     })
