@@ -10,11 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(FactoMineR)
+library(cluster)
 ```
 
 Loading Sample Dataset with Features
 ```{r}
-features_sample <- read_csv("~/Documents/R Programming/Group Assignment/rubasic/rubasic/working files/sample_music_features.csv")
+features_sample <- read_csv("~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/150k_sample.csv")
 ```
 
 Studying Dataset -
@@ -26,16 +27,83 @@ features_sample$year <- as.numeric(features_sample$album_year_4dgt)
 features_sample <- features_sample %>% select(-album_year,-album_year_4dgt)
 ```
 
-PCA for features first on 2018-
+Removing NAs in pull and tracks with duration > 30 mins
 ```{r}
-f_2018 <- features_sample %>% filter(year==2017)
+features_sample_proc <- na.omit(features_sample)
 
-res_pca <- PCA(f_2018,quanti.sup = 1, quali.sup = c(2:4,16:19,22:23))
+features_sample_proc <- features_sample_proc %>%
+  filter(duration_ms<1800000)
 ```
 
 Clustering through K-Means
 ```{r}
-clust_features <- kmeans(f_2018,centers=20,iter.max = 1000, nstart = 100)
+cluster_year_k <- function(objet,year_taken,clust_size){
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  clust_features <- kmeans(restr_obj,centers=clust_size,iter.max = 1000, nstart = 100)
+  filter_obj$k_cluster <- paste0(year_taken,"_",clust_features$cluster)
+  return(list(filter_obj,clust_features))
+}
+```
+
+Clustering through HCPC
+```{r}
+cluster_year_hcpc <- function(objet,year_taken,clust_num){
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  clust_features <- HCPC(restr_obj, nb.clust = clust_num, graph = F)
+  filter_obj$hcpc_cluster <- paste0(year_taken,"_",clust_features$data.clust$clust)
+  return(list(filter_obj,clust_features))
+}
+```
+
+
+Clustering through HCPC with pre PCA (2 principal dimensions)
+```{r}
+cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  pca_res <- PCA(restr_obj,ncp=2,graph = F)
+  clust_features <- HCPC(pca_res, nb.clust = clust_num, graph = F)
+  filter_obj$dim_1 <- pca_res$ind$coord[,1]
+  filter_obj$dim_2 <- pca_res$ind$coord[,2]
+  filter_obj$hcpc_pca_cluster <- paste0(year_taken, "_", clust_features$data.clust$clust)
+  return(list(filter_obj,clust_features))
+}
+```
+
+K means clusters database
+```{r}
+min_year <- min(features_sample$year)
+max_year <- max(features_sample$year)
+features_clustered_k <- data.frame()
+model_k_clusters <- list()
+
+for (year in min_year:max_year) {
+    temp <- cluster_year_k(features_sample_proc,year,3)
+    features_clustered_k <- rbind(features_clustered_k,as.data.frame(temp[1]))
+    model_k_clusters <- append(model_k_clusters,temp[2])
+}
+```
+
+
+Garbage testing from here on -
+```{r}
+nums <- unlist(lapply(temp, is.numeric))
+nums["cluster"] <- TRUE
+temp1 <- temp[,nums] %>% select(-X1,-X) %>% group_by(cluster) %>% summarise_all(funs(mean))
+temp[,nums] %>% select(-X1,-X) %>% group_by(cluster) %>% summarise(n=n())
+temp1
+
+ggplot(data=temp) + geom_point(aes(x=dim_1,y=dim_2,colour=cluster))
+```
+
+```{r}
+nums <- unlist(lapply(features_sample, is.numeric))
+temp1 <- features_sample[,nums] %>% select(-X1,-X) %>% filter(year==2010)
+clust_features <- HCPC(temp1, nb.clust=5)
+clust_features$call$t
+clust_features$data.clust
 
 ```
 
