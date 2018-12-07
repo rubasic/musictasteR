@@ -1,4 +1,5 @@
 usethis::use_build_ignore("devtools_history.R")
+usethis::use_build_ignore("trying_out_functions.Rmd")
 options(usethis.full_name = "Clara Dionet")
 usethis::use_mit_license()
 'usethis::use_package("magrittr")
@@ -10,3 +11,4 @@ usethis::use_package("billboard")'
 usethis::use_build_ignore("plot_time_avg.R")
 #devtools::load_all(".")
 usethis::use_pipe
+

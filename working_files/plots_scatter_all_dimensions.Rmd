@@ -48,14 +48,8 @@ billboard::spotify_track_data
 ```
 
 ```{r}
-#install.packages("billboard")
 
 library(billboard)
-#billboard (top music charts dataframe)
-#View(billboard::spotify_track_data)
-
-spotify_track_data
-
 ```
 
 ```{r}
@@ -64,32 +58,34 @@ library(plotly)
 library(magrittr)
 
 
-#plot_cross takes in a year and two dimension and returns a plot of all songs from this year mapped onto the two dimensions
-#the data point added by the user will have year = 0
-hover_plot <- function(database,filtered_year,x_axis=energy,y_axis=danceability,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
+new_hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
   #enquo all the columns that we need to use
   x_axis <- enquo(x_axis)
   y_axis <- enquo(y_axis)
   artist_name <- enquo(artist_name)
   track_name <- enquo(track_name)
+  year_col <- enquo(year_col)
 
-  tracklist <- database %>% filter(year == filtered_year | year == "0" ) %>%
-    select(year,!!artist_name,!!track_name,!!x_axis,!!y_axis)
+  tracklist <- database %>% filter(!!year_col == filtered_year | !!year_col == "0" ) %>%
+    select(!!year_col,!!artist_name,!!track_name,!!x_axis,!!y_axis)
   
+  print(tracklist)
+  
+    plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis,fill=!!year_col))  +
+    geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) +
+    ggtitle(glue::glue("{title}{filtered_year}")) +
+    theme_minimal() +xlim(0,1) + ylim (0,1)
 
-   plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
-    geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) + 
-     ggtitle(glue::glue("{title}{filtered_year}")) + 
-     theme_minimal() +xlim(0,1) + ylim (0,1)
-   
-   plot_with_hover <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
-   
-   return(plot_with_hover)
-   }
 
-hover_plot(spotify_track_data,2010,energy,danceability,track_name,artist_name)
-#tests: does this function return a plotly element
-# what happens for invalid years
+
+
+  plot_with_hover <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
+
+  return(plot_with_hover)
+}
+
+#add error message if year in the wrong range! 
+new_hover_plot(new_database ,"2010",year,energy,danceability,track_name,artist_name,"Charts")
 
 ```
 
@@ -103,11 +99,6 @@ hover_plot(spotify_track_data,2010,energy,danceability,track_name,artist_name)
 #takes in a database and a track, returns a modified database including this track with "new=0" and "year=0"
 add_a_song <- function(database,new_song){
   database_modif <- database
-  #initialize all songs we already know with new = 0
-  database_modif$new <- 0
-  #mark the track we added with a 1 so we can color by this 
-  new_song$new <- 1
-  #set year to zero so we can always see this point 
   new_song$year <- 0
   database_modif <- rbind(database_modif,new_song)
   return(database_modif)
@@ -116,22 +107,8 @@ add_a_song <- function(database,new_song){
 #test track britney
 #put this into a function that takes an existing song out of our database, and then compares the length of the old and new database with each other 
 britney_track <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
-testdb <- add_a_song(spotify_track_data,britney_track)
 
-#compare your song plots plot cross but adds the new track
-compare_your_song <- function(){
-  
-}
-
-
-
-#neuer plot mit modified datenbank
-plot <- ggplot(spotify_track_data_modified[spotify_track_data_modified$year=="1960"|spotify_track_data_modified$year=="0"  ,], aes(energy, danceability)) +
-  geom_point(aes(text = track_name, artist= artist_name, color=new, size = loudness),alpha = 1/3) + theme_minimal() + 
-   xlim(0,1) + ylim (0,1)
-  
-ggplotly(plot, tooltip = c("text", "artist_name","energy","danceability" ))
-
+new_database <- add_a_song(spotify_track_data,britney_track)
 
 
 
