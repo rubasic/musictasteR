@@ -30,9 +30,10 @@ hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name 
   y_axis <- enquo(y_axis)
   artist_name <- enquo(artist_name)
   track_name <- enquo(track_name)
+  year_col <- enquo(year_col)
 
-  tracklist <- database %>% filter(year_col == filtered_year | year_col == "0" ) %>%
-    select(year_col,!!artist_name,!!track_name,!!x_axis,!!y_axis)
+  tracklist <- database %>% filter(!!year_col == filtered_year | !!year_col == "0" ) %>%
+    select(!!year_col,!!artist_name,!!track_name,!!x_axis,!!y_axis)
 
   plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
     geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) +
@@ -43,3 +44,6 @@ hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name 
 
   return(plot_with_hover)
 }
+
+
+

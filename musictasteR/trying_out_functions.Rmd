@@ -1,0 +1,52 @@
+---
+title: "trying_out_functions"
+author: "Roberta Conrad"
+date: "7 12 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library(musictasteR)
+??musictasteR
+?hover_plot
+data <- billboard::spotify_track_data
+hover_plot(billboard::spotify_track_data,"1999",year,energy,danceability,track_name,artist_name,"Charts")
+billboard::spotify_track_data
+
+
+
+new_hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
+  #enquo all the columns that we need to use
+  x_axis <- enquo(x_axis)
+  y_axis <- enquo(y_axis)
+  artist_name <- enquo(artist_name)
+  track_name <- enquo(track_name)
+  year_col <- enquo(year_col)
+
+  tracklist <- database %>% filter(!!year_col == filtered_year | !!year_col == "0" ) %>%
+    select(!!year_col,!!artist_name,!!track_name,!!x_axis,!!y_axis)
+
+  plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  +
+    geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) +
+    ggtitle(glue::glue("{title}{filtered_year}")) +
+    theme_minimal() +xlim(0,1) + ylim (0,1)
+
+  plot_with_hover <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
+
+  return(plot_with_hover)
+}
+
+```
+#helper functions
+
+```{r}
+
+
+```
+
+

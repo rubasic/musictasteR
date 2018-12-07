@@ -308,8 +308,9 @@ tracks <- map_df(seq_len(length(track_res)), function(x) {
                 track_uri =track_res[[x]]$uri,
                 artist_name = track_res[[x]]$artists[[1]]$name,
                 artist_uri = track_res[[x]]$artists[[1]]$id
-          )
-        })
+                )
+        }
+        )
 ```
 
 Script that searches by year based on one letter string with wildcard  

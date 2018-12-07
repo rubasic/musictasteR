@@ -1,0 +1,111 @@
+---
+title: "Untitled"
+output: html_document
+---
+```{r}
+library(spotifyr)
+library(dplyr)
+library(tidyverse)
+library(httr)
+library(purrr)
+library(readxl)
+library(fossil)
+library(FactoMineR)
+library(corrplot)
+library(factoextra)
+library(gridExtra)
+library(cluster)
+library(Hmisc)
+library(billboard)
+```
+
+
+```{r pressure, echo=FALSE}
+df <- read_csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/150k_sample.csv')
+df <- df[!is.na(df$key),]
+billboard_df <- billboard::spotify_track_data
+# Hmisc::describe(df)
+
+# df_dedup %>% group_by(track_name, artist_name) %>% summarise(cnt=n()) %>% arrange(desc(cnt))
+
+```
+
+```{r}
+colnames(df)
+
+summary_df <- df %>% group_by(album_year_4dgt) %>% 
+  summarise(danceability_avg=mean(danceability),
+energy_avg=mean(energy),
+key_avg=mean(key),
+loudness_avg=mean(loudness),
+mode_avg=mean(mode),
+speechiness_avg=mean(speechiness),
+acousticness_avg=mean(acousticness),
+instrumentalness_avg=mean(instrumentalness),
+liveness_avg=mean(liveness),
+valence_avg=mean(valence),
+tempo_avg=mean(tempo)
+)
+write.csv(summary_df, '/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/avg_across_years_summary.csv')
+```
+
+```{r}
+#logistic regression code
+# colnames(billboard_df)
+# billboard_test <- billboard_df %>% filter(year == 1960)
+# df_test <- df %>% filter(album_year_4dgt == 1960)
+# df_test2 <- df_test[c("track_uri","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+# colnames(df_test2)[1] <- "track_id"
+# df_test2["top_or_not"] <- 0
+# billboard_test2 <- billboard_test[c("track_id","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+# billboard_test2["top_or_not"] <- 1
+# df_test2
+# full_test <- rbind(df_test2,billboard_test2)
+# res <- glm(top_or_not~.,family=binomial(link='logit'),data=full_test[-c(1)])
+# summary(res)
+
+#prepare large dataframes, algin columns 
+df_edit <- df[c("track_uri","album_year_4dgt","track_name", "artist_name", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+colnames(df_edit)[1] <- "track_id"
+colnames(df_edit)[2] <- "year"
+billboard_edit <- billboard_df[c("track_id","year","track_name", "artist_name", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+colnames(df_edit)
+colnames(billboard_edit)
+
+
+head(df_edit) <- df_edit %>% filter(year == 1960)
+
+
+#define function that runs regression
+run_l_reg <-function(billboard_df, non_billboard_df) {
+  full_test <- rbind(billboard_df,non_billboard_df)
+  # print(dim(non_billboard_df))
+  # print(paste("original dataframe length:",dim(full_test)[1]))
+  #dedup on track name and artist
+  full_test <- full_test[!(duplicated(full_test$track_name)& duplicated(full_test$artist_name)), ]
+  # print(paste("reduced dataframe length:",dim(full_test)[1]))
+  res <- glm(top_or_not~.,family=binomial(link='logit'),data=full_test[-c(1:4)])
+  summary <- summary(res)
+  return(summary)
+}
+
+all_results <- list()
+for (year_input in 1960:2015) {
+  billboard_test <- billboard_edit %>% filter(year == year_input)
+  billboard_test["top_or_not"] <- 1
+  non_billboard_test <- df_edit %>% filter(year == year_input)
+  non_billboard_test["top_or_not"] <- 0
+  # print(dim(billboard_test)[1])
+  # print(dim(non_billboard_test)[1])
+  result <- run_l_reg(billboard_test, non_billboard_test)
+  all_results[[paste0('year', as.character(year_input))]] <- result
+}
+
+```
+
+```{r}
+
+for (i in all_results) {
+  all_results[i] <- 
+}
+```
