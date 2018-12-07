@@ -23,6 +23,7 @@ ui <- shinyUI(fluidPage(
       textOutput("count"),
       textOutput("class"),
       textOutput("length"),
+      textOutput("dim"),
       actionButton("clearTracks", label = "Clear tracks")
       
       ## ELEMENTS RELATED TO ARTIST SEARCH
@@ -36,7 +37,8 @@ ui <- shinyUI(fluidPage(
       # tableOutput("artistTable"),
       tableOutput("trackTable"),
       # tableOutput("savedTable")
-      tableOutput("tempTable")
+      tableOutput("tempTable"),
+      tableOutput("tempDf")
     )
   )
 ))
@@ -71,7 +73,7 @@ server <- shinyServer(function(input, output, session) {
   
   # Updating the checkboxes that lets the user choose tracks 
   observeEvent(input$track, {
-    choices <- paste(tracks()$track_name, " - ", tracks()$artist_name)
+    choices <- paste(tracks()$track_name, tracks()$artist_name, sep = " - ")
     updateCheckboxGroupInput(
       session = session, inputId = "selectTracks", 
       choices = choices[1:5])
@@ -81,16 +83,36 @@ server <- shinyServer(function(input, output, session) {
   
   # Saving the selected tracks to a dataframe 
   temp <- c()
+  temp_df <- c()
+  
   observeEvent(input$addTracks, {
     for(i in 1:length(input$selectTracks))
       temp <<- rbind(temp, input$selectTracks[i])
     output$tempTable <- renderTable({
       temp
     })
+    
+    # selectedT <- input$selectTracks
+    # 
+    # vec <- as.vector(input$selectTracks)
+    # temp_df <- data_frame()
+    # tt <- tracks() %>% filter(track_artist==selectedT[1])
+    
+    tt <- tracks() %>% filter(track_artist %in% input$selectTracks) 
+    tt <- subset(tt, !duplicated(tt[,1]))
+    
+    
+    # for(i in 1:length(input$selectTracks)) {
+    #     tt <- tracks() %>% filter(track_artist %in% input$selectTracks)
+    #     # temp_df <<- rbind(temp_df, tt)
+    # }
+    
+    output$tempDf <- renderTable({
+      tt
+    })
   })
   
-  # Adding chosen tracks to the master dataframe 
-  master_df <- data_frame()
+  
   
   
   # Clearing the dataframe with saved tracks
@@ -102,12 +124,20 @@ server <- shinyServer(function(input, output, session) {
     
   })
   
+  # Filtering tracks from the Spotify output (keeping the tracks the user selects)
+  observeEvent(input$addTracks, {
+    
+  })
+  
+  # Adding chosen tracks to the master dataframe 
+  master_df <- data_frame()
+  
   # Output used for debugging and testing
   observeEvent(input$selectTracks, {
     selected <<- input$selectTracks
     
     output$count <- renderText({
-      selected
+      selected[1]
     })
     
     output$class <- renderText({
@@ -116,6 +146,10 @@ server <- shinyServer(function(input, output, session) {
     
     output$length <- renderText({
       length(input$selectTracks)
+    })
+    
+    output$dim <- renderText({
+      dim(selected)
     })
   })
   
