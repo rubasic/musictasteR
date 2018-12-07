@@ -33,6 +33,6 @@ Hover Plot
 }
 \examples{
 \dontrun{
-hover_plot(billboard::spotify_track_data,"1999",energy,danceability,track_name,artist_name,"Charts")
+hover.plot(spotify_track_data,"1999",year,energy,danceability,track_name,artist_name,"Charts")
 }
 }
