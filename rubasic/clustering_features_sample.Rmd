@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+set.seed(333)
+
 library(tidyverse)
 library(FactoMineR)
 library(cluster)
@@ -86,9 +88,47 @@ for (year in min_year:max_year) {
 }
 ```
 
+HCPC clusters database
+```{r}
+features_clustered_hcpc <- data.frame()
+model_hcpc_clusters <- list()
+    
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc(features_sample_proc,year,3)
+    features_clustered_hcpc <- rbind(features_clustered_hcpc,as.data.frame(temp[1]))
+    model_hcpc_clusters <- append(model_hcpc_clusters,temp[2])
+}
+```
+
+HCPC with pre PCA clusters database
+```{r}
+features_clustered_hcpc_pca <- data.frame()
+model_hcpc_pca_clusters <- list()
+    
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc_pca(features_sample_proc,year,3)
+    features_clustered_hcpc_pca <- rbind(features_clustered_hcpc_pca,as.data.frame(temp[1]))
+    model_hcpc_pca_clusters <- append(model_hcpc_pca_clusters,temp[2])
+}
+```
+
+Combination of Cluster databases
+```{r}
+combined_clusters <- features_clustered_hcpc_pca
+combined_clusters$hcpc_cluster <- features_clustered_hcpc$hcpc_cluster
+combined_clusters$k_cluster <- features_clustered_k$k_cluster
+
+#Output
+write_csv(combined_clusters,'~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/150K_samples_clustered.csv')
+```
+
 
 Garbage testing from here on -
 ```{r}
+
+temp <- cluster_year_hcpc_pca(features_sample_proc,2008,3)
+temp1 <- as.data.frame(temp[1])
+
 nums <- unlist(lapply(temp, is.numeric))
 nums["cluster"] <- TRUE
 temp1 <- temp[,nums] %>% select(-X1,-X) %>% group_by(cluster) %>% summarise_all(funs(mean))
