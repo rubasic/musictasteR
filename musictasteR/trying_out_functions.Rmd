@@ -10,12 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r cars}
+```{r}
 library(musictasteR)
 ??musictasteR
 ?hover_plot
 data <- billboard::spotify_track_data
 hover_plot(billboard::spotify_track_data,"1999",year,energy,danceability,track_name,artist_name,"Charts")
+
 billboard::spotify_track_data
 
 

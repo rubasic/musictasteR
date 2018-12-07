@@ -11,4 +11,3 @@ usethis::use_package("billboard")'
 usethis::use_build_ignore("plot_time_avg.R")
 #devtools::load_all(".")
 usethis::use_pipe
-

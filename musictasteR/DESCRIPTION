@@ -42,4 +42,5 @@ Imports:
     spotifyr,
     billboard,
     plotly,
-    glue
+    glue,
+    shiny

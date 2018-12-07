@@ -24,7 +24,7 @@
 #' \dontrun{
 #' hover_plot(billboard::spotify_track_data,"1999",energy,danceability,track_name,artist_name,"Charts")
 #' }
-hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
+hover.plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name = track_name, artist_name = artist_name,title="Billboard Top 100 musical charts of "){
   #enquo all the columns that we need to use
   x_axis <- enquo(x_axis)
   y_axis <- enquo(y_axis)
@@ -40,9 +40,9 @@ hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_name 
     ggtitle(glue::glue("{title}{filtered_year}")) +
     theme_minimal() +xlim(0,1) + ylim (0,1)
 
-  plot_with_hover <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
+  plot.with.hover <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
 
-  return(plot_with_hover)
+  return(plot.with.hover)
 }
 
 
