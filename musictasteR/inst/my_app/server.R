@@ -1,5 +1,11 @@
 
-a <- function(data,x,y,chosen_year)
+
+library(plotly)
+library(shiny)
+library(ggplot2)
+library(billboard)
+
+hover.plot.shiny <- function(data,x,y,chosen_year)
 {
   tracklist <- data %>%
     filter(year == chosen_year | year == "0" ) %>% select(artist_name,year,track_name,x,y)
@@ -17,14 +23,10 @@ a <- function(data,x,y,chosen_year)
 }
 
 
-
-
-library(shiny)
-
 shinyServer(function(input, output,session) {
 
   output$plot <- renderPlotly({
-    a(spotify_track_data, input$x,input$y,input$year)
+    p <- hover.plot.shiny(spotify_track_data, input$x,input$y,input$year)
   })
 
   output$event <- renderPrint({
