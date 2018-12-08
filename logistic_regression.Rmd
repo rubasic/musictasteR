@@ -26,11 +26,14 @@ df <- df[!is.na(df$key),]
 billboard_df <- billboard::spotify_track_data
 # Hmisc::describe(df)
 
-# df_dedup %>% group_by(track_name, artist_name) %>% summarise(cnt=n()) %>% arrange(desc(cnt))
+df %>% group_by(album_year_4dgt, artist_name) %>% summarise(cnt=n()) %>% arrange(desc(cnt))
 
 ```
 
 ```{r}
+
+#sumary csv
+
 colnames(df)
 
 summary_df <- df %>% group_by(album_year_4dgt) %>% 
@@ -50,19 +53,6 @@ write.csv(summary_df, '/Users/miraekim/workspace/coursework/map535r/rubasic/work
 ```
 
 ```{r}
-#logistic regression code
-# colnames(billboard_df)
-# billboard_test <- billboard_df %>% filter(year == 1960)
-# df_test <- df %>% filter(album_year_4dgt == 1960)
-# df_test2 <- df_test[c("track_uri","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
-# colnames(df_test2)[1] <- "track_id"
-# df_test2["top_or_not"] <- 0
-# billboard_test2 <- billboard_test[c("track_id","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
-# billboard_test2["top_or_not"] <- 1
-# df_test2
-# full_test <- rbind(df_test2,billboard_test2)
-# res <- glm(top_or_not~.,family=binomial(link='logit'),data=full_test[-c(1)])
-# summary(res)
 
 #prepare large dataframes, algin columns 
 df_edit <- df[c("track_uri","album_year_4dgt","track_name", "artist_name", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
@@ -71,9 +61,6 @@ colnames(df_edit)[2] <- "year"
 billboard_edit <- billboard_df[c("track_id","year","track_name", "artist_name", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
 colnames(df_edit)
 colnames(billboard_edit)
-
-
-head(df_edit) <- df_edit %>% filter(year == 1960)
 
 
 #define function that runs regression
@@ -85,12 +72,20 @@ run_l_reg <-function(billboard_df, non_billboard_df) {
   full_test <- full_test[!(duplicated(full_test$track_name)& duplicated(full_test$artist_name)), ]
   # print(paste("reduced dataframe length:",dim(full_test)[1]))
   res <- glm(top_or_not~.,family=binomial(link='logit'),data=full_test[-c(1:4)])
-  summary <- summary(res)
-  return(summary)
+  aic <- stepAIC(res,direction="both",k=3,trace = FALSE)
+  res2 <- glm(aic$model,family=binomial(link='logit'),data=full_test[-c(1:4)])
+  anova_res <- anova(update(res2, ~1), res2, test='LR')
+  # print(anova_res$`Pr(>Chi)`)
+  # print(anova_res)
+  return(list(aic, anova_res$`Pr(>Chi)`))
+  # summary <- summary(res)
 }
 
 all_results <- list()
+anova_list <- list()
 for (year_input in 1960:2015) {
+# for (year_input in 1960:1960) {
+  print(year_input)
   billboard_test <- billboard_edit %>% filter(year == year_input)
   billboard_test["top_or_not"] <- 1
   non_billboard_test <- df_edit %>% filter(year == year_input)
@@ -98,14 +93,63 @@ for (year_input in 1960:2015) {
   # print(dim(billboard_test)[1])
   # print(dim(non_billboard_test)[1])
   result <- run_l_reg(billboard_test, non_billboard_test)
-  all_results[[paste0('year', as.character(year_input))]] <- result
+  all_results[[paste0('year', as.character(year_input))]] <- result[1]
+  anova_list[[paste0('year', as.character(year_input))]] <- result[2]
 }
 
+anova_list
 ```
 
 ```{r}
 
-for (i in all_results) {
-  all_results[i] <- 
+
+names(all_results)
+summary(all_results$year1960[[1]])
+sort(unlist(anova_list))
+
+#look at one year
+billboard_test <- billboard_df %>% filter(year == 1969)
+df_test <- df %>% filter(album_year_4dgt == 1969)
+df_test2 <- df_test[c("track_uri","track_name","artist_name","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+colnames(df_test2)[1] <- "track_id"
+df_test2["top_or_not"] <- 0
+billboard_test2 <- billboard_test[c("track_id","track_name","artist_name","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+billboard_test2["top_or_not"] <- 1
+
+colnames(df_test2)
+colnames(billboard_test2)
+
+full_test <- rbind(df_test2,billboard_test2)
+
+full_test
+
+library(MASS)
+res1 <- glm(top_or_not~.,family=binomial(link='logit'),data=full_test[-c(1:4)])
+aic <- stepAIC(res,direction="both",trace = FALSE)
+summary(aic)
+res2 <- glm(aic$model,family=binomial(link='logit'),data=full_test[-c(1:4)])
+summary(res2)
+an <- anova(update(res2,~1), res2, test = "LR")
+an$`Pr(>Chi)`
+anova(res2)
+
+res <- glm(top_or_not~speechiness+acousticness+instrumentalness+valence,family=binomial(link='logit'),data=full_test[-c(1:4)])
+summary(res)
+glm(top_or_not~,family=binomial(link='logit'),data=full_test[-c(1:4)])
+
+
+
+stepAIC(,direction="backward",trace = FALSE)
+step.model <- all_results$year1960 %>% stepAIC(trace = FALSE)
+coef(step.model)
+
+
+for (model_year in names(all_results)) {
+  model_output <- all_results$model_year
+  model <- model_output$model_year
+  result <- glm(model,family=binomial(link='logit'),data=full_test[-c(1:4)])
+  summary(result)
+  anova(res2, res1, test = "LR")
+  break
 }
 ```
