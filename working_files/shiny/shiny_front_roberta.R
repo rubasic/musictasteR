@@ -10,7 +10,6 @@ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Spee
 
 ui <- fluidPage(
   includeCSS("www/styles.css"),
- # setBackgroundImage(src = "www/music_photo.jpg"),
 
 
   titlePanel("Analyze your song"),
@@ -66,7 +65,6 @@ ui <- fluidPage(
   )
 
 
-<- <- <-
 
 server <- function(input, output,session) {
 
