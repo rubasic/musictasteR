@@ -1,0 +1,31 @@
+* installing *source* package 'musictasteR' ...
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+Warning: replacing previous import 'dplyr::collapse' by 'glue::collapse' when loading 'musictasteR'
+Warning: replacing previous import 'graphics::layout' by 'plotly::layout' when loading 'musictasteR'
+Warning: replacing previous import 'ggplot2::last_plot' by 'plotly::last_plot' when loading 'musictasteR'
+[32m<U+2714>[39m Setting active project to [34m'C:/Users/jlund/Documents/R/RforDS/rubasicc/rubasic/musictasteR.Rcheck/00_pkg_src/musictasteR'[39m
+[32m<U+2714>[39m Adding [34m'^devtools_history\\.R$'[39m to [34m'.Rbuildignore'[39m
+[32m<U+2714>[39m Adding [34m'^trying_out_functions\\.Rmd$'[39m to [34m'.Rbuildignore'[39m
+[32m<U+2714>[39m Adding [34m'^temp\\.R$'[39m to [34m'.Rbuildignore'[39m
+[32m<U+2714>[39m Adding [34m'^averagesongs-data$'[39m to [34m'.Rbuildignore'[39m
+[32m<U+2714>[39m Adding [34m'^data/averagesongs$'[39m to [34m'.Rbuildignore'[39m
+[32m<U+2714>[39m Writing [34m'LICENSE.md'[39m
+[32m<U+2714>[39m Adding [34m'^LICENSE\\.md$'[39m to [34m'.Rbuildignore'[39m
+[32m<U+2714>[39m Adding [34m'^plot_time_avg\\.R$'[39m to [34m'.Rbuildignore'[39m
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+*** arch - i386
+Warning: replacing previous import 'dplyr::collapse' by 'glue::collapse' when loading 'musictasteR'
+Warning: replacing previous import 'graphics::layout' by 'plotly::layout' when loading 'musictasteR'
+Warning: replacing previous import 'ggplot2::last_plot' by 'plotly::last_plot' when loading 'musictasteR'
+*** arch - x64
+Warning: replacing previous import 'dplyr::collapse' by 'glue::collapse' when loading 'musictasteR'
+Warning: replacing previous import 'graphics::layout' by 'plotly::layout' when loading 'musictasteR'
+Warning: replacing previous import 'ggplot2::last_plot' by 'plotly::last_plot' when loading 'musictasteR'
+* DONE (musictasteR)
+In R CMD INSTALL
