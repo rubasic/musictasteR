@@ -4,6 +4,7 @@ output: html_document
 ---
 ```{r}
 library(spotifyr)
+library(plotly)
 library(dplyr)
 library(tidyverse)
 library(httr)
@@ -17,10 +18,18 @@ library(gridExtra)
 library(cluster)
 library(Hmisc)
 library(billboard)
+library(MASS)
+library(musictasteR)
 ```
 
 
 ```{r pressure, echo=FALSE}
+
+Sys.setenv(SPOTIFY_CLIENT_ID = '76b887bef35c47c3a2f163b4ef96ad06')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '14a6cf275d804cd5983ac7a3a7b1531a')
+
+access_token <- get_spotify_access_token()
+
 df <- read_csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/150k_sample.csv')
 df <- df[!is.na(df$key),]
 billboard_df <- billboard::spotify_track_data
@@ -116,32 +125,120 @@ df_test2["top_or_not"] <- 0
 billboard_test2 <- billboard_test[c("track_id","track_name","artist_name","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
 billboard_test2["top_or_not"] <- 1
 
+#double check col names before combining the dfs
 colnames(df_test2)
 colnames(billboard_test2)
 
 full_test <- rbind(df_test2,billboard_test2)
 
-full_test
-
-library(MASS)
+#full model
 res1 <- glm(top_or_not~.,family=binomial(link='logit'),data=full_test[-c(1:4)])
+
+#step wise to calibrate model
 aic <- stepAIC(res,direction="both",trace = FALSE)
+
+#check results
 summary(aic)
+
+#best aic model
 res2 <- glm(aic$model,family=binomial(link='logit'),data=full_test[-c(1:4)])
-summary(res2)
+
+#anova test to check significance
 an <- anova(update(res2,~1), res2, test = "LR")
-an$`Pr(>Chi)`
-anova(res2)
 
-res <- glm(top_or_not~speechiness+acousticness+instrumentalness+valence,family=binomial(link='logit'),data=full_test[-c(1:4)])
-summary(res)
-glm(top_or_not~,family=binomial(link='logit'),data=full_test[-c(1:4)])
+track_uri='3MjUtNVVq3C8Fn0MP3zhXa'
+audio_features_api <- str_glue('https://api.spotify.com/v1/audio-features/{track_uri}')
+access_token <- get_spotify_access_token()
+analysis_result <- safely(make_api_call)(audio_features_api,access_token)
+clean_up(analysis_result)
+analysis_result$result$danceability
 
+clean_up <- function(input) {
+                list(
+                  track_name = final_list_filtered[[x]]["track_name"],
+                  track_uri = final_list_filtered[[x]]["track_uri"],
+                  album_name = final_list_filtered[[x]]["album_name"],
+                  album_year = final_list_filtered[[x]]["album_year"],
+                  album_year_4dgt = final_list_filtered[[x]]["album_year_4dgt"],
+                  danceability = input$result$danceability,
+                  energy = input$result$energy,
+                  key = input$result$key,
+                  loudness = input$result$loudness,
+                  mode = input$result$mode,
+                  speechiness = input$result$speechiness,
+                  acousticness = input$result$acousticness,
+                  instrumentalness = input$result$instrumentalness,
+                  liveness = input$result$liveness,
+                  valence = input$result$valence,
+                  tempo = input$result$tempo
+                  # uri = final_list_filtered[[x]]["uri"],
+                  # track_href = final_list_filtered[[x]]["track_href"],
+                  # analysis_url = final_list_filtered[[x]]["analysis_url"],
+                  # duration_ms = final_list_filtered[[x]]["duration_ms"],
+                  # time_signature = final_list_filtered[[x]]["time_signature"],
+                  # artist_name = final_list_filtered[[x]]["artist_name"],
+                  # artist_id = final_list_filtered[[x]]["artist_uri"]
+                )}
 
+massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
+                list(
+                  track_name = final_list_filtered[[x]]["track_name"],
+                  track_uri = final_list_filtered[[x]]["track_uri"],
+                  album_name = final_list_filtered[[x]]["album_name"],
+                  album_year = final_list_filtered[[x]]["album_year"],
+                  album_year_4dgt = final_list_filtered[[x]]["album_year_4dgt"],
+                  danceability = final_list_filtered[[x]]["danceability"],
+                  energy = final_list_filtered[[x]]["energy"],
+                  key = final_list_filtered[[x]]["key"],
+                  loudness = final_list_filtered[[x]]["loudness"],
+                  mode = final_list_filtered[[x]]["mode"],
+                  speechiness = final_list_filtered[[x]]["speechiness"],
+                  acousticness = final_list_filtered[[x]]["acousticness"],
+                  instrumentalness = final_list_filtered[[x]]["instrumentalness"],
+                  liveness = final_list_filtered[[x]]["liveness"],
+                  valence = final_list_filtered[[x]]["valence"],
+                  tempo = final_list_filtered[[x]]["tempo"],
+                  type = final_list_filtered[[x]]["type"],
+                  uri = final_list_filtered[[x]]["uri"],
+                  track_href = final_list_filtered[[x]]["track_href"],
+                  analysis_url = final_list_filtered[[x]]["analysis_url"],
+                  duration_ms = final_list_filtered[[x]]["duration_ms"],
+                  time_signature = final_list_filtered[[x]]["time_signature"],
+                  artist_name = final_list_filtered[[x]]["artist_name"],
+                  artist_id = final_list_filtered[[x]]["artist_uri"]
+                )})
+    
+    
+predict(reg.logit1,newdata=new_d,type="response")
 
-stepAIC(,direction="backward",trace = FALSE)
-step.model <- all_results$year1960 %>% stepAIC(trace = FALSE)
-coef(step.model)
+make_api_call <- function(audio_features_api,access_token) {
+  analysis_result_call <- safely(RETRY)('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) 
+  if (is.null(analysis_result_call$result)) {
+    print("ERROR in call for audio features")
+    print(analysis_result_call$error)
+  } else {
+  analysis_result <- analysis_result_call$result %>% content
+  track_href <- analysis_result$track_href
+  analysis_result <- analysis_result[c('danceability',
+                                       'energy',
+                                       'key',
+                                       'loudness',
+                                       'mode',
+                                       'speechiness',
+                                       'acousticness',
+                                       'instrumentalness',
+                                       'liveness',
+                                       'valence',
+                                       'tempo',
+                                       'type',
+                                       'uri',
+                                       'track_href',
+                                       'analysis_url',
+                                       'duration_ms',
+                                       'time_signature')]
+  return(analysis_result)
+  }
+}
 
 
 for (model_year in names(all_results)) {
