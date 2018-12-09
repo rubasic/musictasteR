@@ -8,12 +8,48 @@ library(spotifyr)
 library(tidyverse)
 library(httr)
 
+#in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
+music_dataframe <- spotify_track_data
+
+add.a.song <- function(database,song){
+  print(song)
+  new_song <- spotify_track_data[1,]
+  new_song[1,] <- ""
+  new_song$artist_name <- song$track_artist_name
+  new_song$track_name <- song$artist_name
+  new_song$danceability <- song$danceability
+  new_song$energy <- song$energy
+  new_song$key <- song$key
+  new_song$loudness <- song$loudness
+  new_song$mode <- song$mode
+  new_song$speechiness<- song$speechiness
+  new_song$acousticness <- song$acousticness
+  new_song$instrumentalness <- song$instrumentalness
+  new_song$liveness <- song$liveness
+  new_song$valence <- song$valence
+  new_song$tempo <- song$tempo
+  new_song$year <- "your song"
+  #new_song$real_year <- substr(song$release_date, 1, 4)
+
+
+
+  #we copy the database we have into a new dataframe
+  database_modif <- database
+  #collect the characteristics that we need
+  #new_song$year <- 0
+  #new_song_new_order <- new_song[,c(2,1)]
+  database_modif <- rbind(database_modif,new_song)
+  print("succesfully added a song")
+  #View(database_modif)
+  return(database_modif)
+}
+
 hover.plot.shiny <- function(data,x,y,chosen_year)
 {
   tracklist <- data %>%
-    filter(year == chosen_year | year == "0" ) %>% select(artist_name,year,track_name,x,y)
+    filter(year == chosen_year | year == "your song" ) %>% select(artist_name,year,track_name,x,y)
 
-  plot <- ggplot(tracklist,x=x,y =y) +
+  plot <- ggplot(tracklist,x=x,y=y,fill= as.factor(year_col)) + guides(fill= "none") +
     geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),alpha = 0.5) +
     ggtitle(glue::glue("Billboard Top 100 musical charts of {chosen_year}")) +
     theme_minimal() + xlim(0,1) + ylim (0,1)
@@ -65,7 +101,8 @@ get_tracks_artists <- function(track_artist_name, access_token = get_spotify_acc
 
 shinyServer(function(input, output,session) {
 
-  # ## JORGEN ADDING SHIT
+##SEARCH FUNCTION
+
   # Get Spotify access token
   Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
   Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
@@ -91,8 +128,9 @@ shinyServer(function(input, output,session) {
     updateCheckboxGroupInput(
       session = session, inputId = "selectTracks",
       choices = choices[1:5])
-  })
 
+
+  })
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
   master_df <- data_frame()
 
@@ -119,7 +157,14 @@ shinyServer(function(input, output,session) {
     output$masterDF <- renderTable({
       master_df
     })
-    print(master_df)
+    #View(master_df)
+    #call plot to update
+    dataframe_with_new_music <- add.a.song(music_dataframe,master_df)
+
+    reactive.data <- reactiveValues(
+      newmusic = dataframe_with_new_music
+    )
+
   })
 
   # Clearing the data frame with saved tracks
@@ -132,13 +177,14 @@ shinyServer(function(input, output,session) {
       master_df
     })
   })
-  # ## JORGEN DONE ADDING SHIT
+##END OF SEARCH FUNCTION
 
   output$plot <- renderPlotly({
-    p <- hover.plot.shiny(spotify_track_data, input$x,input$y,input$year)
+    p <- hover.plot.shiny(music_dataframe, input$x,input$y,input$year)
   })
 
-  output$event <- renderPrint({
+
+ ' output$event <- renderPrint({
     d <- event_data("plotly_hover")
     if (is.null(d)) {
       "Hover to get information about songs"
@@ -146,7 +192,7 @@ shinyServer(function(input, output,session) {
     else {
       d
     }
-  })
+  })'
 
 })
 

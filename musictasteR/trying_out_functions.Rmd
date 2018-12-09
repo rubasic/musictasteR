@@ -15,7 +15,8 @@ library(musictasteR)
 ??musictasteR
 ?hover_plot
 data <- billboard::spotify_track_data
-hover_plot(billboard::spotify_track_data,"1999",year,energy,danceability,track_name,artist_name,"Charts")
+
+hover.plot(billboard::spotify_track_data,"1999",year,energy,danceability,track_name,artist_name,"Charts")
 
 billboard::spotify_track_data
 
@@ -43,11 +44,38 @@ new_hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_n
 }
 
 ```
-#helper functions
+
 
 ```{r}
+apple = tibble(x = 1:3, y = list(1,2,3))
+changed_order = apple[,c(2,1)]
+colnames(britney_track)
+new_col = data.frame(a = 1:23)[, "a", drop = TRUE]
+colnames(new_col) <- colnames(britney_track)
+is(spotify_track_data)
 
+new_song <- spotify_track_data[1,]
+new_song[1,] <- ""
+new_song$artist_name <- song$track_artist_name
+new_song$track_name <- song$artist_name
+new_song$danceability <- song$danceability
+new_song$energy <- song$energy
+new_song$key <- song$key
+new_song$loudness <- song$loudness
+new_song$mode <- song$mode
+new_song$speechiness<- song$speechiness
+new_song$acousticness <- song$acousticness
+new_song$instrumentalness <- song$instrumentalness
+new_song$liveness <- song$liveness
+new_song$valence <- song$valence
+new_song$tempo <- song$tempo
+new_song$year <- 0
+#new_song$year <- substr(song$release_date, 1, 4)
 
+#release date needs to be turned into year
+a="2015-05-26"
+substr(a, 1, 4)
+```
 ```
 
 

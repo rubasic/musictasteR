@@ -12,8 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 #install the following libraries
 #devtools::install_github('charlie86/spotifyr')
-install.packages('spotifyr')
-install.packages("billboard")
+#install.packages('spotifyr')
+#install.packages("billboard")
 
 library(spotifyr)
 library(dplyr)
@@ -62,7 +62,7 @@ library(billboard)
 #takes in a database and a track, returns a modified database including this track with "new=0" and "year=0"
 add_a_song <- function(database,new_song){
   database_modif <- database
-  new_song$year <- 0
+  new_song$year <- "your song"
   database_modif <- rbind(database_modif,new_song)
   return(database_modif)
 }
@@ -83,11 +83,11 @@ new_hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_n
   track_name <- enquo(track_name)
   year_col <- enquo(year_col)
 
-  tracklist <- database %>% filter(!!year_col == filtered_year | !!year_col == "0" ) %>%
+  tracklist <- database %>% filter(!!year_col == filtered_year | !!year_col == "your song" ) %>%
     select(!!year_col,!!artist_name,!!track_name,!!x_axis,!!y_axis)
   
   
-    plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis,fill=!!year_col))  + guides(fill= "none") + 
+    plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis,fill= as.factor(!!year_col) ))  + guides(fill= "none") + 
     geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) +  
     ggtitle(glue::glue("{title}{filtered_year}")) +
     theme_minimal() +xlim(0,1) + ylim (0,1)
@@ -95,8 +95,9 @@ new_hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_n
 
 
 
-  plot_with_hover <- ggplotly(plot) %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
-
+  plot_with_hover <- ggplotly(plot)
+'  %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",font = list(family = "sans serif",size = 12, color = "black")))
+'
   return(plot_with_hover)
 }
 
