@@ -27,23 +27,17 @@ Depends: R (>= 3.5.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Suggests: 
-    testthat,
-    knitr,
-    rmarkdown
+Suggests: testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
-Imports: 
-    magrittr,
-    reshape,
-    dplyr,
-    ggplot2,
-    stats,
-    spotifyr,
-    billboard,
-    plotly,
-    glue,
-    shiny,
-    purrr,
-    httr,
-    stringr
+Imports: magrittr, reshape, dplyr, ggplot2, stats, spotifyr, billboard,
+        plotly, glue, shiny, purrr, httr, stringr
+NeedsCompilation: no
+Packaged: 2018-12-09 20:19:10 UTC; jlund
+Author: Roberta Conrad [aut, cre],
+  Clara Dionet [aut, ctb],
+  Mirae Kim [aut, ctb],
+  Jorgen Lund [aut, ctb],
+  Akshay Sundar [aut, ctb]
+Maintainer: Roberta Conrad <roberta.conrad@polytechnique.edu>
+Built: R 3.5.1; ; 2018-12-09 20:19:18 UTC; windows
