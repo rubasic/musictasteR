@@ -1,6 +1,4 @@
-
 library(musictasteR)
-library(plotly)
 library(shiny)
 library(ggplot2)
 library(billboard)
@@ -8,33 +6,6 @@ library(spotifyr)
 library(tidyverse)
 library(httr)
 library(dplyr)
-
-
-format_new_song <- function(song){
-  new_song <- billboard::spotify_track_data[nrow(song),]
-  new_song <- ""
-  new_song$artist_name <- song$artist_name
-  new_song$track_name <- song$track_artist_name
-  new_song$danceability <- song$danceability
-  new_song$energy <- song$energy
-  new_song$key <- song$key
-  new_song$loudness <- song$loudness
-  new_song$mode <- song$mode
-  new_song$speechiness<- song$speechiness
-  new_song$acousticness <- song$acousticness
-  new_song$instrumentalness <- song$instrumentalness
-  new_song$liveness <- song$liveness
-  new_song$valence <- song$valence
-  new_song$tempo <- song$tempo
-  new_song$year <-  substr(song$release_date, 1, 4)
-  #new_song$real_year <- substr(song$release_date, 1, 4)
-  #we copy the database we have into a new dataframe
-  #new_song_new_order <- new_song[,c(2,1)]
-  'database<- rbind(database,new_song)
-  print("succesfully added a song")
-  print(database)'
-  return(as.data.frame(new_song))
-}
 
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
 music_dataframe <- billboard::spotify_track_data
@@ -55,10 +26,10 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
 
   hover.plot <- plotly::ggplotly(plot)
 
-#  hover.plot %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  plotly::layout(hoverlabel = list(bgcolor = "white",
- #                                                                                                                                                                 font = list(family = "sans serif",
+ #hover.plot %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",
+   #                                                                                                                                                               font = list(family = "sans serif",
   #                                                                                                                                                                            size = 12,
-   #                                                                                                                                                                           color = "black")));
+    #                                                                                                                                                                         color = "black")));
 
   return(hover.plot)
 }
@@ -124,7 +95,7 @@ print(master_df)
     })
     #View(master_df)
     #call plot to update
-    new_music <<- format_new_song(master_df)
+    new_music <<- format_new_songs(master_df)
     print(new_music)
 
     output$plot <- plotly::renderPlotly({

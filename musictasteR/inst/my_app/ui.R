@@ -8,13 +8,13 @@ shinyUI(fluidPage(
   titlePanel("musictasteR"),
   sidebarLayout(
     sidebarPanel(
-      # ## JORGEN ADDING SHIT
+      # SEARCH SPOTIFY START
       textInput("track", "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
       checkboxGroupInput("selectTracks", label = "Select tracks", choices = NULL),
       actionButton("addTracks", label = "Add tracks"),
       actionButton("clearTracks", label = "Clear tracks"),
-      # ## JORGEN DONE ADDING SHIT
+      # SEARCH SPOTIFY END
 
       sliderInput(
         "year",
@@ -46,8 +46,8 @@ shinyUI(fluidPage(
 
     mainPanel(
 
-      plotlyOutput("plot"),
-      verbatimTextOutput("event")
+      plotly::plotlyOutput("plot")
+      #verbatimTextOutput("event")
 
 
     )
