@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 ^Meta$
 ^doc$
+=======
+^data-raw$
+>>>>>>> f0619055a13d654a92c5c842584c2c5c7038aa85
 ^temp\.R$
 ^trying_out_functions\.Rmd$
 ^plot_time_avg\.R$
