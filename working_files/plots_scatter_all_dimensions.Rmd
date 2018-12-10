@@ -69,7 +69,9 @@ add_a_song <- function(database,new_song){
 
 #test track britney
 #put this into a function that takes an existing song out of our database, and then compares the length of the old and new database with each other 
-britney_track <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
+britney_track <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==2)
+
+
 
 new_database <- add_a_song(spotify_track_data,britney_track)
 
@@ -87,8 +89,10 @@ new_hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_n
     select(!!year_col,!!artist_name,!!track_name,!!x_axis,!!y_axis)
   
   
-    plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis,fill= as.factor(!!year_col) ))  + guides(fill= "none") + 
-    geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) +  
+    plot <- ggplot(tracklist, aes(!!x_axis, !!y_axis))  + guides(fill= "none") +
+     geom_point(data = iris, 
+             mapping = aes(x = iris$Sepal.Length, y = iris$Sepal.Width),color="pink") + 
+      geom_point(aes(Trackname = (!!track_name), Artist= (!!artist_name), size = 0.1),alpha = 1/2) +  
     ggtitle(glue::glue("{title}{filtered_year}")) +
     theme_minimal() +xlim(0,1) + ylim (0,1)
 
@@ -102,13 +106,23 @@ new_hover_plot <- function(database,filtered_year,year_col,x_axis,y_axis,track_n
 }
 
 #add error message if year in the wrong range! 
-new_hover_plot(new_database ,"2009",year,energy,danceability,track_name,artist_name,"Charts")
+new_hover_plot(new_database ,"1999",year,energy,danceability,track_name,artist_name,"Charts")
+
+
+#iris
+
+new_song <- as_tibble(billboard::spotify_track_data[c(1:7),])
+typeof(new_song)
+a <- as.data.frame(new_song)
+a
+class(a)
 
 ```
 
 ```{r}
 
-
+britney_tracks <- spotify_track_data %>% filter(artist_name=="Britney Spears") 
+nrow(britney_tracks)
 
 ```
 
