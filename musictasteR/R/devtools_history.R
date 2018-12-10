@@ -14,3 +14,8 @@ usethis::use_package("billboard")'
 usethis::use_build_ignore("plot_time_avg.R")
 #devtools::load_all(".")
 usethis::use_pipe
+
+averagesongs <- read_csv("data-raw/150k_sample.csv")
+averagesongs <- nonchart_df %>% select(-c(1:2))
+colnames(averagesongs)[5] <- "year"
+usethis::use_data(averagesongs)

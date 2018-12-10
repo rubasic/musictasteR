@@ -1,3 +1,4 @@
+^data-raw$
 ^temp\.R$
 ^trying_out_functions\.Rmd$
 ^plot_time_avg\.R$
