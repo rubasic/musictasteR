@@ -54,7 +54,9 @@ fluidPage(theme = shinytheme("slate"),
                  column(3,
                         checkboxGroupInput(
                           "attributes", label = "Choose attributes:",
-                          selected = "danceability",choices = all_attributes
+                          selected = c("danceability", "energy", "speechiness",
+                                       "acousticness", "instrumentalness", "liveness", "valence"),
+                          choices = all_attributes
                         )
                  ),
 
