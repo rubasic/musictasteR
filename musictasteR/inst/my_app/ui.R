@@ -40,7 +40,7 @@ fluidPage(theme = shinytheme("slate"),
   tabsetPanel(
 
       tabPanel("Plot Roberta",
-               plotly::plotlyOutput("plot") %>% withSpinner(color = "#999b9e"),
+               plotly::plotlyOutput("plot"),
                h4("Select a year"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
@@ -105,9 +105,9 @@ fluidPage(theme = shinytheme("slate"),
       tabPanel("Plot Akshay"),
 
       tabPanel("Added songs",
-               tableOutput("masterDF"))
+               DT::dataTableOutput("masterDF")
     )
 
     #verbatimTextOutput("event")
   )
-)
+))

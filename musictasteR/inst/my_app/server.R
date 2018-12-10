@@ -97,13 +97,17 @@ shinyServer(function(input, output,session) {
     print(master_df)
     # Displaying the output data frame
     # Remove for final Shiny
-    output$masterDF <- renderTable({
-      master_df
+    output$masterDF <- DT::renderDataTable({
+      master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
+                                         release_date)
+      colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
+      master_dff
     })
 
     output$yourTracks <- renderTable({
       master_df %>% select(track_artist)
     }, colnames = FALSE)
+
     #View(master_df)
     #call plot to update
     new_music <<- format_new_songs(master_df)
@@ -122,7 +126,7 @@ shinyServer(function(input, output,session) {
 
     # Displaying the output data frame
     # Remove for final Shiny
-    output$masterDF <- renderTable({
+    output$masterDF <- DT::renderDataTable({
       master_df
     })
 
