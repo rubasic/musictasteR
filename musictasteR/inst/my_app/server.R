@@ -34,7 +34,6 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
   return(hover.plot)
 }
 
-
 shinyServer(function(input, output,session) {
 
 ##SEARCH FUNCTION

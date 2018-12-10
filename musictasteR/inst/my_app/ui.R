@@ -45,8 +45,16 @@ shinyUI(fluidPage(
     ),
 
     mainPanel(
+      tabsetPanel(
+        tabPanel("Plot",
+                 plotly::plotlyOutput("plot")),
+        tabPanel("Tab 2"),
+        tabPanel("Tab 3"),
+        tabPanel("Tab 4"),
+        tabPanel("Added songs",
+                 tableOutput("masterDF"))
+      )
 
-      plotly::plotlyOutput("plot")
       #verbatimTextOutput("event")
 
 
