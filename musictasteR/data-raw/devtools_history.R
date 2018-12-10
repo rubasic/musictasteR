@@ -24,3 +24,6 @@ colnames(averagesongs)[4] <- "year"
 averagesongs <- averagesongs[complete.cases(averagesongs), ]
 usethis::use_data(averagesongs, overwrite = TRUE)
 
+#getting snippet from spotify API for testing
+spotify_test_pull <- get_tracks_artists("Golddigger")
+usethis::use_data(spotify_test_pull, overwrite = TRUE)
