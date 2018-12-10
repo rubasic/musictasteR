@@ -1,5 +1,5 @@
 
-
+library(musictasteR)
 library(plotly)
 library(shiny)
 library(ggplot2)
@@ -10,39 +10,6 @@ library(httr)
 
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
 music_dataframe <- spotify_track_data
-
-add.a.song <- function(database,song){
-  print(song)
-  new_song <- spotify_track_data[1,]
-  new_song[1,] <- ""
-  new_song$artist_name <- song$track_artist_name
-  new_song$track_name <- song$artist_name
-  new_song$danceability <- song$danceability
-  new_song$energy <- song$energy
-  new_song$key <- song$key
-  new_song$loudness <- song$loudness
-  new_song$mode <- song$mode
-  new_song$speechiness<- song$speechiness
-  new_song$acousticness <- song$acousticness
-  new_song$instrumentalness <- song$instrumentalness
-  new_song$liveness <- song$liveness
-  new_song$valence <- song$valence
-  new_song$tempo <- song$tempo
-  new_song$year <- "your song"
-  #new_song$real_year <- substr(song$release_date, 1, 4)
-
-
-
-  #we copy the database we have into a new dataframe
-  database_modif <- database
-  #collect the characteristics that we need
-  #new_song$year <- 0
-  #new_song_new_order <- new_song[,c(2,1)]
-  database_modif <- rbind(database_modif,new_song)
-  print("succesfully added a song")
-  #View(database_modif)
-  return(database_modif)
-}
 
 hover.plot.shiny <- function(data,x,y,chosen_year)
 {
@@ -61,42 +28,6 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
   #                                                                                                                                                                                       color = "black")));
   return(hover.plot)
 }
-
-
-get_tracks_artists <- function(track_artist_name, access_token = get_spotify_access_token()) {
-
-  # Search Spotify API
-  res <- GET('https://api.spotify.com/v1/search',
-             query = list(q = track_artist_name,
-                          type = 'track,artist',
-                          access_token = access_token)
-  ) %>% content
-
-  if (length(res$tracks$items) >= 0) {
-
-    res <- res %>% .$tracks %>% .$items
-
-    tracks <- map_df(seq_len(length(res)), function(x) {
-      list(
-        track_artist_name = res[[x]]$name,
-        track_uri = gsub('spotify:track:', '', res[[x]]$uri),
-        artist_name = res[[x]]$artists[[1]]$name,
-        artist_uri = res[[x]]$artists[[1]]$id,
-        album_name = res[[x]]$album$name,
-        album_id = res[[x]]$album$id,
-        album_img = res[[x]]$album$images[[1]]$url,
-        release_date = res[[x]]$album$release_date,
-        track_artist = paste(res[[x]]$name, res[[x]]$artists[[1]]$name, sep = " - ") # Track and artist name combined
-      )
-    })
-
-  } else {
-    tracks <- tibble()
-  }
-
-  return(tracks)
-}
-
 
 
 shinyServer(function(input, output,session) {
@@ -159,7 +90,7 @@ shinyServer(function(input, output,session) {
     })
     #View(master_df)
     #call plot to update
-    dataframe_with_new_music <- add.a.song(music_dataframe,master_df)
+    dataframe_with_new_music <- add_a_song(music_dataframe,master_df)
 
     reactive.data <- reactiveValues(
       newmusic = dataframe_with_new_music
