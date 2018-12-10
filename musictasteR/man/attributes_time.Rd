@@ -36,6 +36,7 @@ Title
 }
 \examples{
 \dontrun{
-attributes_time(topsongs, "Top", 1, averagesongs, "Average", 4, c("energy"), FALSE, c(1960,2015), c("Top","Average"))
+attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4,
+c("energy","speechiness"), FALSE, c(1960,2015), c("Top Songs","Average Songs"))
 }
 }
