@@ -30,9 +30,6 @@ chart_df <- chart_df %>% select(-c(2:6,18:23))
 chart_df <- chart_df %>%  select(-c("key","loudness"))
 head(chart_df)
 
-
-
-
 # get non top chart & clean
 nonchart_df <- read_csv("150k_sample.csv")
 head(nonchart_df)
