@@ -7,25 +7,59 @@ library(billboard)
 library(spotifyr)
 library(tidyverse)
 library(httr)
+library(dplyr)
+
+
+format_new_song <- function(song){
+  new_song <- billboard::spotify_track_data[nrow(song),]
+  new_song <- ""
+  new_song$artist_name <- song$artist_name
+  new_song$track_name <- song$track_artist_name
+  new_song$danceability <- song$danceability
+  new_song$energy <- song$energy
+  new_song$key <- song$key
+  new_song$loudness <- song$loudness
+  new_song$mode <- song$mode
+  new_song$speechiness<- song$speechiness
+  new_song$acousticness <- song$acousticness
+  new_song$instrumentalness <- song$instrumentalness
+  new_song$liveness <- song$liveness
+  new_song$valence <- song$valence
+  new_song$tempo <- song$tempo
+  new_song$year <-  substr(song$release_date, 1, 4)
+  #new_song$real_year <- substr(song$release_date, 1, 4)
+  #we copy the database we have into a new dataframe
+  #new_song_new_order <- new_song[,c(2,1)]
+  'database<- rbind(database,new_song)
+  print("succesfully added a song")
+  print(database)'
+  return(as.data.frame(new_song))
+}
 
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
-music_dataframe <- spotify_track_data
+music_dataframe <- billboard::spotify_track_data
+
+new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
 hover.plot.shiny <- function(data,x,y,chosen_year)
 {
   tracklist <- data %>%
     filter(year == chosen_year | year == "your song" ) %>% select(artist_name,year,track_name,x,y)
 
-  plot <- ggplot(tracklist,x=x,y=y,fill= as.factor(year_col)) + guides(fill= "none") +
+  plot <- ggplot(tracklist,x=x,y=y) +
     geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),alpha = 0.5) +
+    geom_point(data = new_music,
+               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="pink") +
     ggtitle(glue::glue("Billboard Top 100 musical charts of {chosen_year}")) +
     theme_minimal() + xlim(0,1) + ylim (0,1)
 
-  hover.plot <- ggplotly(plot)
-  # %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",
-  #                                                                                                                                                                           font = list(family = "sans serif",
-  #                                                                                                                                                                                       size = 12,
-  #                                                                                                                                                                                       color = "black")));
+  hover.plot <- plotly::ggplotly(plot)
+
+#  hover.plot %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  plotly::layout(hoverlabel = list(bgcolor = "white",
+ #                                                                                                                                                                 font = list(family = "sans serif",
+  #                                                                                                                                                                            size = 12,
+   #                                                                                                                                                                           color = "black")));
+
   return(hover.plot)
 }
 
@@ -82,7 +116,7 @@ shinyServer(function(input, output,session) {
 
     # Adding the merged data frame to the master data frame
     master_df <<- bind_rows(master_df, tracks_joined)
-
+print(master_df)
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- renderTable({
@@ -90,11 +124,13 @@ shinyServer(function(input, output,session) {
     })
     #View(master_df)
     #call plot to update
-    dataframe_with_new_music <- add_a_song(music_dataframe,master_df)
+    new_music <<- format_new_song(master_df)
+    print(new_music)
 
-    reactive.data <- reactiveValues(
-      newmusic = dataframe_with_new_music
-    )
+    output$plot <- plotly::renderPlotly({
+      p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
+    })
+
 
   })
 
@@ -110,7 +146,7 @@ shinyServer(function(input, output,session) {
   })
 ##END OF SEARCH FUNCTION
 
-  output$plot <- renderPlotly({
+ output$plot <- plotly::renderPlotly({
     p <- hover.plot.shiny(music_dataframe, input$x,input$y,input$year)
   })
 

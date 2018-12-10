@@ -12,8 +12,8 @@
 add_a_song <- function(database,song){
   new_song <- database[1,]
   new_song[1,] <- ""
-  new_song$artist_name <- song$track_artist_name
-  new_song$track_name <- song$artist_name
+  new_song$artist_name <- song$artist_name
+  new_song$track_name <- song$track_artist_name
   new_song$danceability <- song$danceability
   new_song$energy <- song$energy
   new_song$key <- song$key
@@ -32,5 +32,6 @@ add_a_song <- function(database,song){
   #new_song_new_order <- new_song[,c(2,1)]
   database_modif <- rbind(database_modif,new_song)
   print("succesfully added a song")
+  print(database_modif)
   return(database_modif)
 }

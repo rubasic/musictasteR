@@ -56,6 +56,19 @@ run test with:
 \f1 \cf2 \cb3 \expnd0\expndtw0\kerning0
 devtools::test() \
 \
-then you can 
+then you can \
+\
+\
+Vignettes\
+- edit rmarkdown that is in the vignette folder to edit existing vignette \
+- add another vignette usethis::use_vignette(\'84titleofvignette\'93)\
+- devtools::build_vignettes - creates the vignette\
+build package in order to browse and see it online :\
+- devtools::install(build_vignettes = TRUE)
 \f2 \cb1 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f1 \cf2 \cb3 - browseVignettes("musictasteR") to see online display version (html, rmd, r)\
+\
+- if i want to change vignette, change the \'84source\'93 rmd in vignettes folder\
 }
