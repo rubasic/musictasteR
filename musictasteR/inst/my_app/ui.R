@@ -4,6 +4,7 @@ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Spee
 library(shiny)
 library(shinythemes)
 library(shinyWidgets)
+library(shinycssloaders)
 
 
 fluidPage(theme = shinytheme("slate"),
@@ -31,7 +32,7 @@ fluidPage(theme = shinytheme("slate"),
   tabsetPanel(
 
       tabPanel("Plot Roberta",
-               plotly::plotlyOutput("plot"),
+               plotly::plotlyOutput("plot") %>% withSpinner(color = "#999b9e"),
                sliderInput("year", "Select a year:", min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
@@ -45,7 +46,7 @@ fluidPage(theme = shinytheme("slate"),
                )),
 
       tabPanel("Plot Clara",
-               plotOutput("attributes_time"),
+               plotOutput("attributes_time") %>% withSpinner(color = "#999b9e"),
 
                br(),
 
