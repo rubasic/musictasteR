@@ -12,9 +12,9 @@ fluidPage(theme = shinytheme("slate"),
 
   headerPanel("",
             tags$head(
-              tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/headrr.png",
-                       height = 60, style = "display: block; margin-left: 40px;
-                       margin-top:25px;")
+              tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/headrrr.png",
+                       height = 50, style = "display: block; margin-left: 40px;
+                       margin-top:25px; margin-bottom: 0px;")
             )),
 
 
@@ -24,8 +24,7 @@ fluidPage(theme = shinytheme("slate"),
       # SEARCH SPOTIFY START
       textInput("track", label = NULL, placeholder = "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
-      br(),
-      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = "Select tracks", choices = NULL),
+      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL),
       actionButton("addTracks", label = "Add tracks"),
       actionButton("clearTracks", label = "Clear tracks"),
       br(),
@@ -42,16 +41,19 @@ fluidPage(theme = shinytheme("slate"),
 
       tabPanel("Plot Roberta",
                plotly::plotlyOutput("plot") %>% withSpinner(color = "#999b9e"),
-               sliderInput("year", "Select a year:", min = 1960, max = 2015,
+               h4("Select a year"),
+               sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
 
+               h4("X Axis"),
                shinyWidgets::radioGroupButtons(
-                 "x", label="X Axis", selected = "energy", choices = all_attributes
+                 "x", label = NULL, selected = "energy", choices = all_attributes
                ),
 
+               h4("Y Axis"),
                shinyWidgets::radioGroupButtons(
-                 "y", label="Y Axis", selected  = "danceability", choices = all_attributes
+                 "y", label= NULL, selected  = "danceability", choices = all_attributes
                )),
 
       tabPanel("Plot Clara",
@@ -61,8 +63,9 @@ fluidPage(theme = shinytheme("slate"),
 
                fluidRow(
                  column(3,
+                        h4("Choose attribute(s)"),
                         checkboxGroupInput(
-                          "attributes", label = "Choose attributes:",
+                          "attributes", label = NULL,
                           selected = c("danceability", "energy", "speechiness",
                                        "acousticness", "instrumentalness", "liveness", "valence"),
                           choices = all_attributes
@@ -70,25 +73,30 @@ fluidPage(theme = shinytheme("slate"),
                  ),
 
                  column(3,
+                        h4("Choose a time range"),
                         sliderInput(
-                          "timerange", label="Choose a time range", min = 1960, max = 2015,
+                          "timerange", label= NULL, min = 1960, max = 2015,
                           value = c(1960,2015), step = 1, sep = "", animate = TRUE
                         )
                  ),
 
                  column(3,
-                        shinyWidgets::materialSwitch(
-                          "boxplot", label = "Boxplot", value = FALSE
+                        h4("Choose music popularity"),
+                        shinyWidgets::checkboxGroupButtons(
+                          "billboard", label = NULL,
+                          selected = c("Billboard", "Non Billboard"),
+                          choices = c("Billboard", "Non Billboard")
                         )
                  ),
 
                  column(3,
-                        shinyWidgets::checkboxGroupButtons(
-                          "billboard", label = "Choose music popularity:",
-                          selected = c("Billboard", "Non Billboard"),
-                          choices = c("Billboard", "Non Billboard")
+                        h4("Boxplot"),
+                        shinyWidgets::materialSwitch(
+                          "boxplot", label = NULL, value = FALSE
                         )
                  )
+
+
                ) # FLUIDROW END
       ),
 

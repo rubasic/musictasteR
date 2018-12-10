@@ -55,9 +55,16 @@ shinyServer(function(input, output,session) {
   output$albumImage <- renderUI({
     if(length(tracks()$album_img[1]) != 0) {
       image_url <- tracks()$album_img[1]
-      tags$img(src = image_url, height = 200, width = 200)
+      tags$img(src = image_url, height = 250, width = 250)
     }
   })
+
+  # output$albumImage2 <- renderUI({
+  #   if(length(tracks()$album_img[2]) != 0) {
+  #     image_url <- tracks()$album_img[2]
+  #     tags$img(src = image_url, height = 200, width = 200)
+  #   }
+  # })
 
   # Updating the checkboxes with top five matches
   observeEvent(input$track, {
@@ -118,6 +125,10 @@ shinyServer(function(input, output,session) {
     output$masterDF <- renderTable({
       master_df
     })
+
+    output$yourTracks <- renderTable(
+      master_df
+    )
   })
 ##END OF SEARCH FUNCTION
 
