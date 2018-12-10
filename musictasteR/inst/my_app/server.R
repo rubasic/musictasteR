@@ -62,7 +62,7 @@ shinyServer(function(input, output,session) {
   # Updating the checkboxes with top five matches
   observeEvent(input$track, {
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
-    updateCheckboxGroupInput(
+    shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
       choices = choices[1:5])
 

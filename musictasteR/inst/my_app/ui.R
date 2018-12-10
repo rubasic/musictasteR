@@ -2,9 +2,10 @@ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Spee
 
 
 library(shiny)
+library(shinythemes)
 
 
-shinyUI(fluidPage(
+fluidPage(theme = shinytheme("slate"),
   titlePanel("musictasteR"),
   sidebarLayout(
     sidebarPanel(
@@ -67,9 +68,6 @@ shinyUI(fluidPage(
       )
 
       #verbatimTextOutput("event")
-
-
     )
   )
-
-))
+)
