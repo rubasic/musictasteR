@@ -50,6 +50,7 @@ server <- function(input, output) {
   library(httr)
   library(stringr)
   library(billboard)
+  library(musictasteR)
   library(reshape)
 
   data(averagesongs)
