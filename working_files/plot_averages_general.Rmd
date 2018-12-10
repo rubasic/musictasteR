@@ -1,0 +1,120 @@
+---
+title: "plot_time_avg"
+author: "Clara Dionet"
+date: '2018-12-07'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+  library(tidyverse)
+  library(spotifyr)
+  library(dplyr)
+  library(tidyverse)
+  library(httr)
+  library(stringr)
+  library(billboard)
+  library(reshape)
+  library(gridExtra)
+```
+
+
+```{r}
+# get top chart
+df1 <- billboard::spotify_track_data
+df1 <- df1 %>% select(-c(2:6,18:23))
+df1 <- df1 %>%  select(-c("key","loudness"))
+head(df1)
+
+# get non top chart & clean
+df2 <- read_csv("150k_sample.csv")
+head(df2)
+df2 <- df2 %>% select(-c(1:6,19:26))
+colnames(df2) <- c("year", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo" )
+# for now only 0-1
+df2 <- df2 %>%  select(-c("key","loudness"))
+# keep non NA cells
+df2 <- df2[complete.cases(df2), ]
+```
+
+```{r}
+# plots attributes over time of multiple variables for 2 distinct dfs (with same features)
+# ex: top chart & non top chart
+
+# df1: top songs (df)
+# df2: average songs (df)
+# difference: a 2x2 vector containing characterstic of df1, df2
+    
+attributes_time <- function(df1, df1_title, df1_year_col, df2, df2_title, df2_year_col, vars, boxplot, timerange, title_vector) {
+
+  # in case column names not called "year"
+  colnames(df1)[df1_year_col] <- "year"
+  colnames(df2)[df2_year_col] <- "year"
+  if(boxplot == FALSE) {
+    # get mean for each attribute
+    df1_avg <- aggregate(df1[,vars], df1[,df1_year_col], mean)
+    df2_avg <- aggregate(df2[,vars], df2[,df2_year_col], mean)
+    # rename first column (Group1 by default)
+    colnames(df1_avg)[1] <- "year"
+    colnames(df2_avg)[1] <- "year"
+    # reshape function for plot:
+    # df melt reshapes data frame with 3 columns: year, variable and value (value=avg here)
+    df1_melt <- melt(as.data.frame(df1_avg), id = "year")
+    df2_melt <- melt(as.data.frame(df2_avg),id = "year")
+    # add col before binding
+    df1_melt$type <- df1_title
+    df2_melt$type <- df2_title
+    df_avg <- rbind(df1_melt,df2_melt)
+    # year as numeric for continuous plot
+    df_avg$year <- as.numeric(as.character(df_avg$year))
+    #return (df_avg)
+    ggplot(df_avg %>% filter(type %in% title_vector), aes(x=year, y=value, color=variable, linetype = type)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
+
+  }
+  else {
+    # filter over wanted time
+    df1_time <- as.data.frame(df1) %>% filter(year %in% timerange[1]:timerange[2])
+    df2_time <- as.data.frame(df2) %>% filter(year %in% timerange[1]:timerange[2])
+    # reshape 
+    df1_box_melt <- melt(df1_time,id.vars="year", measure.vars=vars)
+    df2_box_melt <-  melt(df2_time,id.vars="year", measure.vars=vars)
+    # add col before binding
+    df1_box_melt$type <- df1_title
+    df2_box_melt$type <- df2_title
+    df_boxplot <- rbind(df1_box_melt,df2_box_melt)
+    #return (df_boxplot)
+    ggplot(df_boxplot %>% filter(type %in% title_vector)) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  + facet_grid(. ~ type)
+  }
+}
+
+averagesongs
+topsongs <- billboard::spotify_track_data
+
+# last argument has to match names
+attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("danceability","energy"), FALSE, c(1960,2015), c("Billboard","Non Billboard"))
+
+```
+
+If function returns df -> what kind of plot:
+```{r}
+plot_attributes <- function(df, boxplot, billboard) {
+  if (boxplot == TRUE) {
+  ggplot(df %>% filter(chart == billboard), aes(x=year, y=value, color=variable, linetype = chart)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
+  }
+  else {
+ggplot(df) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  + facet_grid(. ~ chart)
+  }
+}
+```
+
+```{r}
+attributes_time(c("danceability","energy"), FALSE, c(1960,2005))
+#ggplot(df, aes(x=year, y=value, color=variable, linetype = chart)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
+#ggplot(df_boxplot) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  + facet_grid(. ~ chart)
+```
+
+

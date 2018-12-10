@@ -19,47 +19,96 @@ knitr::opts_chunk$set(echo = TRUE)
   library(stringr)
   library(billboard)
   library(reshape)
+  library(gridExtra)
+```
+
+
+```{r}
+# get top chart
+chart_df <- billboard::spotify_track_data
+chart_df <- chart_df %>% select(-c(2:6,18:23))
+chart_df <- chart_df %>%  select(-c("key","loudness"))
+head(chart_df)
+
+# get non top chart & clean
+nonchart_df <- read_csv("150k_sample.csv")
+head(nonchart_df)
+nonchart_df <- nonchart_df %>% select(-c(1:6,19:26))
+colnames(nonchart_df) <- c("year", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo" )
+# for now only 0-1
+nonchart_df <- nonchart_df %>%  select(-c("key","loudness"))
+# keep non NA cells
+nonchart_df <- nonchart_df[complete.cases(nonchart_df), ]
 ```
 
 ```{r}
 
-chart_df <- billboard::spotify_track_data
-nonchart_df <- read_csv("avg_across_years_summary.csv")
-nonchart_df <- nonchart_df %>% select(-"X1")
-colnames(nonchart_df) <- c("year", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo" )
-# for now select values between 0-1 only 
-nonchart_df <- nonchart_df %>%  select(-c("key","loudness"))
-#  plot_avg <- function(vars, boxplot, timerange) {
-#    if(boxplot == FALSE) {
+attributes_time <- function(vars, boxplot, timerange, billboard) {
+  if(boxplot == FALSE) {
     # get mean for each attribute
-
-# if function for yes plot for non billboard
-
-timerange = c(1960,2015)
-vars <- c("danceability" ,"energy" ,"mode", "speechiness","acousticness", "instrumentalness" ,"liveness","valence" ,"tempo")
-    df_avg <- aggregate(chart_df[,vars], list(chart_df$year), mean)
-    colnames(df_avg)[1] <- "year"
-    # reshape function for plot
+  
+    vars <- c("danceability")
+    timerange <- c(1960,2005)
+    billboard <- c("Billboard","Non Billboard")
     
-    # df melt has average of all variables per year
-    df_melt <- melt(as.data.frame(df_avg), id = "year")
-    df_melt_non_chart <- melt(as.data.frame(nonchart_df),id="year")
+    chart_df_avg <- aggregate(chart_df[,vars], list(chart_df$year), mean)
+    nonchart_df_avg <- aggregate(nonchart_df[,vars], list(nonchart_df$year), mean)
+    # rename first column (Group1 by default)
+    colnames(chart_df_avg)[1] <- "year"
+    colnames(nonchart_df_avg)[1] <- "year"
+    # reshape function for plot:
+    # df melt reshapes data frame with 3 columns: year, variable and value (value=avg here)
+    df_melt <- melt(as.data.frame(chart_df_avg), id = "year")
+    df_melt_non_chart <- melt(as.data.frame(nonchart_df_avg),id="year")
+    # add col before binding
     df_melt$chart <- "Billboard"
     df_melt_non_chart$chart <- "Non Billboard"
-    df <- rbind(df_melt,df_melt_non_chart)
-    # make continuous
-    df$year <- as.numeric(as.character(df$year))
-    ggplot(df, aes(x=year, y=value, color=variable, linetype = chart)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
-    # year should be continuous
-    df_melt$year <- as.numeric(as.character(df_melt$year))
-    ggplot(df_melt, aes(x=year, y=value, color=variable)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
-    
-#   }
-#    else {
-      df_time <- as.data.frame(df) %>% filter(year %in% timerange[1]:timerange[2])
-      df_box_melt <- melt(df_time,id.vars="year", measure.vars=vars)
-      ggplot(df_box_melt) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  
-#    }
+    df_avg <- rbind(df_melt,df_melt_non_chart)
+    # year as numeric for continuous plot
+    df_avg$year <- as.numeric(as.character(df_avg$year))
+    #return (df_avg)
+    ggplot(df_avg %>% filter(chart %in% billboard), aes(x=year, y=value, color=variable, linetype = chart)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
+
   }
+  else {
+    # filter over wanted time
+    df_time <- as.data.frame(chart_df) %>% filter(year %in% timerange[1]:timerange[2])
+    df_time2 <- as.data.frame(nonchart_df) %>% filter(year %in% timerange[1]:timerange[2])
+    # reshape 
+    df_box_melt <- melt(df_time,id.vars="year", measure.vars=vars)
+    df_box_melt_non_chart <-  melt(df_time2,id.vars="year", measure.vars=vars)
+    # add col before binding
+    df_box_melt$chart <- "Billboard"
+    df_box_melt_non_chart$chart <- "Non Billboard"
+    df_boxplot <- rbind(df_box_melt,df_box_melt_non_chart)
+    #return (df_boxplot)
+    ggplot(df_boxplot %>% filter(chart == billboard)) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  + facet_grid(. ~ chart)
+  }
+}
+
+#attributes_time(c("danceability","energy"), TRUE, c(1960,2005), c("Billboard"))
+#attributes_time(c("danceability","energy"), TRUE, c(1960,2005), c("Non Billboard"))
+attributes_time(c("danceability","energy"), FALSE, c(1960,2005), c("Billboard","Non Billboard"))
+#sup <- attributes_time(c("danceability","energy"), FALSE, c(1960,2005), c("Billboard","Non Billboard"))
+#  sup %>% filter(chart == c("Billboard"))
 ```
+
+What kind of plot:
+```{r}
+plot_attributes <- function(df, boxplot, billboard) {
+  if (boxplot == TRUE) {
+  ggplot(df %>% filter(chart == billboard), aes(x=year, y=value, color=variable, linetype = chart)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
+  }
+  else {
+ggplot(df) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  + facet_grid(. ~ chart)
+  }
+}
+```
+
+```{r}
+attributes_time(c("danceability","energy"), FALSE, c(1960,2005))
+#ggplot(df, aes(x=year, y=value, color=variable, linetype = chart)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
+#ggplot(df_boxplot) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  + facet_grid(. ~ chart)
+```
+
 

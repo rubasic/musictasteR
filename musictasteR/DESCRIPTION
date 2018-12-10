@@ -42,4 +42,9 @@ Imports:
     spotifyr,
     billboard,
     plotly,
-    glue
+    glue,
+    shiny,
+    purrr,
+    httr,
+    stringr,
+    readr
