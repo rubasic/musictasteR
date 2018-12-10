@@ -6,6 +6,8 @@ library(spotifyr)
 library(tidyverse)
 library(httr)
 library(dplyr)
+library(reshape)
+data(averagesongs)
 
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
 music_dataframe <- billboard::spotify_track_data
@@ -60,7 +62,7 @@ shinyServer(function(input, output,session) {
   # Updating the checkboxes with top five matches
   observeEvent(input$track, {
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
-    updateCheckboxGroupInput(
+    shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
       choices = choices[1:5])
 
@@ -86,7 +88,8 @@ shinyServer(function(input, output,session) {
 
     # Adding the merged data frame to the master data frame
     master_df <<- bind_rows(master_df, tracks_joined)
-print(master_df)
+
+    print(master_df)
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- renderTable({
@@ -130,6 +133,14 @@ print(master_df)
       d
     }
   })'
+
+ ## CLARA PLOT
+ topsongs <- billboard::spotify_track_data
+
+ output$attributes_time <- renderPlot({
+   attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, input$attributes, input$boxplot, input$timerange, input$billboard)
+ })
+
 
 })
 
