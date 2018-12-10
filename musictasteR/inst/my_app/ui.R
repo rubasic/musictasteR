@@ -5,13 +5,17 @@ library(shiny)
 library(shinythemes)
 library(shinyWidgets)
 library(shinycssloaders)
+library(dplyr)
 
 
 fluidPage(theme = shinytheme("slate"),
-  titlePanel("musictasteR"),
+
+  headerPanel(h1(id = "headr", "musictasteR", windowTitle = "musictasteR")),
+
 
   ## SIDEBAR
   sidebarPanel(
+
       # SEARCH SPOTIFY START
       textInput("track", label = NULL, placeholder = "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
