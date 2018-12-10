@@ -4,13 +4,13 @@
 #' @param song a new song pulled from an API
 #' @param year the year to be compared with
 #' @param k_model the model for k means clustering
-#' @import billboard
+#' @importFrom stats dist
 #'
 #' @return the dataframe with additional column for cluster
 #' @export
 #' @examples
 #' \dontrun{
-#' format_new_songs(songs)
+#' classify_songs_k(song,year,k_model)
 #' }
 classify_songs_k <- function(song,year,k_model){
 

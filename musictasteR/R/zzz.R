@@ -5,6 +5,15 @@ globalVariables(
    "track_name",
    "type",
    "value",
-   "variable"
+   "variable",
+   "new_song",
+   "dim_1",
+   "dim_2" ,
+   "dim_pc_1" ,
+   "dim_pc_2"
+
   )
 )
+
+
+

@@ -21,8 +21,8 @@ k_model <- readRDS(model_k_clusters, file = "~/Documents/R Programming/Group Ass
 hcpc_model <- readRDS(model_hcpc_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/hcpc_clusters_model.rda")
 hcpc_pca_model <- readRDS(model_hcpc_pca_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/hcpc_pca_clusters_model.rda")
 
-dim_pc_1 <- readRDS(model_hcpc_pca_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_princomp_lm_1.rda")
-dim_pc_2 <- readRDS(model_hcpc_pca_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_princomp_lm_2.rda")
+dim_pc_1 <- readRDS(bb_princomp_lm_1, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_princomp_lm_1.rda")
+dim_pc_2 <- readRDS(bb_princomp_lm_2, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_princomp_lm_2.rda")
 ```
 
 Create Principal Dimensions for each year -
