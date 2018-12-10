@@ -13,6 +13,7 @@ set.seed(333)
 library(tidyverse)
 library(FactoMineR)
 library(cluster)
+library(billboard)
 ```
 
 Loading Sample Dataset with Features
@@ -42,7 +43,7 @@ Clustering through K-Means
 cluster_year_k <- function(objet,year_taken,clust_size){
   filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
   restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
-  clust_features <- kmeans(restr_obj,centers=clust_size,iter.max = 1000, nstart = 100)
+  clust_features <- kmeans(restr_obj,centers=clust_size,iter.max = 1000, nstart = 10)
   filter_obj$k_cluster <- paste0(year_taken,"_",clust_features$cluster)
   return(list(filter_obj,clust_features))
 }
@@ -62,6 +63,7 @@ cluster_year_hcpc <- function(objet,year_taken,clust_num){
 
 Clustering through HCPC with pre PCA (2 principal dimensions)
 ```{r}
+
 cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
   filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
   restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
@@ -72,6 +74,7 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
   filter_obj$hcpc_pca_cluster <- paste0(year_taken, "_", clust_features$data.clust$clust)
   return(list(filter_obj,clust_features))
 }
+
 ```
 
 K means clusters database
@@ -122,28 +125,112 @@ combined_clusters$k_cluster <- features_clustered_k$k_cluster
 write_csv(combined_clusters,'~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/150K_samples_clustered.csv')
 ```
 
-
-Garbage testing from here on -
+Save array of models -
 ```{r}
-
-temp <- cluster_year_hcpc_pca(features_sample_proc,2008,3)
-temp1 <- as.data.frame(temp[1])
-
-nums <- unlist(lapply(temp, is.numeric))
-nums["cluster"] <- TRUE
-temp1 <- temp[,nums] %>% select(-X1,-X) %>% group_by(cluster) %>% summarise_all(funs(mean))
-temp[,nums] %>% select(-X1,-X) %>% group_by(cluster) %>% summarise(n=n())
-temp1
-
-ggplot(data=temp) + geom_point(aes(x=dim_1,y=dim_2,colour=cluster))
+saveRDS(model_k_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/k_clusters_model.rda")
+saveRDS(model_hcpc_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/hcpc_clusters_model.rda")
+saveRDS(model_hcpc_pca_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/hcpc_pca_clusters_model.rda")
 ```
 
+
+
+
+
+
+
+
+
+Only for Billboard Data -
 ```{r}
-nums <- unlist(lapply(features_sample, is.numeric))
-temp1 <- features_sample[,nums] %>% select(-X1,-X) %>% filter(year==2010)
-clust_features <- HCPC(temp1, nb.clust=5)
-clust_features$call$t
-clust_features$data.clust
+billboard_data <- billboard::spotify_track_data
+billboard_data$year <- as.numeric(billboard_data$year)
+summary(billboard_data)
+```
+
+
+K means clusters database
+```{r}
+min_year <- min(billboard_data$year)
+max_year <- max(billboard_data$year)
+bb_features_clustered_k <- data.frame()
+bb_model_k_clusters <- list()
+
+for (year in min_year:max_year) {
+    temp <- cluster_year_k(billboard_data,year,3)
+    bb_features_clustered_k <- rbind(bb_features_clustered_k,as.data.frame(temp[1]))
+    bb_model_k_clusters <- append(bb_model_k_clusters,temp[2])
+}
+```
+
+HCPC clusters database
+```{r}
+bb_features_clustered_hcpc <- data.frame()
+bb_model_hcpc_clusters <- list()
+    
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc(billboard_data,year,3)
+    bb_features_clustered_hcpc <- rbind(bb_features_clustered_hcpc,as.data.frame(temp[1]))
+    bb_model_hcpc_clusters <- append(bb_model_hcpc_clusters,temp[2])
+}
+```
+
+HCPC with pre PCA clusters database
+```{r}
+bb_features_clustered_hcpc_pca <- data.frame()
+bb_model_hcpc_pca_clusters <- list()
+    
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc_pca(billboard_data,year,3)
+    bb_features_clustered_hcpc_pca <- rbind(bb_features_clustered_hcpc_pca,as.data.frame(temp[1]))
+    bb_model_hcpc_pca_clusters <- append(bb_model_hcpc_pca_clusters,temp[2])
+}
+```
+
+Combination of Cluster databases
+```{r}
+bb_combined_clusters <- bb_features_clustered_hcpc_pca
+bb_combined_clusters$hcpc_cluster <- bb_features_clustered_hcpc$hcpc_cluster
+bb_combined_clusters$k_cluster <- bb_features_clustered_k$k_cluster
+
+#Output
+write_csv(bb_combined_clusters,'~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/billboard_samples_clustered.csv')
+```
+
+Save array of models -
+```{r}
+saveRDS(bb_model_k_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_k_clusters_model.rda")
+saveRDS(bb_model_hcpc_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_hcpc_clusters_model.rda")
+saveRDS(bb_model_hcpc_pca_clusters, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_hcpc_pca_clusters_model.rda")
+```
+
+PCA components as linear components of Variables - Yearwise
+```{r}
+
+pc_as_lm <- function(objet,year_taken){
+  filter_obj <- objet %>% filter(year==(year_taken))
+  mod1 <- lm(dim_1~danceability+energy+key+loudness+mode+speechiness+acousticness+instrumentalness+liveness+valence+tempo+duration_ms,data=filter_obj)
+  mod2 <- lm(dim_2~dim_1+danceability+energy+key+loudness+mode+speechiness+acousticness+instrumentalness+liveness+valence+tempo+duration_ms,data=filter_obj)
+  return(list(year_taken,mod1,mod2))
+}
 
 ```
+
+Creating Yearly model
+```{r}
+bb_pc_lm_dim1 <- list()
+bb_pc_lm_dim2 <- list()
+    
+for (years in min_year:max_year) {
+    temp <- pc_as_lm(bb_combined_clusters,years)
+    bb_pc_lm_dim1 <- append(bb_pc_lm_dim1,temp[2])
+    bb_pc_lm_dim2 <- append(bb_pc_lm_dim2,temp[3])
+}
+```
+
+Save Linear Models
+```{r}
+saveRDS(bb_pc_lm_dim1, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_princomp_lm_1.rda")
+saveRDS(bb_pc_lm_dim2, file = "~/Documents/R Programming/Group Assignment/rubasic/rubasic/working_files/bb_princomp_lm_2.rda")
+```
+
 
