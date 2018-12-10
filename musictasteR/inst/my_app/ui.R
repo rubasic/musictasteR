@@ -41,6 +41,9 @@ fluidPage(theme = shinytheme("slate"),
 
       tabPanel("Plot Roberta",
                plotly::plotlyOutput("plot"),
+               br(),
+               p("This plot shows ..."),
+
                h4("Select a year"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
@@ -60,6 +63,7 @@ fluidPage(theme = shinytheme("slate"),
                plotOutput("attributes_time") %>% withSpinner(color = "#999b9e"),
 
                br(),
+               p("This plot shows ..."),
 
                fluidRow(
                  column(3,
