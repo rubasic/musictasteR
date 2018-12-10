@@ -1,0 +1,7 @@
+attributes_time         Title
+averagesongs            Average songs
+fahrenheit_to_kelvin    Converts stuff
+format_new_songs        Format the songs that the user inputs into the
+                        same format as the billboard top charts
+get_tracks_artists      Get Tracks Artists
+launch.shiny            Launch Shiny

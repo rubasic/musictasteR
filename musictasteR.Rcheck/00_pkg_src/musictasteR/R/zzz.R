@@ -1,0 +1,10 @@
+globalVariables(
+  c(
+   "year",
+   "artist_name",
+   "track_name",
+   "type",
+   "value",
+   "variable"
+  )
+)
