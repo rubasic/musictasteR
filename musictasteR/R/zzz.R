@@ -6,6 +6,14 @@ globalVariables(
    "type",
    "value",
    "variable",
-   "new_song"
+   "new_song",
+   "dim_1",
+   "dim_2" ,
+   "dim_pc_1" ,
+   "dim_pc_2"
+
   )
 )
+
+
+

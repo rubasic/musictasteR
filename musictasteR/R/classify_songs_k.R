@@ -4,6 +4,7 @@
 #' @param song a new song pulled from an API
 #' @param year the year to be compared with
 #' @param k_model the model for k means clustering
+#' @importFrom stats dist
 #'
 #' @return the dataframe with additional column for cluster
 #' @export
