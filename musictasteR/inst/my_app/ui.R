@@ -10,7 +10,10 @@ library(dplyr)
 
 fluidPage(theme = shinytheme("slate"),
 
-  headerPanel(h1(id = "headr", "musictasteR", windowTitle = "musictasteR")),
+  headerPanel("",
+            tags$head(
+              tags$img(src="inst/my_app/headr.png", height="200px")
+            )),
 
 
   ## SIDEBAR
