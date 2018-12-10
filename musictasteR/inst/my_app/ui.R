@@ -12,7 +12,9 @@ fluidPage(theme = shinytheme("slate"),
 
   headerPanel("",
             tags$head(
-              tags$img(src="inst/my_app/headr.png", height="200px")
+              tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/headr.png",
+                       height = 50, style = "display: block; margin-left: 50px;
+                       margin-top:25px;")
             )),
 
 
