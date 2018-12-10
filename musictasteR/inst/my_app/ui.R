@@ -13,44 +13,55 @@ shinyUI(fluidPage(
       htmlOutput("albumImage"),
       checkboxGroupInput("selectTracks", label = "Select tracks", choices = NULL),
       actionButton("addTracks", label = "Add tracks"),
-      actionButton("clearTracks", label = "Clear tracks"),
+      actionButton("clearTracks", label = "Clear tracks")
       # SEARCH SPOTIFY END
-
-      sliderInput(
-        "year",
-        "Select a year:",
-        min = 1960,
-        max = 2015,
-        value = 2015,
-        animate = TRUE,
-        round = TRUE,
-        ticks = FALSE,
-        sep = ""
-      ),
-
-      selectInput(
-        "x",
-        label="X Axis",
-        selected = "energy",
-        choices = all_attributes
-      ),
-
-      selectInput(
-        "y",
-        label="Y Axis",
-        selected  = "danceability",
-        choices = all_attributes
-      )
 
     ),
 
     mainPanel(
       tabsetPanel(
-        tabPanel("Plot",
-                 plotly::plotlyOutput("plot")),
-        tabPanel("Tab 2"),
-        tabPanel("Tab 3"),
-        tabPanel("Tab 4"),
+
+        tabPanel("Plot Roberta",
+                 plotly::plotlyOutput("plot"),
+                 sliderInput("year", "Select a year:", min = 1960, max = 2015,
+                   value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = ""
+                 ),
+
+                 selectInput(
+                   "x", label="X Axis", selected = "energy", choices = all_attributes
+                 ),
+
+                 selectInput(
+                   "y", label="Y Axis", selected  = "danceability", choices = all_attributes
+                 )),
+
+        tabPanel("Plot Clara",
+                 plotOutput("attributes_time"),
+
+                 checkboxGroupInput(
+                   "attributes", label = "Choose attributes:",
+                   selected = "danceability",choices = all_attributes
+                 ),
+
+                 sliderInput(
+                   "timerange", label="Choose a time range", min = 1960, max = 2015,
+                   value = c(1960,2015), step = 1, sep = "", animate = TRUE
+                 ),
+
+                 checkboxInput(
+                   "boxplot", label = "Boxplot", value = FALSE
+                 ),
+
+                 checkboxGroupInput(
+                   "billboard", label = "Choose music popularity:",
+                   selected = c("Billboard", "Non Billboard"),
+                   choices = c("Billboard", "Non Billboard")
+                 )),
+
+        tabPanel("Plot Mirry"),
+
+        tabPanel("Plot Akshay"),
+
         tabPanel("Added songs",
                  tableOutput("masterDF"))
       )
