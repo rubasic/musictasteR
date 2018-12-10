@@ -46,4 +46,5 @@ Imports:
     shiny,
     purrr,
     httr,
-    stringr
+    stringr,
+    readr
