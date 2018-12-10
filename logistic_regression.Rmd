@@ -4,7 +4,7 @@ output: html_document
 ---
 ```{r}
 library(spotifyr)
-library(plotly)
+library(stringr)
 library(dplyr)
 library(tidyverse)
 library(httr)
@@ -63,7 +63,7 @@ write.csv(summary_df, '/Users/miraekim/workspace/coursework/map535r/rubasic/work
 
 ```{r}
 
-#prepare large dataframes, algin columns 
+#prepare large dataframes, align columns 
 df_edit <- df[c("track_uri","album_year_4dgt","track_name", "artist_name", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
 colnames(df_edit)[1] <- "track_id"
 colnames(df_edit)[2] <- "year"
@@ -92,9 +92,8 @@ run_l_reg <-function(billboard_df, non_billboard_df) {
 
 all_results <- list()
 anova_list <- list()
-for (year_input in 1960:2015) {
-# for (year_input in 1960:1960) {
-  print(year_input)
+# for (year_input in 1960:2015) {
+for (year_input in 1960:1960) {
   billboard_test <- billboard_edit %>% filter(year == year_input)
   billboard_test["top_or_not"] <- 1
   non_billboard_test <- df_edit %>% filter(year == year_input)
@@ -146,20 +145,20 @@ res2 <- glm(aic$model,family=binomial(link='logit'),data=full_test[-c(1:4)])
 #anova test to check significance
 an <- anova(update(res2,~1), res2, test = "LR")
 
-track_uri='3MjUtNVVq3C8Fn0MP3zhXa'
+#save the models
+saveRDS(all_results, file="all_models2.rda")
+m <- readRDS("all_models2.rda")
+
+#check against a new song
+
+track_uri='08mG3Y1vljYA6bvDt4Wqkj'
 audio_features_api <- str_glue('https://api.spotify.com/v1/audio-features/{track_uri}')
 access_token <- get_spotify_access_token()
 analysis_result <- safely(make_api_call)(audio_features_api,access_token)
-clean_up(analysis_result)
-analysis_result$result$danceability
+new_song <- clean_up(analysis_result)
 
 clean_up <- function(input) {
                 list(
-                  track_name = final_list_filtered[[x]]["track_name"],
-                  track_uri = final_list_filtered[[x]]["track_uri"],
-                  album_name = final_list_filtered[[x]]["album_name"],
-                  album_year = final_list_filtered[[x]]["album_year"],
-                  album_year_4dgt = final_list_filtered[[x]]["album_year_4dgt"],
                   danceability = input$result$danceability,
                   energy = input$result$energy,
                   key = input$result$key,
@@ -170,46 +169,20 @@ clean_up <- function(input) {
                   instrumentalness = input$result$instrumentalness,
                   liveness = input$result$liveness,
                   valence = input$result$valence,
-                  tempo = input$result$tempo
+                  tempo = input$result$tempo,
                   # uri = final_list_filtered[[x]]["uri"],
                   # track_href = final_list_filtered[[x]]["track_href"],
                   # analysis_url = final_list_filtered[[x]]["analysis_url"],
                   # duration_ms = final_list_filtered[[x]]["duration_ms"],
                   # time_signature = final_list_filtered[[x]]["time_signature"],
-                  # artist_name = final_list_filtered[[x]]["artist_name"],
+                  artist_name = input$result$artist_name,
+                  track_name = input$result$track_name,
+                  album_year = input$result$year
                   # artist_id = final_list_filtered[[x]]["artist_uri"]
-                )}
+                )
+  as.data.
+  }
 
-massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
-                list(
-                  track_name = final_list_filtered[[x]]["track_name"],
-                  track_uri = final_list_filtered[[x]]["track_uri"],
-                  album_name = final_list_filtered[[x]]["album_name"],
-                  album_year = final_list_filtered[[x]]["album_year"],
-                  album_year_4dgt = final_list_filtered[[x]]["album_year_4dgt"],
-                  danceability = final_list_filtered[[x]]["danceability"],
-                  energy = final_list_filtered[[x]]["energy"],
-                  key = final_list_filtered[[x]]["key"],
-                  loudness = final_list_filtered[[x]]["loudness"],
-                  mode = final_list_filtered[[x]]["mode"],
-                  speechiness = final_list_filtered[[x]]["speechiness"],
-                  acousticness = final_list_filtered[[x]]["acousticness"],
-                  instrumentalness = final_list_filtered[[x]]["instrumentalness"],
-                  liveness = final_list_filtered[[x]]["liveness"],
-                  valence = final_list_filtered[[x]]["valence"],
-                  tempo = final_list_filtered[[x]]["tempo"],
-                  type = final_list_filtered[[x]]["type"],
-                  uri = final_list_filtered[[x]]["uri"],
-                  track_href = final_list_filtered[[x]]["track_href"],
-                  analysis_url = final_list_filtered[[x]]["analysis_url"],
-                  duration_ms = final_list_filtered[[x]]["duration_ms"],
-                  time_signature = final_list_filtered[[x]]["time_signature"],
-                  artist_name = final_list_filtered[[x]]["artist_name"],
-                  artist_id = final_list_filtered[[x]]["artist_uri"]
-                )})
-    
-    
-predict(reg.logit1,newdata=new_d,type="response")
 
 make_api_call <- function(audio_features_api,access_token) {
   analysis_result_call <- safely(RETRY)('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) 
@@ -218,7 +191,10 @@ make_api_call <- function(audio_features_api,access_token) {
     print(analysis_result_call$error)
   } else {
   analysis_result <- analysis_result_call$result %>% content
+  # print(paste('$$$',analysis_result$h))
   track_href <- analysis_result$track_href
+  track_result_call <- safely(RETRY)('GET', url = track_href, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100)
+  # print(paste('$$$',track_href))
   analysis_result <- analysis_result[c('danceability',
                                        'energy',
                                        'key',
@@ -236,17 +212,27 @@ make_api_call <- function(audio_features_api,access_token) {
                                        'analysis_url',
                                        'duration_ms',
                                        'time_signature')]
+    track_basic_trait_result <- track_result_call$result %>% content
+    print(paste('***', track_basic_trait_result))
+    analysis_result['artist_name'] <- track_basic_trait_result$artists[[1]]$name
+    analysis_result['track_name'] <- track_basic_trait_result$name
+    analysis_result['year'] <- track_basic_trait_result$album$release_date
   return(analysis_result)
   }
 }
+summary(m$year1991[[1]])
+predict(m$year1991[[1]],newdata=new_song,type="response")[[1]]
 
-
-for (model_year in names(all_results)) {
-  model_output <- all_results$model_year
-  model <- model_output$model_year
-  result <- glm(model,family=binomial(link='logit'),data=full_test[-c(1:4)])
-  summary(result)
-  anova(res2, res1, test = "LR")
-  break
+list_of_probability <- vector() 
+for (model_year in names(m)) {
+  model_output <-m[model_year][[1]]
+  song_year <- new_song$album_year
+  probability <- predict(model_output,newdata=new_song,type="response")[[1]]
+  list_of_probability[model_year] <- probability
+  # break
 }
+
+years <- lapply(names(list_of_probability), function(x) {as.integer(substring(x,str_length(x)-3,str_length(x)))})
+list_probs <- data.frame(list_of_probability)$list_of_probability
+plot(y=list_probs, x=years)
 ```
