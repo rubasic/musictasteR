@@ -5,6 +5,7 @@ globalVariables(
    "track_name",
    "type",
    "value",
-   "variable"
+   "variable",
+   "new_song"
   )
 )
