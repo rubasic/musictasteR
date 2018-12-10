@@ -3,71 +3,91 @@ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Spee
 
 library(shiny)
 library(shinythemes)
+library(shinyWidgets)
 
 
 fluidPage(theme = shinytheme("slate"),
   titlePanel("musictasteR"),
-  sidebarLayout(
-    sidebarPanel(
+
+  ## SIDEBAR
+  sidebarPanel(
       # SEARCH SPOTIFY START
-      textInput("track", "Search for a track and/or an artist"),
+      textInput("track", label = NULL, placeholder = "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
-      checkboxGroupInput("selectTracks", label = "Select tracks", choices = NULL),
+      br(),
+      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = "Select tracks", choices = NULL),
       actionButton("addTracks", label = "Add tracks"),
-      actionButton("clearTracks", label = "Clear tracks")
+      actionButton("clearTracks", label = "Clear tracks"),
+      br(),
+      br(),
+      tags$b("Your tracks"),
+      tableOutput("yourTracks")
       # SEARCH SPOTIFY END
 
     ),
 
-    mainPanel(
-      tabsetPanel(
+  ## BODY
+  mainPanel(
+  tabsetPanel(
 
-        tabPanel("Plot Roberta",
-                 plotly::plotlyOutput("plot"),
-                 sliderInput("year", "Select a year:", min = 1960, max = 2015,
-                   value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = ""
+      tabPanel("Plot Roberta",
+               plotly::plotlyOutput("plot"),
+               sliderInput("year", "Select a year:", min = 1960, max = 2015,
+                 value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
+               ),
+
+               shinyWidgets::radioGroupButtons(
+                 "x", label="X Axis", selected = "energy", choices = all_attributes
+               ),
+
+               shinyWidgets::radioGroupButtons(
+                 "y", label="Y Axis", selected  = "danceability", choices = all_attributes
+               )),
+
+      tabPanel("Plot Clara",
+               plotOutput("attributes_time"),
+
+               br(),
+
+               fluidRow(
+                 column(3,
+                        checkboxGroupInput(
+                          "attributes", label = "Choose attributes:",
+                          selected = "danceability",choices = all_attributes
+                        )
                  ),
 
-                 selectInput(
-                   "x", label="X Axis", selected = "energy", choices = all_attributes
+                 column(3,
+                        sliderInput(
+                          "timerange", label="Choose a time range", min = 1960, max = 2015,
+                          value = c(1960,2015), step = 1, sep = "", animate = TRUE
+                        )
                  ),
 
-                 selectInput(
-                   "y", label="Y Axis", selected  = "danceability", choices = all_attributes
-                 )),
-
-        tabPanel("Plot Clara",
-                 plotOutput("attributes_time"),
-
-                 checkboxGroupInput(
-                   "attributes", label = "Choose attributes:",
-                   selected = "danceability",choices = all_attributes
+                 column(3,
+                        shinyWidgets::materialSwitch(
+                          "boxplot", label = "Boxplot", value = FALSE
+                        )
                  ),
 
-                 sliderInput(
-                   "timerange", label="Choose a time range", min = 1960, max = 2015,
-                   value = c(1960,2015), step = 1, sep = "", animate = TRUE
-                 ),
+                 column(3,
+                        shinyWidgets::checkboxGroupButtons(
+                          "billboard", label = "Choose music popularity:",
+                          selected = c("Billboard", "Non Billboard"),
+                          choices = c("Billboard", "Non Billboard")
+                        )
+                 )
+               ) # FLUIDROW END
+      ),
 
-                 checkboxInput(
-                   "boxplot", label = "Boxplot", value = FALSE
-                 ),
+      tabPanel("Plot Mirry"),
 
-                 checkboxGroupInput(
-                   "billboard", label = "Choose music popularity:",
-                   selected = c("Billboard", "Non Billboard"),
-                   choices = c("Billboard", "Non Billboard")
-                 )),
+      tabPanel("Plot Akshay"),
 
-        tabPanel("Plot Mirry"),
-
-        tabPanel("Plot Akshay"),
-
-        tabPanel("Added songs",
-                 tableOutput("masterDF"))
-      )
-
-      #verbatimTextOutput("event")
+      tabPanel("Added songs",
+               tableOutput("masterDF"))
     )
+
+    #verbatimTextOutput("event")
   )
 )

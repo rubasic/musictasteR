@@ -65,8 +65,6 @@ shinyServer(function(input, output,session) {
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
       choices = choices[1:5])
-
-
   })
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
   master_df <- data_frame()
@@ -95,6 +93,10 @@ shinyServer(function(input, output,session) {
     output$masterDF <- renderTable({
       master_df
     })
+
+    output$yourTracks <- renderTable({
+      master_df %>% select(track_artist)
+    }, colnames = FALSE)
     #View(master_df)
     #call plot to update
     new_music <<- format_new_songs(master_df)
