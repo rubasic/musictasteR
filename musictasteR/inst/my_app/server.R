@@ -7,7 +7,9 @@ library(tidyverse)
 library(httr)
 library(dplyr)
 library(reshape)
+library(shinythemes)
 data(averagesongs)
+library(shinycssloaders)
 
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
 music_dataframe <- billboard::spotify_track_data
@@ -17,21 +19,19 @@ new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% fi
 hover.plot.shiny <- function(data,x,y,chosen_year)
 {
   tracklist <- data %>%
-    filter(year == chosen_year | year == "your song" ) %>% select(artist_name,year,track_name,x,y)
+    filter(year == chosen_year) %>% select(artist_name,year,track_name,x,y)
 
   plot <- ggplot(tracklist,x=x,y=y) +
-    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),alpha = 0.5) +
+    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),color="#00c193",size=4.5,alpha = 0.5) +
     geom_point(data = new_music,
-               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="pink") +
-    ggtitle(glue::glue("Billboard Top 100 musical charts of {chosen_year}")) +
-    theme_minimal() + xlim(0,1) + ylim (0,1)
+               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="#fd5bda",size=4.5) +
+   scale_x_continuous(name=glue::glue("{x}"), limits=c(0, 1))+ scale_y_continuous(name=glue::glue("{y}"), limits=c(0, 1)) +
 
-  hover.plot <- plotly::ggplotly(plot)
-
- #hover.plot %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",
-   #                                                                                                                                                               font = list(family = "sans serif",
-  #                                                                                                                                                                            size = 12,
-    #                                                                                                                                                                         color = "black")));
+    theme(text = element_text(size=9),plot.background = element_rect(fill = "#3e444c"))
+ # hover.plot <- plotly::ggplotly(plot)
+  hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Helvetica Neue",
+                                                                                                                                                                          size = 14,
+                                                                                                                                                                             color = "black")));
 
   return(hover.plot)
 }
@@ -71,7 +71,7 @@ shinyServer(function(input, output,session) {
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
-      choices = choices[0:min(5,length(choices))]
+      choices = choices[0:min(5,length(choices))], inline = TRUE
     )
   })
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
@@ -161,4 +161,3 @@ shinyServer(function(input, output,session) {
 
 
 })
-

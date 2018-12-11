@@ -9,22 +9,23 @@ library(dplyr)
 
 
 fluidPage(theme = shinytheme("slate"),
+          includeCSS("www/styles.css"),
 
   headerPanel("",
             tags$head(
-              tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrr.png",
-                       height = 50, style = "display: block; margin-left: 40px;
-                       margin-top:25px; margin-bottom: 0px;")
+              tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrrr.png",
+                       height = 60, style = "display: block; margin-left: 40px;
+                       margin-top:25px; margin-bottom: -15px;")
             )),
 
 
   ## SIDEBAR
-  sidebarPanel(
+  sidebarPanel(width = 3,
 
       # SEARCH SPOTIFY START
       textInput("track", label = NULL, placeholder = "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
-      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL),
+      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL, inline = TRUE),
       actionButton("addTracks", label = "Add tracks"),
       actionButton("clearTracks", label = "Clear tracks"),
       br(),
@@ -44,17 +45,13 @@ fluidPage(theme = shinytheme("slate"),
                br(),
                p("This plot shows ..."),
 
-               h4("Select a year"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
-
-               h4("X Axis"),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes
                ),
 
-               h4("Y Axis"),
                shinyWidgets::radioGroupButtons(
                  "y", label= NULL, selected  = "danceability", choices = all_attributes
                )),
