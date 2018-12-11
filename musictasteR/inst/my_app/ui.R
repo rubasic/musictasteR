@@ -48,6 +48,7 @@ fluidPage(theme = shinytheme("slate"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
+               setSliderColor(sliderId = c(1,2), color = c("#00c193", "#00c193")),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes
                ),
@@ -93,7 +94,7 @@ fluidPage(theme = shinytheme("slate"),
                  column(3,
                         h4("Boxplot"),
                         shinyWidgets::materialSwitch(
-                          "boxplot", label = NULL, value = FALSE
+                          inputId = "boxplot", label = NULL, value = FALSE
                         )
                  )
 

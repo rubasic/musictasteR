@@ -154,6 +154,15 @@ shinyServer(function(input, output,session) {
 
  ## CLARA PLOT
  topsongs <- billboard::spotify_track_data
+ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
+
+ observe({
+   if(input$boxplot == TRUE) {
+     updateCheckboxGroupInput(session = session,
+                              inputId = "attributes", selected = "danceability",
+                              choices = all_attributes)
+   }
+ })
 
  output$attributes_time <- renderPlot({
    attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, input$attributes, input$boxplot, input$timerange, input$billboard)
