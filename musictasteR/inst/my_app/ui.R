@@ -9,6 +9,7 @@ library(dplyr)
 
 
 fluidPage(theme = shinytheme("slate"),
+          includeCSS("www/styles.css"),
 
   headerPanel("",
             tags$head(
