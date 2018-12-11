@@ -1,5 +1,4 @@
-all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
-
+all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness" ,"Liveness" = "liveness","Valence" = "valence")
 
 library(shiny)
 library(shinythemes)
@@ -48,6 +47,7 @@ fluidPage(theme = shinytheme("slate"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
+               setSliderColor(sliderId = c(1,2), color = c("#00c193", "#00c193")),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes
                ),
@@ -93,7 +93,7 @@ fluidPage(theme = shinytheme("slate"),
                  column(3,
                         h4("Boxplot"),
                         shinyWidgets::materialSwitch(
-                          "boxplot", label = NULL, value = FALSE
+                          inputId = "boxplot", label = NULL, value = FALSE
                         )
                  )
 
@@ -103,7 +103,13 @@ fluidPage(theme = shinytheme("slate"),
 
       tabPanel("Plot Mirry"),
 
-      tabPanel("Plot Akshay"),
+      tabPanel("Plot Akshay",
+               plotly::plotlyOutput("plot_cluster"),
+               h4("Select a year"),
+               sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
+                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = ""
+               )
+      ),
 
       tabPanel("Added songs",
                DT::dataTableOutput("masterDF")

@@ -93,6 +93,9 @@ predict_pc_lm_temp <- function(song,year,mod1,mod2){
   return(song)
 }
 plot_songs_clusters <- function(songs,year_taken){
+  songs$key <- as.numeric(songs$key)
+  songs$mode <- as.numeric(songs$mode)
+  colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
   
   restr <- bb_data %>% filter(year==year_taken)
   restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
@@ -115,8 +118,13 @@ plot_songs_clusters <- function(songs,year_taken){
 
 ```{r}
 temp1 <- read_csv("data-raw/billboard_samples_clustered.csv")
+temp1
 temp2 <- temp1 %>% filter(artist_name=="Pink Floyd")
-d<-plot_songs_clusters(temp2,1990)
+
+temp3 <- get_tracks_artists("hey")
+
+
+d<-plot_songs_clusters(temp3,1990)
 d
 ```
 

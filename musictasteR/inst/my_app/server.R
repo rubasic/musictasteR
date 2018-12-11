@@ -36,6 +36,26 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
   return(hover.plot)
 }
 
+
+## AKSHAY CLUSTER FUNCTION
+
+plot_songs_clusters <- function(songs,year_taken){
+  print(songs)
+  songs$key <- as.numeric(songs$key)
+  songs$mode <- as.numeric(songs$mode)
+  colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+  restr <- bb_data %>% filter(year==year_taken)
+  restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
+  songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
+  songs_edit$cluster_final <- "Manual Input songs"
+  songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  restr <- restr %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  combined <- rbind(restr,songs_edit)
+  response <- combined %>% ggplot(aes(x=dim_1,y=dim_2)) + geom_point(aes(col=cluster_final)) + scale_fill_manual(name="Clusters",values = c("Cluster 1"="red","Cluster 2"="cyan","Cluster 3"="magenta","Manual Input songs"="yellow"))
+  response_fin <- plotly::ggplotly(response)%>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Arial", size = 12, color = "black"))) %>% plotly::config(displayModeBar = F)
+  return(response)
+}
+
 shinyServer(function(input, output,session) {
 
 ##SEARCH FUNCTION
@@ -99,10 +119,11 @@ shinyServer(function(input, output,session) {
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- DT::renderDataTable({
-      master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
-                                         release_date)
-      colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
-      master_dff
+      master_df
+      # master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
+      #                                    release_date)
+      # colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
+      # master_dff
     })
 
     output$yourTracks <- renderTable({
@@ -117,6 +138,12 @@ shinyServer(function(input, output,session) {
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
     })
+
+
+    output$plot_cluster <- plotly::renderPlotly({
+      plot_songs_clusters(master_df,input$year_cluster)
+    })
+
 
 
   })
@@ -154,6 +181,15 @@ shinyServer(function(input, output,session) {
 
  ## CLARA PLOT
  topsongs <- billboard::spotify_track_data
+ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
+
+ observe({
+   if(input$boxplot == TRUE) {
+     updateCheckboxGroupInput(session = session,
+                              inputId = "attributes", selected = "danceability",
+                              choices = all_attributes)
+   }
+ })
 
  output$attributes_time <- renderPlot({
    attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, input$attributes, input$boxplot, input$timerange, input$billboard)
