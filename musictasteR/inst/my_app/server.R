@@ -99,10 +99,11 @@ shinyServer(function(input, output,session) {
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- DT::renderDataTable({
-      master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
-                                         release_date)
-      colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
-      master_dff
+      master_df
+      # master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
+      #                                    release_date)
+      # colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
+      # master_dff
     })
 
     output$yourTracks <- renderTable({
