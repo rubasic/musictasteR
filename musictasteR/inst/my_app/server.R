@@ -25,7 +25,8 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
     geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),color="#e91e63",size=5,alpha = 0.5) +
     geom_point(data = new_music,
                mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="#ffeb3b",size=5) +
-   xlim(0,1) + ylim (0,1) + scale_y_continuous(labels = scales::percent) + scale_x_continuous(labels = scales::percent)
+   xlim(0,1) + ylim (0,1)
+    #scale_y_continuous(labels = scales::percent) + scale_x_continuous(labels = scales::percent)
 
  # hover.plot <- plotly::ggplotly(plot)
   hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",
