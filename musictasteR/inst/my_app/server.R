@@ -22,12 +22,12 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
     filter(year == chosen_year) %>% select(artist_name,year,track_name,x,y)
 
   plot <- ggplot(tracklist,x=x,y=y) +
-    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),color="#e91e63",size=5,alpha = 0.5) +
+    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),color="#00c193",size=4.5,alpha = 0.5) +
     geom_point(data = new_music,
-               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="#ffeb3b",size=5) +
-   xlim(0,1) + ylim (0,1)
-    #scale_y_continuous(labels = scales::percent) + scale_x_continuous(labels = scales::percent)
+               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="#fd5bda",size=4.5) +
+   scale_x_continuous(name=glue::glue("{x}"), limits=c(0, 1))+ scale_y_continuous(name=glue::glue("{y}"), limits=c(0, 1)) +
 
+    theme(text = element_text(size=9),plot.background = element_rect(fill = "#3e444c"))
  # hover.plot <- plotly::ggplotly(plot)
   hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Helvetica Neue",
                                                                                                                                                                           size = 14,
