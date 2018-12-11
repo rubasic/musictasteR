@@ -45,17 +45,13 @@ fluidPage(theme = shinytheme("slate"),
                br(),
                p("This plot shows ..."),
 
-               h4("Select a year"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
-
-               h4("X Axis"),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes
                ),
 
-               h4("Y Axis"),
                shinyWidgets::radioGroupButtons(
                  "y", label= NULL, selected  = "danceability", choices = all_attributes
                )),
