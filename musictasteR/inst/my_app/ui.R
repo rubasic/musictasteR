@@ -1,6 +1,5 @@
 all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness" ,"Liveness" = "liveness","Valence" = "valence")
 
-
 library(shiny)
 library(shinythemes)
 library(shinyWidgets)
@@ -119,4 +118,3 @@ fluidPage(theme = shinytheme("slate"),
     #verbatimTextOutput("event")
   )
 ))
->>>>>>> 312f3629ba287c2febbfffe25d195a7125474be2
