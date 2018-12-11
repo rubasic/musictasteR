@@ -29,8 +29,7 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
     #scale_y_continuous(labels = scales::percent) + scale_x_continuous(labels = scales::percent)
 
  # hover.plot <- plotly::ggplotly(plot)
-  hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",
-                                                                                                                                                                font = list(family = "Helvetica Neue",
+  hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Helvetica Neue",
                                                                                                                                                                           size = 14,
                                                                                                                                                                              color = "black")));
 
