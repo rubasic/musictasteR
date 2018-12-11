@@ -71,7 +71,7 @@ shinyServer(function(input, output,session) {
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
-      choices = choices[0:length(choices)]
+      choices = choices[0:min(5,length(choices))]
     )
   })
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
