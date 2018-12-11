@@ -15,17 +15,17 @@ fluidPage(theme = shinytheme("slate"),
             tags$head(
               tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrrr.png",
                        height = 60, style = "display: block; margin-left: 40px;
-                       margin-top:25px; margin-bottom: 0px;")
+                       margin-top:25px; margin-bottom: -10px;")
             )),
 
 
   ## SIDEBAR
-  sidebarPanel(
+  sidebarPanel(width = 3,
 
       # SEARCH SPOTIFY START
       textInput("track", label = NULL, placeholder = "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
-      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL),
+      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL, inline = TRUE),
       actionButton("addTracks", label = "Add tracks"),
       actionButton("clearTracks", label = "Clear tracks"),
       br(),
