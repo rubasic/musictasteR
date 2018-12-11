@@ -16,6 +16,8 @@ music_dataframe <- billboard::spotify_track_data
 
 new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
+
+##hover plot shiny function
 hover.plot.shiny <- function(data,x,y,chosen_year)
 {
   tracklist <- data %>%
@@ -35,6 +37,26 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
 
   return(hover.plot)
 }
+
+## AKSHAY CLUSTER FUNCTION
+
+plot_songs_clusters <- function(songs,year_taken){
+  print(songs)
+  songs$key <- as.numeric(songs$key)
+  songs$mode <- as.numeric(songs$mode)
+  colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+  restr <- bb_data %>% filter(year==year_taken)
+  restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
+  songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
+  songs_edit$cluster_final <- "Manual Input songs"
+  songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  restr <- restr %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  combined <- rbind(restr,songs_edit)
+  response <- combined %>% ggplot(aes(x=dim_1,y=dim_2)) + geom_point(aes(col=cluster_final)) + scale_fill_manual(name="Clusters",values = c("Cluster 1"="red","Cluster 2"="cyan","Cluster 3"="magenta","Manual Input songs"="yellow"))
+  response_fin <- plotly::ggplotly(response)%>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Arial", size = 12, color = "black"))) %>% plotly::config(displayModeBar = F)
+  return(response)
+}
+
 
 shinyServer(function(input, output,session) {
 
@@ -111,11 +133,16 @@ shinyServer(function(input, output,session) {
 
     #View(master_df)
     #call plot to update
+    #print(master_df)
     new_music <<- format_new_songs(master_df)
-    print(new_music)
+    #print(new_music)
 
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
+    })
+
+    output$plot_cluster <- plotly::renderPlotly({
+      plot_songs_clusters(master_df,input$year_cluster)
     })
 
 
@@ -159,5 +186,13 @@ shinyServer(function(input, output,session) {
    attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, input$attributes, input$boxplot, input$timerange, input$billboard)
  })
 
+ ##akshay
+
+ #Akshay Plot
+
+' output$plot_cluster <- plotly::renderPlotly({
+   plot_songs_clusters(new_music,input$year_cluster)
+ })
+'
 
 })
