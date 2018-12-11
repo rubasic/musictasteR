@@ -9,6 +9,8 @@ library(dplyr)
 
 fluidPage(theme = shinytheme("slate"),
           includeCSS("www/styles.css"),
+          setSliderColor(sliderId = c(1,2,3), color = c("#00c193", "#00c193", "#00c193")),
+
 
   headerPanel("",
             tags$head(
@@ -47,7 +49,6 @@ fluidPage(theme = shinytheme("slate"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
-               setSliderColor(sliderId = c(1,2), color = c("#00c193", "#00c193")),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes
                ),
