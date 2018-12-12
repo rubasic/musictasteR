@@ -102,8 +102,13 @@ fluidPage(theme = shinytheme("slate"),
                ) # FLUIDROW END
       ),
 
-      tabPanel(strong("Plot Mirry"),
-               plotOutput("plot_logit")
+      tabPanel(strong("Plot Mirae"),
+               plotOutput("plot_logit"),
+               br(),
+               p("This plot shows ..."),
+               actionButton("updateLogit", label = "Create plot"),
+               shinyWidgets::awesomeCheckboxGroup("selectLogit", choices = NULL, label = NULL, inline = TRUE),
+               DT::dataTableOutput("logit_df")
                ),
 
       tabPanel(strong("Plot Akshay"),
