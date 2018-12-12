@@ -7,7 +7,9 @@ library(tidyverse)
 library(httr)
 library(dplyr)
 library(reshape)
+library(shinythemes)
 data(averagesongs)
+library(shinycssloaders)
 
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
 music_dataframe <- billboard::spotify_track_data
@@ -17,23 +19,41 @@ new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% fi
 hover.plot.shiny <- function(data,x,y,chosen_year)
 {
   tracklist <- data %>%
-    filter(year == chosen_year | year == "your song" ) %>% select(artist_name,year,track_name,x,y)
+    filter(year == chosen_year) %>% select(artist_name,year,track_name,x,y)
 
   plot <- ggplot(tracklist,x=x,y=y) +
-    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),alpha = 0.5) +
+    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),color="#00c193",size=4.5,alpha = 0.5) +
     geom_point(data = new_music,
-               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="pink") +
-    ggtitle(glue::glue("Billboard Top 100 musical charts of {chosen_year}")) +
-    theme_minimal() + xlim(0,1) + ylim (0,1)
+               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="#fd5bda",size=4.5) +
+   scale_x_continuous(name=glue::glue("{x}"), limits=c(0, 1))+ scale_y_continuous(name=glue::glue("{y}"), limits=c(0, 1)) +
 
-  hover.plot <- plotly::ggplotly(plot)
-
- #hover.plot %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)) %>%  layout(hoverlabel = list(bgcolor = "white",
-   #                                                                                                                                                               font = list(family = "sans serif",
-  #                                                                                                                                                                            size = 12,
-    #                                                                                                                                                                         color = "black")));
+    theme(text = element_text(size=9),plot.background = element_rect(fill = "#3e444c"))
+ # hover.plot <- plotly::ggplotly(plot)
+  hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Helvetica Neue",
+                                                                                                                                                                          size = 14,
+                                                                                                                                                                             color = "black")));
 
   return(hover.plot)
+}
+
+
+## AKSHAY CLUSTER FUNCTION
+
+plot_songs_clusters <- function(songs,year_taken){
+  print(songs)
+  songs$key <- as.numeric(songs$key)
+  songs$mode <- as.numeric(songs$mode)
+  colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+  restr <- bb_data %>% filter(year==year_taken)
+  restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
+  songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
+  songs_edit$cluster_final <- "Manual Input songs"
+  songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  restr <- restr %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  combined <- rbind(restr,songs_edit)
+  response <- combined %>% ggplot(aes(x=dim_1,y=dim_2)) + geom_point(aes(col=cluster_final)) + scale_fill_manual(name="Clusters",values = c("Cluster 1"="red","Cluster 2"="cyan","Cluster 3"="magenta","Manual Input songs"="yellow"))
+  response_fin <- plotly::ggplotly(response)%>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Arial", size = 12, color = "black"))) %>% plotly::config(displayModeBar = F)
+  return(response)
 }
 
 shinyServer(function(input, output,session) {
@@ -71,7 +91,7 @@ shinyServer(function(input, output,session) {
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
-      choices = choices[0:min(5,length(choices))]
+      choices = choices[0:min(5,length(choices))], inline = TRUE
     )
   })
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
@@ -99,10 +119,11 @@ shinyServer(function(input, output,session) {
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- DT::renderDataTable({
-      master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
-                                         release_date)
-      colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
-      master_dff
+      master_df
+      # master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
+      #                                    release_date)
+      # colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
+      # master_dff
     })
 
     output$yourTracks <- renderTable({
@@ -118,6 +139,9 @@ shinyServer(function(input, output,session) {
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
     })
 
+    output$plot_cluster <- plotly::renderPlotly({
+      plot_songs_clusters(master_df,input$year_cluster)
+    })
 
   })
 
@@ -153,12 +177,22 @@ shinyServer(function(input, output,session) {
   })'
 
  ## CLARA PLOT
- topsongs <- billboard::spotify_track_data
+ all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
+
+ observe({
+   if(input$boxplot == TRUE) {
+     updateCheckboxGroupInput(session = session,
+                              inputId = "attributes", selected = "danceability",
+                              choices = all_attributes)
+   }
+ })
 
  output$attributes_time <- renderPlot({
-   attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, input$attributes, input$boxplot, input$timerange, input$billboard)
+   req(input$attributes)
+   attributes_time(music_dataframe, "Billboard", 1, averagesongs,
+                   "Non Billboard", 4, input$attributes, input$boxplot,
+                   input$timerange, input$billboard)
  })
 
 
 })
-

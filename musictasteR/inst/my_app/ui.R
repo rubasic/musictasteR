@@ -1,5 +1,4 @@
-all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
-
+all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness" ,"Liveness" = "liveness","Valence" = "valence")
 
 library(shiny)
 library(shinythemes)
@@ -9,24 +8,27 @@ library(dplyr)
 
 
 fluidPage(theme = shinytheme("slate"),
+          includeCSS("www/styles.css"),
+          shinyWidgets::chooseSliderSkin("Shiny", color = "#00c193"),
+
 
   headerPanel("",
             tags$head(
-              tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrr.png",
-                       height = 50, style = "display: block; margin-left: 40px;
-                       margin-top:25px; margin-bottom: 0px;")
+              tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrrr.png",
+                       height = 60, style = "display: block; margin-left: 40px;
+                       margin-top:25px; margin-bottom: -15px;")
             )),
 
 
   ## SIDEBAR
-  sidebarPanel(
+  sidebarPanel(width = 3,
 
       # SEARCH SPOTIFY START
       textInput("track", label = NULL, placeholder = "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
-      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL),
-      actionButton("addTracks", label = "Add tracks"),
-      actionButton("clearTracks", label = "Clear tracks"),
+      shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL, inline = TRUE),
+      actionButton("addTracks", label = strong("Add tracks")),
+      actionButton("clearTracks", label = strong("Clear tracks")),
       br(),
       br(),
       tags$b("Your tracks"),
@@ -39,27 +41,23 @@ fluidPage(theme = shinytheme("slate"),
   mainPanel(
   tabsetPanel(
 
-      tabPanel("Plot Roberta",
+      tabPanel(strong("Plot Roberta"),
                plotly::plotlyOutput("plot"),
                br(),
                p("This plot shows ..."),
 
-               h4("Select a year"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
-
-               h4("X Axis"),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes
                ),
 
-               h4("Y Axis"),
                shinyWidgets::radioGroupButtons(
                  "y", label= NULL, selected  = "danceability", choices = all_attributes
                )),
 
-      tabPanel("Plot Clara",
+      tabPanel(strong("Plot Clara"),
                plotOutput("attributes_time") %>% withSpinner(color = "#999b9e"),
 
                br(),
@@ -96,7 +94,7 @@ fluidPage(theme = shinytheme("slate"),
                  column(3,
                         h4("Boxplot"),
                         shinyWidgets::materialSwitch(
-                          "boxplot", label = NULL, value = FALSE
+                          inputId = "boxplot", label = NULL, value = FALSE
                         )
                  )
 
@@ -104,13 +102,21 @@ fluidPage(theme = shinytheme("slate"),
                ) # FLUIDROW END
       ),
 
-      tabPanel("Plot Mirry"),
+      tabPanel(strong("Plot Mirry")),
 
-      tabPanel("Plot Akshay"),
+      tabPanel(strong("Plot Akshay"),
+               plotly::plotlyOutput("plot_cluster"),
+               h4("Select a year"),
+               sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
+                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = ""
+               )
+      ),
 
-      tabPanel("Added songs",
+      tabPanel(strong("Added songs"),
                DT::dataTableOutput("masterDF")
-    )
+      ),
+
+      tabPanel(strong("About the app"))
 
     #verbatimTextOutput("event")
   )
