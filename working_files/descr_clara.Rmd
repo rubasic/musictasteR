@@ -1,0 +1,28 @@
+---
+title: "descr_clara"
+author: "Clara Dionet"
+date: '2018-12-12'
+output: html_document
+---
+
+Motivations & Learning
+
+In order to visualize and compare the evolution of top and average song attributes (such as "valence", "danceability", etc.), we decided to implement the attributes_time function. 
+
+This function plots overlapping variables (chosen by the user) of 2 different data sets as a function of the "year" column. In our case these two dataframes correspond to top and average songs ("Billboard" and "Non Billboard" respectively).
+
+The choice to take as arguments 2 dataframes instead of 1 (with an additional column specifying the category of each dataset) was to avoid unnecessary formatting in case of very different datasets. If the user only needs to plot one overlapping feature in his 2 datasets, he does not need to match every column name to each other before applying the rbind function in order to store them as one dataframe. 
+
+This was appropriate in our case as the billboard data was collected from a different source than the one for average songs, but both contained music features from the Spotify API.
+
+
+```{r}
+library(musictasteR)
+data(averagesongs)
+data
+```
+
+
+Learnings:
+- at first we only had the top songs chart
+- integrate average songs easily
