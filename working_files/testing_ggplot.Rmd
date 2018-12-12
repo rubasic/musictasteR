@@ -1,0 +1,71 @@
+---
+title: "Testing_ggplot"
+author: "Clara Dionet"
+date: '2018-12-12'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(testthat)
+test_that("formatting songs works", {
+  a <- fahrenheit_to_kelvin(45)
+  expect_equal(a,(45 - 32) * (5/9) + 273.15)
+})
+
+```
+
+```{r}
+
+test_that("Plot layers match expectations",{
+  p <- plot_fun(df)
+  expect_is(p$layers[[1]], "proto")
+  expect_identical(p$layers[[1]]$geom$objname, "bar")
+  expect_identical(p$layers[[1]]$stat$objname, "identity")
+})
+
+test_that("Scale is labelled 'Proportion'",{
+  p <- plot_fun(df)
+  expect_identical(p$labels$y, "Proportion")
+})
+
+test_that("Scale range is NULL",{
+  p <- plot_fun(df)
+  expect_null(p$scales$scales[[1]]$range$range)
+})
+```
+
+
+```{r}
+data(averagesongs)
+music_dataframe <- billboard::spotify_track_data
+
+test_that("All input attributes corresponds to the different variables plotted",{
+  plot <- attributes_time(music_dataframe, "Billboard", 1, averagesongs,
+                   "Non Billboard", 4, c("danceability","energy", "speechiness","acousticness"), FALSE,
+                   c(1960,2010), c("Billboard","Non Billboard"))
+  expect_identical(plot$plot_env$attributes, levels(as.factor(plot$data$variable)))
+})
+
+test_that("Only years from timerange input are being plotted & y axis limits are 0-1",{
+  plot <- attributes_time(music_dataframe, "Billboard", 1, averagesongs,
+                   "Non Billboard", 4, c("danceability","energy", "speechiness","acousticness"), FALSE,
+                   c(1960,2010), c("Billboard","Non Billboard"))
+  expect_identical(plot$scales$scales[[1]]$limits,c(0,1))
+  expect_identical(plot$scales$scales[[2]]$limits,c(1960,2010))
+})
+
+test_that("Only chart type (billboard/non billboard) specified by user is plotted",{
+  plot <- attributes_time(music_dataframe, "Billboard", 1, averagesongs,
+                   "Non Billboard", 4, c("danceability","energy"), FALSE,
+                   c(1960,2010), c("Billboard"))
+  expect_identical(plot$plot_env$title_vector, levels(as.factor(plot$data$type)))
+})
+
+
+#musictasteR::attributes_time()
+```
+
