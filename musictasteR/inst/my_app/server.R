@@ -145,11 +145,11 @@ shinyServer(function(input, output,session) {
     output$plot_cluster <- plotly::renderPlotly({
       plot_songs_clusters(master_df,input$year_cluster)
     })
-
+'
     output$plot_logit <- renderPlot(
       input_song_df <- new_music %>% split(.$track_name) %>% map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) }),
       plot_probabilities(input_song_df, 3, 2, 4, 5)
-    )
+    )'
   })
 
   # Clearing the data frame with saved tracks
