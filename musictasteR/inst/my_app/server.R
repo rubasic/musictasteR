@@ -74,7 +74,6 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
   return(hover.plot)
 }
 
-
 ## AKSHAY CLUSTER FUNCTION
 
 plot_songs_clusters <- function(songs,year_taken){
@@ -128,7 +127,6 @@ plot_songs_clusters <- function(songs,year_taken){
 shinyServer(function(input, output,session) {
 
 ##SEARCH FUNCTION
-
   access_token <- reactive({
     spotifyr::get_spotify_access_token()
   })
