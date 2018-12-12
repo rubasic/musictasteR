@@ -10,6 +10,7 @@ library(reshape)
 library(shinythemes)
 data(averagesongs)
 library(shinycssloaders)
+library(data.table)
 
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
 music_dataframe <- billboard::spotify_track_data
@@ -99,6 +100,7 @@ shinyServer(function(input, output,session) {
 
   # Adding tracks to the master data frame
   observeEvent(input$addTracks, {
+    req(input$track)
 
     # Filtering the data frame with track information based on the tracks the user has selected
     filtered_tracks <- tracks() %>% filter(track_artist %in% input$selectTracks)
@@ -134,6 +136,7 @@ shinyServer(function(input, output,session) {
     #call plot to update
     new_music <<- format_new_songs(master_df)
     print(new_music)
+    print(class(new_music))
 
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
@@ -143,6 +146,10 @@ shinyServer(function(input, output,session) {
       plot_songs_clusters(master_df,input$year_cluster)
     })
 
+    output$plot_logit <- renderPlot(
+      input_song_df <- new_music %>% split(.$track_name) %>% map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) }),
+      plot_probabilities(input_song_df, 3, 2, 4, 5)
+    )
   })
 
   # Clearing the data frame with saved tracks

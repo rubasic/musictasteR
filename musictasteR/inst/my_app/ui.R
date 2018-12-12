@@ -102,7 +102,9 @@ fluidPage(theme = shinytheme("slate"),
                ) # FLUIDROW END
       ),
 
-      tabPanel(strong("Plot Mirry")),
+      tabPanel(strong("Plot Mirry"),
+               plotOutput("plot_logit")
+               ),
 
       tabPanel(strong("Plot Akshay"),
                plotly::plotlyOutput("plot_cluster"),
