@@ -9,6 +9,8 @@ library(dplyr)
 
 fluidPage(theme = shinytheme("slate"),
           includeCSS("www/styles.css"),
+          shinyWidgets::chooseSliderSkin("Shiny", color = "#00c193"),
+
 
   headerPanel("",
             tags$head(
@@ -25,8 +27,8 @@ fluidPage(theme = shinytheme("slate"),
       textInput("track", label = NULL, placeholder = "Search for a track and/or an artist"),
       htmlOutput("albumImage"),
       shinyWidgets::awesomeCheckboxGroup("selectTracks", label = NULL, choices = NULL, inline = TRUE),
-      actionButton("addTracks", label = "Add tracks"),
-      actionButton("clearTracks", label = "Clear tracks"),
+      actionButton("addTracks", label = strong("Add tracks")),
+      actionButton("clearTracks", label = strong("Clear tracks")),
       br(),
       br(),
       tags$b("Your tracks"),
@@ -39,7 +41,7 @@ fluidPage(theme = shinytheme("slate"),
   mainPanel(
   tabsetPanel(
 
-      tabPanel("Plot Roberta",
+      tabPanel(strong("Plot Roberta"),
                plotly::plotlyOutput("plot"),
                br(),
                p("This plot shows ..."),
@@ -47,7 +49,6 @@ fluidPage(theme = shinytheme("slate"),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000
                ),
-               setSliderColor(sliderId = c(1,2), color = c("#00c193", "#00c193")),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes
                ),
@@ -56,7 +57,7 @@ fluidPage(theme = shinytheme("slate"),
                  "y", label= NULL, selected  = "danceability", choices = all_attributes
                )),
 
-      tabPanel("Plot Clara",
+      tabPanel(strong("Plot Clara"),
                plotOutput("attributes_time") %>% withSpinner(color = "#999b9e"),
 
                br(),
@@ -101,9 +102,11 @@ fluidPage(theme = shinytheme("slate"),
                ) # FLUIDROW END
       ),
 
-      tabPanel("Plot Mirry"),
+      tabPanel(strong("Plot Mirry"),
+               plotOutput("plot_logit")
+               ),
 
-      tabPanel("Plot Akshay",
+      tabPanel(strong("Plot Akshay"),
                plotly::plotlyOutput("plot_cluster"),
                h4("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
@@ -111,9 +114,11 @@ fluidPage(theme = shinytheme("slate"),
                )
       ),
 
-      tabPanel("Added songs",
+      tabPanel(strong("Added songs"),
                DT::dataTableOutput("masterDF")
-    )
+      ),
+
+      tabPanel(strong("About the app"))
 
     #verbatimTextOutput("event")
   )

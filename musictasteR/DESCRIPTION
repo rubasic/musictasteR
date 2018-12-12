@@ -47,4 +47,5 @@ Imports:
     purrr,
     httr,
     stringr,
-    readr
+    readr,
+    data.table

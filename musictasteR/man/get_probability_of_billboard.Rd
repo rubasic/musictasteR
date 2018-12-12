@@ -29,6 +29,7 @@ the input song has the following attributes:
 }
 \value{
 a dataframe containing the probability a song will be on the billboard charts throughout time
+dataframe contains three columns: year (formatted as strings: "year<year>"), probability (double) and year_int (integer of year)
 }
 \description{
 This function gets the probability that a song will be on the billboard charts throughout time
