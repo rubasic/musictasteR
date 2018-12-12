@@ -66,7 +66,7 @@ fluidPage(theme = shinytheme("slate"),
                fluidRow(
                  column(3,
                         h4("Choose attribute(s)"),
-                        checkboxGroupInput(
+                        shinyWidgets::awesomeCheckboxGroup(
                           "attributes", label = NULL,
                           selected = c("danceability", "energy", "speechiness",
                                        "acousticness", "instrumentalness", "liveness", "valence"),
