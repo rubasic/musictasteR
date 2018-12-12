@@ -18,8 +18,14 @@ This was appropriate in our case as the billboard data was collected from a diff
 
 ```{r}
 library(musictasteR)
-data(averagesongs)
-data
+attributes <- c("danceability" ,"energy" ,"mode", "speechiness","acousticness", "instrumentalness" ,"liveness","valence" ,"tempo")
+```
+
+The arguments 
+
+```{r}
+attributes_time(billboard_music_dataframe, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, FALSE, c(1960,2015), c("Top Songs","Average Songs"))
+#' }
 ```
 
 

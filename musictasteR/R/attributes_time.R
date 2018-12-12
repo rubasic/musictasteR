@@ -29,7 +29,6 @@
 #' c("energy","speechiness"), FALSE, c(1960,2015), c("Top Songs","Average Songs"))
 #' }
 attributes_time <- function(df1, df1_title, df1_year_col, df2, df2_title, df2_year_col, attributes, boxplot, timerange, title_vector) {
-
   # in case column names not called "year"
   colnames(df1)[df1_year_col] <- "year"
   colnames(df2)[df2_year_col] <- "year"
