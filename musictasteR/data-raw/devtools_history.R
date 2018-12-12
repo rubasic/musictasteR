@@ -30,6 +30,12 @@ usethis::use_data(averagesongs, overwrite = TRUE)
 spotify_test_pull <- get_tracks_artists("Golddigger")
 usethis::use_data(spotify_test_pull, overwrite = TRUE)
 
+#models for logistic regression
+log_model_list <- readRDS(file = "data-raw/all_models2.rda")
+
+#adding the models for predictions
+usethis::use_data(log_model_list, overwrite = TRUE)
+
 #models for K clustering and linear models for principal components
 k_model <- readRDS(file = "data-raw/bb_k_clusters_model.rda")
 dim_pc_1 <- readRDS(file = "data-raw/bb_princomp_lm_1.rda")

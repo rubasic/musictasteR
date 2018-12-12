@@ -20,6 +20,7 @@ library(Hmisc)
 library(billboard)
 library(MASS)
 library(musictasteR)
+
 ```
 
 
@@ -177,8 +178,8 @@ res2 <- glm(aic$model,family=binomial(link='logit'),data=full_test[-c(1:4)])
 an <- anova(update(res2,~1), res2, test = "LR")
 
 #save the models
-saveRDS(save_result$model_list, file="all_models2.rda")
-m <- readRDS("all_models2.rda")
+# saveRDS(save_result$model_list, file="all_models2.rda")
+m <- readRDS("musictasteR/data-raw/all_models2.rda")
 
 #check against a new song
 clean_up <- function(input) {
@@ -206,7 +207,6 @@ clean_up <- function(input) {
                   # artist_id = final_list_filtered[[x]]["artist_uri"]
                 )
   }
-
 
 make_api_call <- function(audio_features_api,access_token) {
   analysis_result_call <- safely(RETRY)('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) 
@@ -242,43 +242,82 @@ make_api_call <- function(audio_features_api,access_token) {
   }
 }
 
-track_uri='2cjGujZxfRKo1NKTUy0fBU'
+data.table::.SD
+
+track_uri = '2cjGujZxfRKo1NKTUy0fBU'
+another_uri='5gXlabehojXdqcfFN8ncey'
+another_uri2='6naxalmIoLFWR0siv8dnQQ'
 audio_features_api <- str_glue('https://api.spotify.com/v1/audio-features/{track_uri}')
+another_api <- str_glue('https://api.spotify.com/v1/audio-features/{another_uri}')
+another_api2 <- str_glue('https://api.spotify.com/v1/audio-features/{another_uri2}')
 access_token <- get_spotify_access_token()
 analysis_result <- safely(make_api_call)(audio_features_api,access_token)
+analysis_result2 <- safely(make_api_call)(another_api,access_token)
+analysis_result3 <- safely(make_api_call)(another_api2,access_token)
 new_song <- clean_up(analysis_result)
+new_song2 <- clean_up(analysis_result2)
+new_song3 <- clean_up(analysis_result3)
 
 #returns dataframe with year, probability of it being in the top song, and year int, which is the integer
-get_probability_of_billboard <- function(input_song) {
+get_probability_of_billboard <- function(input_song, model) {
 list_of_probability <- vector()
-for (model_year in names(m)) {
-  model_output <-m[model_year][[1]]
-  song_year <- new_song$album_year
-  probability <- predict(model_output,newdata=new_song,type="response")[[1]]
+for (model_year in names(model)) {
+  model_output <- model[model_year][[1]]
+  probability <- as.numeric(predict(model_output,newdata=input_song,type="response")[[1]])
+  # print(class(probability))
   list_of_probability[model_year] <- probability
 }
-df <- data.frame(list_of_probability)
-df <- data.frame(cbind(rownames(df),df$list_of_probability))
+df <- data.frame(list_of_probability,stringsAsFactors = F)
+df <- data.frame(cbind(rownames(df),prob=as.double(df$list_of_probability)))
 colnames(df) <- c('year', 'prob')
+df['prob'] <- as.double(df$prob) 
 df['year_int'] <- sapply(df$year,  function(x) {as.integer(substring(x,str_length(x)-3,str_length(x)))})
+df['track_name'] <-  input_song$track_name
+df['true_song_year'] <- substring(input_song$album_year, 1,4)
 return(df)
 }
 
-df <- get_probability_of_billboard(new_song)
-data.frame(cbind(rownames(df),df$list_of_probability))
-df <- data.frame(list_of_probability)
-df['years'] <- lapply(rownames(list_of_probability), function(x) {as.integer(substring(x,str_length(x)-3,str_length(x)))})
-lapply(rownames(df), function(x) {as.integer(substring(x,str_length(x)-3,str_length(x)))})
-years <- lapply(names(list_of_probability), function(x) {as.integer(substring(x,str_length(x)-3,str_length(x)))})
+df <- get_probability_of_billboard(new_song, m)
+another_df <- get_probability_of_billboard(new_song2, m)
+another_df2 <- get_probability_of_billboard(new_song3, m)
+
+multiple_df<- rbind(df, another_df, another_df2)
+
+library(data.table)
+plot_probabilities <- function(input_dataframe, year_int_col_index, prob_col_index, track_name_col_index,  true_song_year_index) {
+  #dataframe with year and probability
+  colnames(input_dataframe)[year_int_col_index] <-"year_int"
+  colnames(input_dataframe)[prob_col_index] <-"prob"
+  colnames(input_dataframe)[track_name_col_index] <-"track_name"
+  colnames(input_dataframe)[true_song_year_index] <- "true_song_year"
+  input_dataframe['true_song_year_bool'] <- input_dataframe$true_song_year == input_dataframe$year_int
+  
+  DT <- data.table(input_dataframe)
+    g <- ggplot(input_dataframe)+
+      geom_line(aes(x=input_dataframe$year_int, y=as.double(input_dataframe$prob),group =input_dataframe$track_name, color=input_dataframe$track_name))+
+      theme(legend.position="bottom", legend.direction="vertical")+
+      labs(x='year',y='probability', title='Probability of being a top song', legend='tracks')+
+      guides(size = "none",color=guide_legend("Track Name"), alpha="none")
+    g <- g + geom_point(data=input_dataframe[input_dataframe$true_song_year_bool == T,],
+                        aes(x=input_dataframe[input_dataframe$true_song_year_bool == T,]$year_int, 
+                            y=input_dataframe[input_dataframe$true_song_year_bool == T,]$prob
+                            ), color="black")
+    # g <- g+ geom_text(aes(label=ifelse(true_song_year_bool == T,as.character(input_dataframe[input_dataframe$true_song_year_bool == T,]$prob),'')),hjust=0,vjust=0)
+    g <- g + geom_point(data=DT[ , .SD[which.min(prob)], by = track_name],
+                        aes(x=DT[ , .SD[which.min(prob)], by = track_name]$year_int, 
+                            y=DT[ , .SD[which.min(prob)], by = track_name]$prob), color="red", shape=25, size=5)
+    g <- g + geom_point(data=DT[ , .SD[which.max(prob)], by = track_name],
+                        aes(x=DT[ , .SD[which.max(prob)], by = track_name]$year_int, 
+                            y=DT[ , .SD[which.max(prob)], by = track_name]$prob), color="blue", shape=17, size=5)
+    g <- g+ geom_text(data=input_dataframe[input_dataframe$true_song_year_bool == T,], aes(x=year_int,y=prob,label=paste0("release year: ", year_int) , alpha=0.8), hjust=-.06,vjust=-.06, size=3)
+    g <- g+ geom_text(data=DT[ , .SD[which.min(prob)]], aes(x=year_int,y=prob, label=paste0("min. probability year: ", year_int) ,alpha=0.8), hjust=-.06,vjust=-.06, size=3)
+    g <- g+ geom_text(data=DT[ , .SD[which.max(prob)]], aes(x=year_int,y=prob,label=paste0("max. probability year: ", year_int) ,alpha=0.8), hjust=-.06,vjust=-.06, size=3)
+    return(g)
+}
 
 
-years <- lapply(names(list_of_probability), function(x) {as.integer(substring(x,str_length(x)-3,str_length(x)))})
-list_probs <- data.frame(list_of_probability)$list_of_probability
-plot(y=list_probs, x=years)
-df <- data.frame(list_of_probability)
-as.double(df$prob)
+plot_probabilities(multiple_df, 3,2,4, 5)
 
-ggplot(df, aes(x=df$year_int, y=as.double(df$prob)))+
-  geom_line()+
-  labs(x='year',y='probability', title='Probability of being a top song')
+
+
 ```
