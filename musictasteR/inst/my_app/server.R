@@ -41,9 +41,28 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
 ## AKSHAY CLUSTER FUNCTION
 
 plot_songs_clusters <- function(songs,year_taken){
-  print(songs)
-  songs$key <- as.numeric(songs$key)
-  songs$mode <- as.numeric(songs$mode)
+
+  songs$mode <- ifelse(songs$mode=="Major",1,0)
+  songs$key <- case_when(
+    songs$key=="C"~0,
+    songs$key=="C#"~1,
+    songs$key=="Db"~1,
+    songs$key=="D"~2,
+    songs$key=="D#"~3,
+    songs$key=="Eb"~3,
+    songs$key=="E"~4,
+    songs$key=="F"~5,
+    songs$key=="F#"~6,
+    songs$key=="Gb"~6,
+    songs$key=="G"~7,
+    songs$key=="G#"~8,
+    songs$key=="Ab"~8,
+    songs$key=="A"~9,
+    songs$key=="A#"~10,
+    songs$key=="Bb"~10,
+    songs$key=="B"~11,
+    TRUE~-1
+  )
   colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
   restr <- bb_data %>% filter(year==year_taken)
   restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
@@ -141,6 +160,7 @@ shinyServer(function(input, output,session) {
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
     })
+    #AKSHAY
 
     output$plot_cluster <- plotly::renderPlotly({
       plot_songs_clusters(master_df,input$year_cluster)
@@ -168,10 +188,15 @@ shinyServer(function(input, output,session) {
   })
 ##END OF SEARCH FUNCTION
 
+
+  #default plots
  output$plot <- plotly::renderPlotly({
     p <- hover.plot.shiny(music_dataframe, input$x,input$y,input$year)
   })
 
+ output$plot_cluster <- plotly::renderPlotly({
+   plot_songs_clusters(new_music,input$year_cluster)
+ })
 
  ' output$event <- renderPrint({
     d <- event_data("plotly_hover")
