@@ -51,3 +51,7 @@ bb_data <- readr::read_csv("data-raw/billboard_samples_clustered.csv")
 
 #adding the models for predictions
 usethis::use_data(bb_data, overwrite = TRUE)
+
+#save billboard music data into .data repo in order to test functions on it
+billboard_music_dataframe <- billboard::spotify_track_data
+usethis::use_data(billboard_music_dataframe, overwrite = TRUE)
