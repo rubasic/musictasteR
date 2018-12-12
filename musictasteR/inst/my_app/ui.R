@@ -66,7 +66,7 @@ fluidPage(theme = shinytheme("slate"),
                fluidRow(
                  column(3,
                         h4("Choose attribute(s)"),
-                        checkboxGroupInput(
+                        shinyWidgets::awesomeCheckboxGroup(
                           "attributes", label = NULL,
                           selected = c("danceability", "energy", "speechiness",
                                        "acousticness", "instrumentalness", "liveness", "valence"),
@@ -102,13 +102,20 @@ fluidPage(theme = shinytheme("slate"),
                ) # FLUIDROW END
       ),
 
-      tabPanel(strong("Plot Mirry"),
-               plotOutput("plot_logit")
+      tabPanel(strong("Plot Mirae"),
+               plotOutput("plot_logit"),
+               br(),
+               p("This plot shows ..."),
+               actionButton("updateLogit", label = "Create plot"),
+               shinyWidgets::awesomeCheckboxGroup("selectLogit", choices = NULL, label = NULL, inline = TRUE),
+               DT::dataTableOutput("logit_df")
                ),
 
       tabPanel(strong("Plot Akshay"),
                plotly::plotlyOutput("plot_cluster"),
-               h4("Select a year"),
+               br(),
+               p("This plot shows ..."),
+               strong("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
                            value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = ""
                )

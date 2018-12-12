@@ -1,0 +1,320 @@
+---
+title: "Getting the data from spotify"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{dplyr compatibility}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+This vignette describes how we gathered our data from the spotify api.
+
+```{r}
+library(spotifyr)
+library(dplyr)
+library(tidyverse)
+library(httr)
+library(purrr)
+```
+
+The user needs to first go on spotify to get their Client ID:
+https://developer.spotify.com/documentation/web-api/
+
+## Motivation for Project
+- wanted to explore characteristics of popular songs vs unpopular songs throughout time
+- include the paper we found on top billboard data?
+
+## Data gathering
+- Billboard data (top chart songs)
+- One million song database 
+  - found it too difficult to use because we couldnt match every song on spotify using just the artist an
+  - most songs were from 1980s onwards
+- Directly using spotify API
+    - failed attempt at getting data using first character a-z strings + wildcard -- bias towards classical music (bc exact matches are prioritized)
+    - akshay describes how he sampled spotify data
+- once we had all the samples of the uri, we gathered audio features
+
+## Search and Save Tracks (not sure if we have enough to write here?)
+- How we added songs to the cart
+- Learnings from the search function?
+
+## Data Visualization and Exploration
+
+- Motivations/Learnings behind @Clara's plot
+- Motivations/Learnings behind @Roberta's plot
+
+## Analysis and Prediction
+- Logistic Regression
+- Clustering
+
+## How to use the package
+- get the client id
+- how each of the tabs are used (not sure if we are putting this in the vignette or directly in the app)
+
+
+```{r}
+Sys.setenv(SPOTIFY_CLIENT_ID = '76b887bef35c47c3a2f163b4ef96ad06')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '14a6cf275d804cd5983ac7a3a7b1531a')
+
+access_token <- get_spotify_access_token()
+
+#Samples
+#get ID for a song					 
+search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
+res <- RETRY('GET', url = str_glue(search),
+                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
+					 
+#get the audio feature for a song
+res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
+                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
+
+```
+
+##Data Gathering
+
+We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types.
+In order to build a database of "average" songs, we searched on the internet for a flat file of a sample of average songs, we came across the One Million Song Database (https://labrosa.ee.columbia.edu/millionsong/) which we originally tried to use as our sample of "average songs." However, we ran into two problems with this dataset. The first was that using track name and artist name to search for the spotify URL did not always yield accurate song matches, as song titles and artist names could be different across sources. Another problem was that we only had data from the 1980s onwards with most of the data coming from the 2010s, which was not the distribution of the billboard data we had, which had an equal number of top charts songs from 1960 to 2015. Therefore, we decided to supplement the years we were missing with data sampled directly from spotify.
+
+Spotify api search track function that had a wildcard feature, and it also provided a filter on the album year. We decided to leverage these features to sample random songs directly from spotify. 
+
+Below is the function that we used to match the songs from the one million song database to the spotify data.
+```{r}
+get_track_id <- function(row) {
+  track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['song']))
+  artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['artist']))
+  api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
+  access_token <- get_spotify_access_token()
+  result <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+    tryCatch({
+      final_id <- suppressWarnings(result$tracks$items[[1]]$id)
+      return (final_id)
+    }, error=function(error_cond) {
+      if (error_cond$message == 'subscript out of bounds') {
+        return('ERROR subscript')
+      }
+    }
+    , error=function(error_cond) {
+      if (error_cond$message =='$ operator is invalid for atomic vectors') {
+        result2 <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+        print(error_cond$message)
+        print(api)
+        return(result2$tracks$items[[1]]$id)
+      }
+      else {
+        print(error_cond$message)
+        return('ERROR mysterious')
+      }
+    }
+  )
+}
+
+# Iteratively try to get the spotify track id for every row in the `try` dataframe.
+try <- trial_df3
+for (i in 1:nrow(try)) {
+  if (i %% 500 == 0) {
+    print(i)
+  }
+  row <- try[i,]
+  value <- get_track_id(row)
+  try[i,]$spotify_uri <- value
+}
+```
+
+### Sampling the Data
+
+AKSHAY
+
+```{r}
+
+```
+
+
+
+
+The following functions were used to grab the audio features from spotify:
+
+```{r}
+make_api_call <- function(audio_features_api,access_token) {
+  analysis_result_call <- safely(RETRY)('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) 
+  if (is.null(analysis_result_call$result)) {
+    print("ERROR in call for audio features")
+    print(analysis_result_call$error)
+  } else {
+  analysis_result <- analysis_result_call$result %>% content
+  track_href <- analysis_result$track_href
+  analysis_result <- analysis_result[c('danceability',
+                                       'energy',
+                                       'key',
+                                       'loudness',
+                                       'mode',
+                                       'speechiness',
+                                       'acousticness',
+                                       'instrumentalness',
+                                       'liveness',
+                                       'valence',
+                                       'tempo',
+                                       'type',
+                                       'uri',
+                                       'track_href',
+                                       'analysis_url',
+                                       'duration_ms',
+                                       'time_signature')]
+  return(analysis_result)
+  }
+}
+
+get_audio_features <- function(row) {
+    track_uri <- as.character(row["track_uri"])
+    audio_features_api <- str_glue('https://api.spotify.com/v1/audio-features/{track_uri}')
+    access_token <- get_spotify_access_token()
+    analysis_result <- safely(make_api_call)(audio_features_api,access_token)
+    if (is.null(analysis_result$error)) {
+      return(analysis_result)
+    } else {
+      print("ERROR in overall call")
+      print(analysis_result$error)
+    }
+}
+
+
+head_of_df <- df
+final_list <- list()
+fail_list <- list()
+
+#loop that runs the api fetch of musi
+for (i in 1:nrow(head_of_df)) {
+  if (i %% 20 == 0) {
+    print(i)
+    #randomly sleep for a little bit   
+    Sys.sleep(sample(seq(0.5, 2.5, 0.5), 1))
+  }
+  row <- unlist(head_of_df[i,])
+  api_result <- get_audio_features(row)
+  #error hndling
+  if (is.null(api_result$result)) {
+    #wrong url
+    if (api_result$message == "Must specify at least one of url or handle") {
+      print(paste("Error in id", i))
+      # return("URL misinput error")
+    } else {
+      print(paste('Other kind of error in id', i))
+      print(api_result$message)
+    }
+    ## put other error handling here
+  } else {
+    final_row <- c(unlist(row[c("track_name", "track_uri", "album_name", "album_year", "album_year_4dgt", "artist_name", "artist_uri")]), unlist(api_result$result))
+    final_list[[i]] <- final_row
+  }
+}
+
+#filter out the null entries in the list
+final_list_filtered <- Filter(Negate(is.null), final_list)
+
+#make the list into a dataframe
+massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
+                list(
+                  track_name = final_list_filtered[[x]]["track_name"],
+                  track_uri = final_list_filtered[[x]]["track_uri"],
+                  album_name = final_list_filtered[[x]]["album_name"],
+                  album_year = final_list_filtered[[x]]["album_year"],
+                  album_year_4dgt = final_list_filtered[[x]]["album_year_4dgt"],
+                  danceability = final_list_filtered[[x]]["danceability"],
+                  energy = final_list_filtered[[x]]["energy"],
+                  key = final_list_filtered[[x]]["key"],
+                  loudness = final_list_filtered[[x]]["loudness"],
+                  mode = final_list_filtered[[x]]["mode"],
+                  speechiness = final_list_filtered[[x]]["speechiness"],
+                  acousticness = final_list_filtered[[x]]["acousticness"],
+                  instrumentalness = final_list_filtered[[x]]["instrumentalness"],
+                  liveness = final_list_filtered[[x]]["liveness"],
+                  valence = final_list_filtered[[x]]["valence"],
+                  tempo = final_list_filtered[[x]]["tempo"],
+                  type = final_list_filtered[[x]]["type"],
+                  uri = final_list_filtered[[x]]["uri"],
+                  track_href = final_list_filtered[[x]]["track_href"],
+                  analysis_url = final_list_filtered[[x]]["analysis_url"],
+                  duration_ms = final_list_filtered[[x]]["duration_ms"],
+                  time_signature = final_list_filtered[[x]]["time_signature"],
+                  artist_name = final_list_filtered[[x]]["artist_name"],
+                  artist_id = final_list_filtered[[x]]["artist_uri"]
+                )})
+```
+
+
+
+```{r}
+#load the large data
+df <- read_csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/150k_sample.csv')
+df <- df[!is.na(df$key),]
+billboard_df <- billboard::spotify_track_data
+
+#prepare large dataframes, align columns and combine the datasets
+#this is the average songs data
+df_edit <- df[c("track_uri","album_year_4dgt","track_name", "artist_name","duration_ms", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+colnames(df_edit)[1] <- "track_id"
+colnames(df_edit)[2] <- "year"
+df_edit["top_or_not"] <- 0
+
+#this is the billboard data
+billboard_edit <- billboard_df[c("track_id","year","track_name", "artist_name","duration_ms", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+billboard_edit["top_or_not"] <- 1
+full_test <- rbind(billboard_edit,df_edit)
+full_test <- full_test[!(duplicated(full_test$track_name)& duplicated(full_test$artist_name)),]
+
+#filter out artists that show up more than 3 times
+
+artist_test <- full_test %>% filter(top_or_not == 0) %>% group_by(year, artist_name) %>% slice(1:3)
+artist_test%>% group_by(year, artist_name) %>% summarise(count=n())
+artist_test <- artist_test %>% group_by(year) %>% slice(1:600) %>% ungroup() #limit each year to only have 600 average songs
+artist_test %>% group_by(year) %>% summarise(count=n()) 
+new_artist_test <-rbind(billboard_edit, artist_test) #finally, combine the average and the billboard songs
+
+per_year_test <- new_artist_test %>% group_by(year) %>% slice(1:600)
+
+#Look at the distribution of the 
+new_artist_test %>% group_by(year, top_or_not) %>% summarise(count=n()) %>% ggplot(aes(x=year, y=count, fill=top_or_not)) + geom_bar(stat="identity", position=position_dodge())
+
+ggplot(data=df2, aes(x=dose, y=len, fill=supp)) +
+geom_bar(stat="identity", position=position_dodge())
+
+df_edit <- df_edit[df_edit$duration_ms <= 300000,]
+billboard_edit
+
+#define function that runs regression
+run_l_reg <-function(full_test) {
+  # print(dim(non_billboard_df))
+  # print(paste("original dataframe length:",dim(full_test)[1]))
+  #dedup on track name and artist
+  # print(paste("reduced dataframe length:",dim(full_test)[1]))
+  res <- glm(top_or_not~.,family=binomial(link='logit'), data=full_test[-c(1:4)])
+  bic <- step(res,direction="both",k=3,trace = FALSE)
+  res2 <- glm(bic$model,family=binomial(link='logit'),data=full_test[-c(1:4)])
+  anova_res <- anova(update(res2, ~1), res2, test='LR')
+  return(list(bic, anova_res$`Pr(>Chi)`[2]))
+  # return(full_test)
+}
+
+get_all_reg_models <- function(full_test) {
+all_results <- list()
+anova_list <- list()
+return_list <- list()
+for (year_input in 1960:2015) {
+  print(year_input)
+# for (year_input in 1960:1960) {
+  full_test_year <- full_test %>% filter(year == year_input)
+  result <- run_l_reg(full_test_year)
+  all_results[paste0('year', as.character(year_input))] <- result[1]
+  anova_list[paste0('year', as.character(year_input))] <- result[2]
+}
+return_list[['model_list']] <- all_results
+return_list[['anova_list']] <- anova_list
+return(return_list)
+}
+
+get_all_reg_models(new_artist_test)
+
+save_result <- get_all_reg_models(new_artist_test)
+
+# saveRDS(save_result$model_list, file="all_models2.rda")
+```
+
+

@@ -145,6 +145,17 @@ is.data.frame(formated_list)
 year
 ```
 
+```{r}
+a <- get_tracks_artists("hey")
+nrow(a) == 20
+"track_artist_name" %in% colnames(a)
+"artist_name" %in% colnames(a)
+"album_name" %in% colnames(a)
+"release_date" %in% colnames(a)
+"track_artist" %in% colnames(a)
+
+#should return 20 rows 
+```
 
 
 
