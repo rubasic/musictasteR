@@ -156,6 +156,7 @@ shinyServer(function(input, output,session) {
   })
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
   master_df <- data_frame()
+  # input_song_df <- data_frame()
 
   # Adding tracks to the master data frame
   observeEvent(input$addTracks, {
@@ -176,7 +177,9 @@ shinyServer(function(input, output,session) {
     # Adding the merged data frame to the master data frame
     master_df <<- bind_rows(master_df, tracks_joined)
 
-    print(master_df)
+    # Preventing user from adding same song twice
+    master_df <<- unique(master_df)
+
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- DT::renderDataTable({
@@ -188,7 +191,7 @@ shinyServer(function(input, output,session) {
     })
 
     output$yourTracks <- renderTable({
-      master_df %>% select(track_artist)
+      unique(master_df %>% select(track_artist))
     }, colnames = FALSE)
 
     #View(master_df)
@@ -200,13 +203,27 @@ shinyServer(function(input, output,session) {
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
     })
+
     #AKSHAY
 
     output$plot_cluster <- plotly::renderPlotly({
       plot_songs_clusters(master_df,input$year_cluster)
     })
 
-    input_song_df <- new_music %>% split(.$track_name) %>% map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
+    # MIRAE CHOICES
+    choicez <- unique(master_df$track_artist_name)
+    shinyWidgets::updateAwesomeCheckboxGroup(
+      session = session, inputId = "selectLogit",
+      choices = choicez, selected = choicez[1])
+  })
+
+
+  # MIRAE PLOT UPDATE
+  observeEvent(input$updateLogit, {
+    req(input$selectLogit)
+    input_song_df <- new_music %>% split(.$track_name) %>%
+      map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
+    input_song_df <- input_song_df %>% filter(track_name %in% input$selectLogit)
     output$plot_logit <- renderPlot(
       plot_probabilities(input_song_df, 3, 2, 4, 5)
     )
