@@ -13,3 +13,10 @@ test_that("Only years from timerange input are being plotted",{
                           c(1960,2010), c("Billboard","Non Billboard"))
   expect_identical(plot$scales$scales[[2]]$limits,c(1960,2010))
 })
+
+test_that("Only chart type (billboard/non billboard) specified by user is plotted",{
+  plot <- attributes_time(music_dataframe, "Billboard", 1, averagesongs,
+                          "Non Billboard", 4, c("danceability","energy"), FALSE,
+                          c(1960,2010), c("Billboard"))
+  expect_identical(plot$plot_env$title_vector, levels(as.factor(plot$data$type)))
+})
