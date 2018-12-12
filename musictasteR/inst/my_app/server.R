@@ -188,6 +188,7 @@ shinyServer(function(input, output,session) {
  })
 
  output$attributes_time <- renderPlot({
+   req(input$attributes)
    attributes_time(music_dataframe, "Billboard", 1, averagesongs,
                    "Non Billboard", 4, input$attributes, input$boxplot,
                    input$timerange, input$billboard)
