@@ -1,12 +1,9 @@
-
 library(musictasteR)
 library(shiny)
-library(ggplot2)
 library(billboard)
 library(spotifyr)
 library(tidyverse)
 library(httr)
-library(dplyr)
 library(reshape)
 library(shinythemes)
 data(averagesongs)
@@ -51,7 +48,6 @@ format_new_songs <- function(songs){
   new_songs$year <-  substr(songs$release_date, 1, 4)
   return(as.data.frame(new_songs))
 }
-
 #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
 music_dataframe <- billboard::spotify_track_data
 
@@ -104,6 +100,9 @@ plot_songs_clusters <- function(songs,year_taken){
     TRUE~-1
   )
   colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+  year_mod <- bb_data$year
+  year_mod[is.na(year_mod)] <- 2000
+  bb_data$year <- year_mod
   restr <- bb_data %>% filter(year==year_taken)
   restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
   songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
@@ -111,7 +110,16 @@ plot_songs_clusters <- function(songs,year_taken){
   songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
   restr <- restr %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
   combined <- rbind(restr,songs_edit)
-  response <- combined %>% ggplot(aes(x=dim_1,y=dim_2)) + geom_point(aes(col=cluster_final)) + scale_fill_manual(name="Clusters",values = c("Cluster 1"="red","Cluster 2"="cyan","Cluster 3"="magenta","Manual Input songs"="yellow"))
+  combined$Primary <- round(combined$dim_1,2)
+  combined$Secondary <- round(combined$dim_2,2)
+  combined$Group <- combined$cluster_final
+
+
+  response <- ggplot(combined,aes(x=Primary,y=Secondary,col=Group)) +
+    geom_point(aes_string(Trackname = as.factor(combined$track_name),Artist = as.factor(combined$artist_name)),size=2,alpha = 0.5) +
+    scale_x_continuous(name=glue::glue("Primary Dimension"), limits=c(-3, 3))+ scale_y_continuous(name=glue::glue("Secondary Dimension"), limits=c(-3, 3)) +
+    theme(text = element_text(size=9),plot.background = element_rect(fill = "#3e444c"))
+
   response_fin <- plotly::ggplotly(response)%>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Arial", size = 12, color = "black"))) %>% plotly::config(displayModeBar = F)
   return(response)
 }
@@ -176,7 +184,10 @@ shinyServer(function(input, output,session) {
     # Adding the merged data frame to the master data frame
     master_df <<- bind_rows(master_df, tracks_joined)
 
-    print(master_df)
+    # Preventing user from adding same song twice
+    master_df <<- unique(master_df)
+
+    #print(master_df)
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- DT::renderDataTable({
@@ -188,14 +199,13 @@ shinyServer(function(input, output,session) {
     })
 
     output$yourTracks <- renderTable({
-      master_df %>% select(track_artist)
+      unique(master_df %>% select(track_artist))
     }, colnames = FALSE)
 
     #View(master_df)
     #call plot to update
     new_music <<- format_new_songs(master_df)
     print(new_music)
-    print(class(new_music))
 
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
@@ -206,7 +216,19 @@ shinyServer(function(input, output,session) {
       plot_songs_clusters(master_df,input$year_cluster)
     })
 
-    input_song_df <- new_music %>% split(.$track_name) %>% map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
+    # MIRAE CHOICES
+    choicez <- unique(master_df$track_artist_name)
+    shinyWidgets::updateAwesomeCheckboxGroup(
+      session = session, inputId = "selectLogit",
+      choices = choicez, selected = choicez[1])
+  })
+
+  # MIRAE PLOT UPDATE
+  observeEvent(input$updateLogit, {
+    req(input$selectLogit)
+    input_song_df <- new_music %>% split(.$track_name) %>%
+      map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
+    input_song_df <- input_song_df %>% filter(track_name %in% input$selectLogit)
     output$plot_logit <- renderPlot(
       plot_probabilities(input_song_df, 3, 2, 4, 5)
     )
