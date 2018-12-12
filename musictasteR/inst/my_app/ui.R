@@ -113,7 +113,9 @@ fluidPage(theme = shinytheme("slate"),
 
       tabPanel(strong("Plot Akshay"),
                plotly::plotlyOutput("plot_cluster"),
-               h4("Select a year"),
+               br(),
+               p("This plot shows ..."),
+               strong("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
                            value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = ""
                )

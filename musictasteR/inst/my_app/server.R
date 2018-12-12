@@ -6,9 +6,10 @@ library(tidyverse)
 library(httr)
 library(reshape)
 library(shinythemes)
-data(averagesongs)
 library(shinycssloaders)
 library(data.table)
+data(averagesongs)
+
 
 format_new_songs <- function(songs){
   new_songs <- billboard::spotify_track_data[nrow(songs),]
