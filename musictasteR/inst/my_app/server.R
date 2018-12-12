@@ -136,7 +136,7 @@ shinyServer(function(input, output,session) {
     # Adding the merged data frame to the master data frame
     master_df <<- bind_rows(master_df, tracks_joined)
 
-    print(master_df)
+    #print(master_df)
     # Displaying the output data frame
     # Remove for final Shiny
     output$masterDF <- DT::renderDataTable({
@@ -155,7 +155,6 @@ shinyServer(function(input, output,session) {
     #call plot to update
     new_music <<- format_new_songs(master_df)
     print(new_music)
-    print(class(new_music))
 
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
