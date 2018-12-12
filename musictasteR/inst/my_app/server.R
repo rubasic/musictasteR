@@ -80,6 +80,7 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
 
 plot_songs_clusters <- function(songs,year_taken){
 
+  #Process Columns for Mode and Key
   songs$mode <- ifelse(songs$mode=="Major",1,0)
   songs$key <- case_when(
     songs$key=="C"~0,
@@ -102,10 +103,17 @@ plot_songs_clusters <- function(songs,year_taken){
     TRUE~-1
   )
   colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
-  year_mod <- bb_data$year
-  year_mod[is.na(year_mod)] <- 2000
-  bb_data$year <- year_mod
-  restr <- bb_data %>% filter(year==year_taken)
+
+  #Test years for 2 samples
+  temp <- bb_data %>% filter(year!=1983) %>% filter(year!=2000)
+  temp1 <- bb_data %>% filter(year==1985)
+  temp1$year=1983
+  temp2 <- bb_data %>% filter(year==1997)
+  temp2$year=2000
+  restr <- rbind(temp,temp1,temp2)
+
+
+  restr <- restr %>% filter(year==year_taken)
   restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
   songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
   songs_edit$cluster_final <- "Manual Input songs"
@@ -118,14 +126,16 @@ plot_songs_clusters <- function(songs,year_taken){
 
 
   response <- ggplot(combined,aes(x=Primary,y=Secondary,col=Group)) +
-    geom_point(aes_string(Trackname = as.factor(combined$track_name),Artist = as.factor(combined$artist_name)),size=2,alpha = 0.5) +
-    scale_x_continuous(name=glue::glue("Primary Dimension"), limits=c(-3, 3))+ scale_y_continuous(name=glue::glue("Secondary Dimension"), limits=c(-3, 3)) +
-    theme(text = element_text(size=9),plot.background = element_rect(fill = "#3e444c"))
+    geom_point(aes_string(Trackname = as.factor(combined$track_name),Artist = as.factor(combined$artist_name)),size=2.5,alpha = 0.5) +
+    scale_x_continuous(limits=c(-5, 5))+ scale_y_continuous(limits=c(-5, 5)) +
+    theme(text = element_text(size=12),plot.background = element_rect(fill = "#f7f7f7"),panel.background = element_rect(fill = "#f7f7f7", colour = "grey50"))
 
-  response_fin <- plotly::ggplotly(response)%>%  plotly::layout(hoverlabel = list(bgcolor = "#ebebeb",font = list(family = "Arial", size = 12, color = "black"))) %>% plotly::config(displayModeBar = F)
-  return(response)
+  response_fin <- plotly::ggplotly(response) %>%
+    plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(font = list(family = "Helvetica Neue",
+                                                                                         size = 14,
+                                                                                         color = "black")));
+  return(response_fin)
 }
-
 shinyServer(function(input, output,session) {
 
 ##SEARCH FUNCTION
