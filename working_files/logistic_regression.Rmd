@@ -137,7 +137,6 @@ return(return_list)
 get_all_reg_models(new_artist_test)
 
 save_result <- get_all_reg_models(new_artist_test)
-save_result$anova_list
 ```
 
 ```{r}

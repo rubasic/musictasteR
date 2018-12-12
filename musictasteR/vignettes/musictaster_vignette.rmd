@@ -6,7 +6,8 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-This vignette describes how we gathered our data from the spotify api.
+
+This vignette describes the MusicTasteR package, the process from its conception to its execution, and its final capabilities and use cases.
 
 ```{r}
 library(spotifyr)
@@ -18,37 +19,6 @@ library(purrr)
 
 The user needs to first go on spotify to get their Client ID:
 https://developer.spotify.com/documentation/web-api/
-
-## Motivation for Project
-- wanted to explore characteristics of popular songs vs unpopular songs throughout time
-- include the paper we found on top billboard data?
-
-## Data gathering
-- Billboard data (top chart songs)
-- One million song database 
-  - found it too difficult to use because we couldnt match every song on spotify using just the artist an
-  - most songs were from 1980s onwards
-- Directly using spotify API
-    - failed attempt at getting data using first character a-z strings + wildcard -- bias towards classical music (bc exact matches are prioritized)
-    - akshay describes how he sampled spotify data
-- once we had all the samples of the uri, we gathered audio features
-
-## Search and Save Tracks (not sure if we have enough to write here?)
-- How we added songs to the cart
-- Learnings from the search function?
-
-## Data Visualization and Exploration
-
-- Motivations/Learnings behind @Clara's plot
-- Motivations/Learnings behind @Roberta's plot
-
-## Analysis and Prediction
-- Logistic Regression
-- Clustering
-
-## How to use the package
-- get the client id
-- how each of the tabs are used (not sure if we are putting this in the vignette or directly in the app)
 
 
 ```{r}
@@ -70,9 +40,11 @@ res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJD
 ```
 
 ##Data Gathering
+We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types. We explored various sources of music data on the net, including MusicBrainz (https://musicbrainz.org), Discogs api (https://www.discogs.com/developers/), Echo Nest (http://the.echonest.com/) but eventually settled on Spotify due to their lenient API rate usage policies, and the simplicity of the music attribute outputs. 
 
-We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types.
-In order to build a database of "average" songs, we searched on the internet for a flat file of a sample of average songs, we came across the One Million Song Database (https://labrosa.ee.columbia.edu/millionsong/) which we originally tried to use as our sample of "average songs." However, we ran into two problems with this dataset. The first was that using track name and artist name to search for the spotify URL did not always yield accurate song matches, as song titles and artist names could be different across sources. Another problem was that we only had data from the 1980s onwards with most of the data coming from the 2010s, which was not the distribution of the billboard data we had, which had an equal number of top charts songs from 1960 to 2015. Therefore, we decided to supplement the years we were missing with data sampled directly from spotify.
+For the top charts data, we found the following package: https://cran.r-project.org/web/packages/billboard/index.html, which gave us a dataset of about 90-100 top charts songs froom 1960 to 2015. It already had the spotify uri and the audio features included in the dataframe, which was very convenient for us to use.
+
+In order to build a database of "average" songs, we searched on the internet for a flat file of a sample of average songs. We came across the One Million Song Database (https://labrosa.ee.columbia.edu/millionsong/) which we tried to use as our sample of "average songs." However, we ran into two problems with this dataset. The first was that using track name and artist name to search for the spotify URL did not always yield accurate matches, as song titles and artist names could be different across sources. Another problem was that we only had data from the 1980s onwards with most of the data coming from the 2010s, which was not the distribution of the billboard data we had. Therefore, we decided to supplement the years we were missing with data sampled directly from spotify.
 
 Spotify api search track function that had a wildcard feature, and it also provided a filter on the album year. We decided to leverage these features to sample random songs directly from spotify. 
 
@@ -240,6 +212,9 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
 ```
 
 
+## Logistic Regression
+
+One of the features of the app was to predict how successful a song would perform. For this, we implemented a logistic regression, to find the probability of whether a song would be in the top charts or not. First, I needed to make sure that for every year, we had an equal proportion of non-billboard songs to billboard songs. Because the billboard songs quantity was relatively fixed across the years, we reduced the number of average songs in our sample per year. Variable selection for the logistic regression was performed using the stepwise method that used both the forward and backward procedure optimizing on the BIC criterion. We calibrated one model per year and saved it into a list of models, along with their fisher test scores to check global signficance of the model. The models were saved as a .rda object and is accessible in the package as "log_model_list."
 
 ```{r}
 #load the large data
@@ -261,7 +236,6 @@ full_test <- rbind(billboard_edit,df_edit)
 full_test <- full_test[!(duplicated(full_test$track_name)& duplicated(full_test$artist_name)),]
 
 #filter out artists that show up more than 3 times
-
 artist_test <- full_test %>% filter(top_or_not == 0) %>% group_by(year, artist_name) %>% slice(1:3)
 artist_test%>% group_by(year, artist_name) %>% summarise(count=n())
 artist_test <- artist_test %>% group_by(year) %>% slice(1:600) %>% ungroup() #limit each year to only have 600 average songs
@@ -270,44 +244,38 @@ new_artist_test <-rbind(billboard_edit, artist_test) #finally, combine the avera
 
 per_year_test <- new_artist_test %>% group_by(year) %>% slice(1:600)
 
-#Look at the distribution of the 
+#Look at the distribution of songs per year
 new_artist_test %>% group_by(year, top_or_not) %>% summarise(count=n()) %>% ggplot(aes(x=year, y=count, fill=top_or_not)) + geom_bar(stat="identity", position=position_dodge())
 
+#quickly see the proportion of billboard to nonbillboard songs per year
 ggplot(data=df2, aes(x=dose, y=len, fill=supp)) +
 geom_bar(stat="identity", position=position_dodge())
 
-df_edit <- df_edit[df_edit$duration_ms <= 300000,]
-billboard_edit
-
-#define function that runs regression
+#define function that runs logistic regression for one year
 run_l_reg <-function(full_test) {
-  # print(dim(non_billboard_df))
-  # print(paste("original dataframe length:",dim(full_test)[1]))
-  #dedup on track name and artist
-  # print(paste("reduced dataframe length:",dim(full_test)[1]))
   res <- glm(top_or_not~.,family=binomial(link='logit'), data=full_test[-c(1:4)])
   bic <- step(res,direction="both",k=3,trace = FALSE)
   res2 <- glm(bic$model,family=binomial(link='logit'),data=full_test[-c(1:4)])
   anova_res <- anova(update(res2, ~1), res2, test='LR')
   return(list(bic, anova_res$`Pr(>Chi)`[2]))
-  # return(full_test)
 }
 
+#run the logistic regression for every year
 get_all_reg_models <- function(full_test) {
-all_results <- list()
-anova_list <- list()
-return_list <- list()
-for (year_input in 1960:2015) {
-  print(year_input)
-# for (year_input in 1960:1960) {
-  full_test_year <- full_test %>% filter(year == year_input)
-  result <- run_l_reg(full_test_year)
-  all_results[paste0('year', as.character(year_input))] <- result[1]
-  anova_list[paste0('year', as.character(year_input))] <- result[2]
-}
-return_list[['model_list']] <- all_results
-return_list[['anova_list']] <- anova_list
-return(return_list)
+  all_results <- list()
+  anova_list <- list()
+  return_list <- list()
+  for (year_input in 1960:2015) {
+    print(year_input)
+  # for (year_input in 1960:1960) {
+    full_test_year <- full_test %>% filter(year == year_input)
+    result <- run_l_reg(full_test_year)
+    all_results[paste0('year', as.character(year_input))] <- result[1]
+    anova_list[paste0('year', as.character(year_input))] <- result[2]
+  }
+  return_list[['model_list']] <- all_results
+  return_list[['anova_list']] <- anova_list
+  return(return_list)
 }
 
 get_all_reg_models(new_artist_test)
