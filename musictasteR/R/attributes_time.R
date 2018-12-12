@@ -1,4 +1,9 @@
-#' Title
+#' Plot Attributes Over Time
+#'
+#' This function plots the features of 2 different datasets (in dataframes) over time in the same graph.
+#' The dataframes should have overlapping features and contain a column "year" over which these features will be plotted.
+#' An example of 2 datasets are: top songs & average songs with "danceability" and "energy" attributes over years 1990 to 2010.
+#'
 #'
 #' @param df1 a data.frame
 #' @param df1_title title of your first df (ex: topsongs)
