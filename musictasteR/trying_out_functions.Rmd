@@ -128,7 +128,22 @@ d<-plot_songs_clusters(temp3,1990)
 d
 ```
 
+Testing Format new songs
+```{r}
 
+library(billboard)
+
+spotify_test_pull
+
+formated_list <- musictasteR::format_new_songs(spotify_test_pull)
+is.data.frame(formated_list)
+
+"track_name" %in% colnames(formated_list)
+"artist_name" %in% colnames(formated_list)
+
+"energy" %in% colnames(formated_list)
+year
+```
 
 
 

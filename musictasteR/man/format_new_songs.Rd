@@ -2,7 +2,7 @@
 % Please edit documentation in R/format_new_songs.R
 \name{format_new_songs}
 \alias{format_new_songs}
-\title{Format the songs that the user inputs into the same format as the billboard top charts}
+\title{Format the songs that the user inputs (e.g. form spotify) into the same format as the billboard top charts}
 \usage{
 format_new_songs(songs)
 }
@@ -13,7 +13,7 @@ format_new_songs(songs)
 the dataframe with another row, containing the song
 }
 \description{
-Format the songs that the user inputs into the same format as the billboard top charts
+Format the songs that the user inputs (e.g. form spotify) into the same format as the billboard top charts
 }
 \examples{
 \dontrun{
