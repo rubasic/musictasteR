@@ -9,7 +9,7 @@ library(dplyr)
 
 fluidPage(theme = shinytheme("slate"),
           includeCSS("www/styles.css"),
-          setSliderColor(sliderId = c(1,2,3), color = c("#00c193", "#00c193", "#00c193")),
+          shinyWidgets::chooseSliderSkin("Shiny", color = "#00c193"),
 
 
   headerPanel("",
@@ -114,7 +114,9 @@ fluidPage(theme = shinytheme("slate"),
 
       tabPanel("Added songs",
                DT::dataTableOutput("masterDF")
-    )
+      ),
+
+      tabPanel("About the app")
 
     #verbatimTextOutput("event")
   )

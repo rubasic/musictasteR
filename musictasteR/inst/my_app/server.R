@@ -139,12 +139,9 @@ shinyServer(function(input, output,session) {
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
     })
 
-
     output$plot_cluster <- plotly::renderPlotly({
       plot_songs_clusters(master_df,input$year_cluster)
     })
-
-
 
   })
 
