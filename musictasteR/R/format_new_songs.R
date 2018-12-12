@@ -1,4 +1,4 @@
-#' Format the songs that the user inputs into the same format as the billboard top charts
+#' Format the songs that the user inputs (e.g. form spotify) into the same format as the billboard top charts
 #'
 #'
 #' @param songs a new song pulled from an API

@@ -11,6 +11,7 @@ fluidPage(theme = shinytheme("slate"),
           includeCSS("www/styles.css"),
           shinyWidgets::chooseSliderSkin("Shiny", color = "#00c193"),
 
+
   headerPanel("",
             tags$head(
               tags$img(src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrrr.png",

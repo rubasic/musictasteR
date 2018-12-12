@@ -23,7 +23,7 @@ the input song has the following attributes:
 "duration_ms"
 "artist_name"
 "track_name"
-"album_year"}
+"year"}
 
 \item{model}{The list of logistic regression models that predict probability that a song will be on the billboard charts}
 }
