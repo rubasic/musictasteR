@@ -11,7 +11,7 @@ library(data.table)
 data(averagesongs)
 
 
-format_new_songs <- function(songs){
+format_new_songs_logit <- function(songs){
   new_songs <- billboard::spotify_track_data[nrow(songs),]
   new_songs <- ""
   new_songs$artist_name <- songs$artist_name
@@ -129,6 +129,10 @@ shinyServer(function(input, output,session) {
 
 ##SEARCH FUNCTION
 
+  access_token <- reactive({
+    spotifyr::get_spotify_access_token()
+  })
+
   # Get Spotify access token
   Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
   Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
@@ -205,8 +209,7 @@ shinyServer(function(input, output,session) {
 
     #View(master_df)
     #call plot to update
-    new_music <<- format_new_songs(master_df)
-    print(new_music)
+    new_music <<- format_new_songs_logit(master_df)
 
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
