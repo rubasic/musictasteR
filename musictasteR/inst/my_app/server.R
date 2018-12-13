@@ -54,7 +54,7 @@ music_dataframe <- billboard::spotify_track_data
 
 new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
-hover.plot.shiny <- function(data,x,y,chosen_year)
+hover_plot_shiny <- function(data,x,y,chosen_year)
 {
   tracklist <- data %>%
     filter(year == chosen_year) %>% select(artist_name,year,track_name,x,y)
@@ -223,7 +223,7 @@ shinyServer(function(input, output,session) {
     new_music <<- format_new_songs_logit(master_df)
 
     output$plot <- plotly::renderPlotly({
-      p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
+      p <- hover_plot_shiny(billboard::spotify_track_data, input$x,input$y,input$year)
     })
     #AKSHAY
 
@@ -268,7 +268,7 @@ shinyServer(function(input, output,session) {
 
   #default plots
  output$plot <- plotly::renderPlotly({
-    p <- hover.plot.shiny(music_dataframe, input$x,input$y,input$year)
+    p <- hover_plot_shiny(music_dataframe, input$x,input$y,input$year)
   })
 
  output$plot_cluster <- plotly::renderPlotly({
