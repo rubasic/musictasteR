@@ -15,20 +15,61 @@ The choice to take as arguments 2 dataframes instead of 1 (with an additional co
 
 This was appropriate in our case as the billboard data was collected from a different source than the one for average songs, but both contained music features from the Spotify API.
 
+The input arguments are as follows:
 
+First dataset characteristics:
+- df1: a data.frame
+- df1_title: title of your first df (ex: topsongs)
+- df1_year_col: a number (column number of the "year" column)
+
+Second dataset characteristics:
+- df2: a data.frame
+- df2_title: title of your second df (ex: averagesongs)
+- df2_year_col: a number (column number of the "year" column)
+
+Plot characteristics:
+- attributes: a vector containing strings, the column names to be plotted (ex: c("energy","danceability"))
+- boxplot: a boolean, specifies the type of plot (TRUE = plot as boxplots, FALSE = plot as averages)
+- timerange: a 2x1 vector, this defines xlims, years to be plotted over (ex: c(1990, 2010))
+- title_vector: a string vector with the df_title names (the strings have to match!). This defines what will be plotted, for example, c(df1_title) will plot only the first dataframe, and c(df1_title, df2_title) will plot both. Although this is a redundant input parameter, it was created to facilitate the synchronization with the shiny app (the user can choose from the "Billboard" or "Non Billboard" checkboxes).
+
+Example: 
+Load data & define inputs:
 ```{r}
 library(musictasteR)
-attributes <- c("danceability" ,"energy" ,"mode", "speechiness","acousticness", "instrumentalness" ,"liveness","valence" ,"tempo")
-```
+data("billboard_music_dataframe")
+data("averagesongs")
 
-The arguments 
+topsongs <- averagesongs
+```
 
 ```{r}
-attributes_time(billboard_music_dataframe, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, FALSE, c(1960,2015), c("Top Songs","Average Songs"))
-#' }
+head(averagesongs)
+head(topsongs)
+```
+The variable "year" is in column 1 for topsongs and column 4 for average songs.
+
+Comparing averages for Billboard / Non Billboard data:
+```{r}
+attributes <- c("danceability" ,"energy" ,"mode", "speechiness","acousticness", "instrumentalness" ,"liveness","valence" ,"tempo")
+boxplot <- FALSE
+timerange <- c(1960,2015)
+title_vector <- c("Top Songs","Average Songs") # plot both
+
+attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
 ```
 
+Plot only billboard data:
+```{r}
+title_vector <- "Average Songs"
+attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
 
-Learnings:
-- at first we only had the top songs chart
-- integrate average songs easily
+```
+
+Plot as boxplots:
+```{r}
+attributes <- c("danceability" ,"energy")
+boxplot <- TRUE
+attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
+```
+
