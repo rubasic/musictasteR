@@ -286,3 +286,167 @@ save_result <- get_all_reg_models(new_artist_test)
 ```
 
 
+
+# Clustering Functions -
+
+Clustering through K-Means
+```{r}
+cluster_year_k <- function(objet,year_taken,clust_size){
+  
+  # Restricting the input object to the input year
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  
+  # Keeping only the numerical columns that will be useful for the clustering
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  
+  # K means clustering
+  clust_features <- kmeans(restr_obj,centers=clust_size,iter.max = 1000, nstart = 10)
+  
+  # Append into original input database and returning
+  filter_obj$k_cluster <- paste0(year_taken,"_",clust_features$cluster)
+  return(list(filter_obj,clust_features))
+}
+```
+
+Clustering through HCPC
+```{r}
+cluster_year_hcpc <- function(objet,year_taken,clust_num){
+  
+  # Restricting the input object to the input year
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  
+  # Keeping only the numerical columns that will be useful for the clustering
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  
+  # HCPC clustering
+  clust_features <- HCPC(restr_obj, nb.clust = clust_num, graph = F)
+  
+  # Append into original input database and returning
+  filter_obj$hcpc_cluster <- paste0(year_taken,"_",clust_features$data.clust$clust)
+  return(list(filter_obj,clust_features))
+}
+```
+
+
+Clustering through HCPC with pre PCA (2 principal dimensions)
+```{r}
+
+cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
+  
+  # Restricting the input object to the input year
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  
+  # Keeping only the numerical columns that will be useful for the clustering
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  
+  # Running the PCA for preprocessing the input database
+  pca_res <- PCA(restr_obj,ncp=2,graph = F)
+  
+  # Clustering with HCPC based on the PCA input
+  clust_features <- HCPC(pca_res, nb.clust = clust_num, graph = F)
+  
+  # Adding Principal dimensions and Clusters to the database and returning
+  filter_obj$dim_1 <- pca_res$ind$coord[,1]
+  filter_obj$dim_2 <- pca_res$ind$coord[,2]
+  filter_obj$hcpc_pca_cluster <- paste0(year_taken, "_", clust_features$data.clust$clust)
+  return(list(filter_obj,clust_features))
+}
+
+```
+
+
+# Compilation functions
+
+K means clusters database
+```{r}
+
+# Setting range for the processing yearly
+min_year <- min(features_sample$year)
+max_year <- max(features_sample$year)
+
+# Creating empty dataframe/list for appending
+features_clustered_k <- data.frame()
+model_k_clusters <- list()
+
+# Creating a model and clusters for each year through a loop
+for (year in min_year:max_year) {
+    temp <- cluster_year_k(features_sample_proc,year,3)
+    features_clustered_k <- rbind(features_clustered_k,as.data.frame(temp[1]))
+    model_k_clusters <- append(model_k_clusters,temp[2])
+}
+```
+
+HCPC clusters database
+```{r}
+features_clustered_hcpc <- data.frame()
+model_hcpc_clusters <- list()
+    
+# Creating a model and clusters for each year through a loop
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc(features_sample_proc,year,3)
+    features_clustered_hcpc <- rbind(features_clustered_hcpc,as.data.frame(temp[1]))
+    model_hcpc_clusters <- append(model_hcpc_clusters,temp[2])
+}
+```
+
+HCPC with pre PCA clusters database
+```{r}
+features_clustered_hcpc_pca <- data.frame()
+model_hcpc_pca_clusters <- list()
+    
+# Creating a model and clusters for each year through a loop
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc_pca(features_sample_proc,year,3)
+    features_clustered_hcpc_pca <- rbind(features_clustered_hcpc_pca,as.data.frame(temp[1]))
+    model_hcpc_pca_clusters <- append(model_hcpc_pca_clusters,temp[2])
+}
+```
+
+Combination of Cluster databases
+```{r}
+# Creating a combined database with all the three clustering types
+combined_clusters <- features_clustered_hcpc_pca
+combined_clusters$hcpc_cluster <- features_clustered_hcpc$hcpc_cluster
+combined_clusters$k_cluster <- features_clustered_k$k_cluster
+```
+
+"combined_clusters" is the output database
+
+
+
+# Create PCA linear models -
+
+PCA components as linear components of Variables - Yearwise
+```{r}
+
+pc_as_lm <- function(objet,year_taken){
+  
+  # Only using the year inputed
+  filter_obj <- objet %>% filter(year==(year_taken))
+  
+  # Creating linear models 1 and 2 for the two principal dimensions using the numerical features
+  mod1 <- lm(dim_1~danceability+energy+key+loudness+mode+speechiness+acousticness+instrumentalness+liveness+valence+tempo+duration_ms,data=filter_obj)
+  mod2 <- lm(dim_2~dim_1+danceability+energy+key+loudness+mode+speechiness+acousticness+instrumentalness+liveness+valence+tempo+duration_ms,data=filter_obj)
+  
+  # Return the year along with the two models as a list
+  return(list(year_taken,mod1,mod2))
+}
+
+```
+
+Creating Yearly model
+```{r}
+bb_pc_lm_dim1 <- list()
+bb_pc_lm_dim2 <- list()
+    
+# Running the model on a yearly basis to pull in the linear models for each
+for (years in min_year:max_year) {
+    temp <- pc_as_lm(bb_combined_clusters,years)
+    bb_pc_lm_dim1 <- append(bb_pc_lm_dim1,temp[2])
+    bb_pc_lm_dim2 <- append(bb_pc_lm_dim2,temp[3])
+}
+```
+
+"bb_pc_lm_dim1" and "bb_pc_lm_dim2" are the R objects for the list of linear models on a yearly basis
+
+
