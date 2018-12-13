@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_tracks_and_features.R
 \name{get_tracks_and_features}
 \alias{get_tracks_and_features}
-\title{Get Tracks and features}
+\title{Get Tracks and Features}
 \usage{
 get_tracks_and_features(search_string,
   access_token = get_spotify_access_token())
@@ -16,5 +16,9 @@ get_tracks_and_features(search_string,
 a 23 x 20 dataframe containing the first 20 matches from spotify including music characteristics such as energy, danceability etc.
 }
 \description{
-Get Tracks and features
+get_tracks_and_features returns the 20 first matches of a string query to the spotify API.
+The returned dataframe contains all the characteristics needed to make use of the musictasteR plots
+}
+\examples{
+get_tracks_and_features("thriller")
 }

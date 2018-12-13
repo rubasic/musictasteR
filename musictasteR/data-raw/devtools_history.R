@@ -32,6 +32,9 @@ usethis::use_data(spotify_test_pull, overwrite = TRUE)
 
 
 #getting snippet from spotify API for testing with get_track_and_features
+spotify_test_pull_with_characteristics <- get_tracks_and_features("Golddigger")
+usethis::use_data(spotify_test_pull_with_characteristics, overwrite = TRUE)
+
 
 #models for logistic regression
 log_model_list <- readRDS(file = "data-raw/all_models2.rda")
