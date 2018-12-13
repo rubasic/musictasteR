@@ -9,14 +9,23 @@ attributes_time(df1, df1_title, df1_year_col, df2, df2_title, df2_year_col,
 }
 \arguments{
 \item{df1}{a data.frame}
+
 \item{df1_title}{title of your first df (ex: topsongs)}
+
 \item{df1_year_col}{a number (column number of the "year" column)}
+
 \item{df2}{a data.frame}
+
 \item{df2_title}{title of your second df (ex: averagesongs)}
+
 \item{df2_year_col}{a number (column number of the "year" column)}
+
 \item{attributes}{a vector containing strings (names of columns to be plotted, ex: c("energy","danceability"))}
+
 \item{boxplot}{a boolean (TRUE = plot as boxplot, FALSE = plot as averages)}
+
 \item{timerange}{a 2x1 vector (years to be plotted over, ex: c(1990, 2010))}
+
 \item{title_vector}{a string vector with df title names, defines what will be plotted (ex: c(df1_title) will plot only the first dataframe, c(df1_title, df2_title) will plot both)}
 }
 \value{

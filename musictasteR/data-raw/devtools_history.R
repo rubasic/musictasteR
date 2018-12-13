@@ -1,5 +1,6 @@
 usethis::use_build_ignore("devtools_history.R")
 usethis::use_build_ignore("trying_out_functions.Rmd")
+usethis::use_build_ignore("musictaster_vignette_draft.Rmd")
 usethis::use_build_ignore("temp.R")
 usethis::use_build_ignore("plot_clusters_songs.R")
 
