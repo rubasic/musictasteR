@@ -95,12 +95,113 @@ for (i in 1:nrow(try)) {
 
 AKSHAY
 
+
+Script that searches by year based on top words in song titles
 ```{r}
+all_tracks_upd <- list()
+for (i in 1:98) {
+  for (year in 1960:2019) {
+    
+    # Top words is a list of top 100 songs, link given in the description
+    track_search <-  paste0('*',top_words[i,],'*')
+    
+    #URL to query
+    url_built <- str_glue('https://api.spotify.com/v1/search?q=track:{track_search}%20year:{year}&limit=50&offset=60&type=track')
+      res <- RETRY('GET', url = url_built, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+    if((!is.null(names(res)))){
+    res <- res %>% .$tracks %>% .$items
+    all_tracks_upd <- append(all_tracks_upd,res)
+    }
+  }
+  # Testing to see if the word was correctly used
+  print(top_words[i,])
+}
 
 ```
 
+```{r}
+#transforms list of results into a dataframe
+tracks_df_upd <- map_df(seq_len(length(all_tracks_upd)), function(x) {
+                list(
+                    track_name = all_tracks_upd[[x]]$name,
+                    track_uri = gsub('spotify:track:', '', all_tracks_upd[[x]]$uri),
+                    artist_name = all_tracks_upd[[x]]$artists[[1]]$name,
+                    artist_uri = all_tracks_upd[[x]]$artists[[1]]$id,
+                    album_name = all_tracks_upd[[x]]$album$name,
+                    album_id = all_tracks_upd[[x]]$album$id,
+                    album_year= all_tracks_upd[[x]]$album$release_date
+                )
+            })
+
+# Pulling the last 4 digits in the year, because some songs contain the full date of release
+sample_by_year_upd <- tracks_df_upd %>% mutate(album_year_4dgt=substr(album_year,1,4) ) 
+```
+
+Test to see if restriction at 7 songs per artist per year will cut down the total songs by a considerable amount -
+```{r}
+artist_freq <- sample_by_year_upd %>%
+  group_by(artist_name,album_year_4dgt) %>%
+  summarise(freq=n()) 
+
+artist_freq$recalc_songs=ifelse(artist_freq$freq>7,7,artist_freq$freq)
+
+#Total songs
+artist_freq %>%
+  ungroup() %>%
+  summarise(tots=sum(recalc_songs))
 
 
+ggplot(data=artist_freq, aes(x=freq)) + geom_histogram(bins=30) 
+```
+
+
+Restricting to 7 songs per artist per year, to prevent over-sampling from one artist. Selection of songs will be random -
+```{r}
+sample_songs_edit <- sampled_songs_worded %>%
+  select(-album_year) %>%
+  distinct() %>%
+  arrange(album_year_4dgt,artist_name) %>%
+  group_by(album_year_4dgt,artist_name) %>%
+  slice(1:7) %>%
+  ungroup()
+
+# Test to see distribution
+sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
+
+sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+```
+
+Applying a Max cap at 3000 songs per year -
+```{r}
+sample_songs_edit <- sample_songs_edit %>%
+  arrange(album_year_4dgt,artist_name)
+
+#First keep as many unique artists as possible
+sample_songs_edit$count=1
+
+# Setting a counter for each song by an artist in a year
+for(i in 2:nrow(sample_songs_edit)){
+  if(sample_songs_edit$artist_name[i]==sample_songs_edit$artist_name[i-1]&sample_songs_edit$album_year_4dgt[i]==sample_songs_edit$album_year_4dgt[i-1]){
+    sample_songs_edit$count[i]=sample_songs_edit$count[i-1]+1
+  }
+}
+
+# Selecting on the basis of the counter variable, so that 1 song from each artist is selected and then 2nd from each artist and so on
+sample_songs_edit <- sample_songs_edit %>%
+  arrange(album_year_4dgt,artist_name,count) %>%
+  group_by(album_year_4dgt) %>%
+  slice(1:3000) %>%
+  ungroup()
+
+sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
+
+sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+```
+
+Sample_songs_edit is the final pre-processed dataframe used
+
+
+# Grabbing Data from Spotify
 
 The following functions were used to grab the audio features from spotify:
 
@@ -284,5 +385,169 @@ save_result <- get_all_reg_models(new_artist_test)
 
 # saveRDS(save_result$model_list, file="all_models2.rda")
 ```
+
+
+
+# Clustering Functions -
+
+Clustering through K-Means
+```{r}
+cluster_year_k <- function(objet,year_taken,clust_size){
+  
+  # Restricting the input object to the input year
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  
+  # Keeping only the numerical columns that will be useful for the clustering
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  
+  # K means clustering
+  clust_features <- kmeans(restr_obj,centers=clust_size,iter.max = 1000, nstart = 10)
+  
+  # Append into original input database and returning
+  filter_obj$k_cluster <- paste0(year_taken,"_",clust_features$cluster)
+  return(list(filter_obj,clust_features))
+}
+```
+
+Clustering through HCPC
+```{r}
+cluster_year_hcpc <- function(objet,year_taken,clust_num){
+  
+  # Restricting the input object to the input year
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  
+  # Keeping only the numerical columns that will be useful for the clustering
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  
+  # HCPC clustering
+  clust_features <- HCPC(restr_obj, nb.clust = clust_num, graph = F)
+  
+  # Append into original input database and returning
+  filter_obj$hcpc_cluster <- paste0(year_taken,"_",clust_features$data.clust$clust)
+  return(list(filter_obj,clust_features))
+}
+```
+
+
+Clustering through HCPC with pre PCA (2 principal dimensions)
+```{r}
+
+cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
+  
+  # Restricting the input object to the input year
+  filter_obj <- na.omit(objet) %>% filter(year==(year_taken))
+  
+  # Keeping only the numerical columns that will be useful for the clustering
+  restr_obj <- filter_obj %>% select(danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature, year)
+  
+  # Running the PCA for preprocessing the input database
+  pca_res <- PCA(restr_obj,ncp=2,graph = F)
+  
+  # Clustering with HCPC based on the PCA input
+  clust_features <- HCPC(pca_res, nb.clust = clust_num, graph = F)
+  
+  # Adding Principal dimensions and Clusters to the database and returning
+  filter_obj$dim_1 <- pca_res$ind$coord[,1]
+  filter_obj$dim_2 <- pca_res$ind$coord[,2]
+  filter_obj$hcpc_pca_cluster <- paste0(year_taken, "_", clust_features$data.clust$clust)
+  return(list(filter_obj,clust_features))
+}
+
+```
+
+
+# Compilation functions
+
+K means clusters database
+```{r}
+
+# Setting range for the processing yearly
+min_year <- min(features_sample$year)
+max_year <- max(features_sample$year)
+
+# Creating empty dataframe/list for appending
+features_clustered_k <- data.frame()
+model_k_clusters <- list()
+
+# Creating a model and clusters for each year through a loop
+for (year in min_year:max_year) {
+    temp <- cluster_year_k(features_sample_proc,year,3)
+    features_clustered_k <- rbind(features_clustered_k,as.data.frame(temp[1]))
+    model_k_clusters <- append(model_k_clusters,temp[2])
+}
+```
+
+HCPC clusters database
+```{r}
+features_clustered_hcpc <- data.frame()
+model_hcpc_clusters <- list()
+    
+# Creating a model and clusters for each year through a loop
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc(features_sample_proc,year,3)
+    features_clustered_hcpc <- rbind(features_clustered_hcpc,as.data.frame(temp[1]))
+    model_hcpc_clusters <- append(model_hcpc_clusters,temp[2])
+}
+```
+
+HCPC with pre PCA clusters database
+```{r}
+features_clustered_hcpc_pca <- data.frame()
+model_hcpc_pca_clusters <- list()
+    
+# Creating a model and clusters for each year through a loop
+for (year in min_year:max_year) {
+    temp <- cluster_year_hcpc_pca(features_sample_proc,year,3)
+    features_clustered_hcpc_pca <- rbind(features_clustered_hcpc_pca,as.data.frame(temp[1]))
+    model_hcpc_pca_clusters <- append(model_hcpc_pca_clusters,temp[2])
+}
+```
+
+Combination of Cluster databases
+```{r}
+# Creating a combined database with all the three clustering types
+combined_clusters <- features_clustered_hcpc_pca
+combined_clusters$hcpc_cluster <- features_clustered_hcpc$hcpc_cluster
+combined_clusters$k_cluster <- features_clustered_k$k_cluster
+```
+
+"combined_clusters" is the output database
+
+
+
+# Create PCA linear models -
+
+PCA components as linear components of Variables - Yearwise
+```{r}
+
+pc_as_lm <- function(objet,year_taken){
+  
+  # Only using the year inputed
+  filter_obj <- objet %>% filter(year==(year_taken))
+  
+  # Creating linear models 1 and 2 for the two principal dimensions using the numerical features
+  mod1 <- lm(dim_1~danceability+energy+key+loudness+mode+speechiness+acousticness+instrumentalness+liveness+valence+tempo+duration_ms,data=filter_obj)
+  mod2 <- lm(dim_2~dim_1+danceability+energy+key+loudness+mode+speechiness+acousticness+instrumentalness+liveness+valence+tempo+duration_ms,data=filter_obj)
+  
+  # Return the year along with the two models as a list
+  return(list(year_taken,mod1,mod2))
+}
+
+```
+
+Creating Yearly model
+```{r}
+bb_pc_lm_dim1 <- list()
+bb_pc_lm_dim2 <- list()
+    
+# Running the model on a yearly basis to pull in the linear models for each
+for (years in min_year:max_year) {
+    temp <- pc_as_lm(bb_combined_clusters,years)
+    bb_pc_lm_dim1 <- append(bb_pc_lm_dim1,temp[2])
+    bb_pc_lm_dim2 <- append(bb_pc_lm_dim2,temp[3])
+}
+```
+
+"bb_pc_lm_dim1" and "bb_pc_lm_dim2" are the R objects for the list of linear models on a yearly basis
 
 

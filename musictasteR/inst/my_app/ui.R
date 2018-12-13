@@ -41,7 +41,7 @@ fluidPage(theme = shinytheme("slate"),
                br(),
                p("This plot shows ..."),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
-                 value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000),
+                 value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "", width = 1000),
                shinyWidgets::radioGroupButtons(
                  "x", label = NULL, selected = "energy", choices = all_attributes),
                shinyWidgets::radioGroupButtons(
@@ -86,12 +86,12 @@ fluidPage(theme = shinytheme("slate"),
 
       # TAB 3
       tabPanel(strong("Plot Mirae"),
-               plotOutput("plot_logit"),
+               plotOutput("plotLogit"),
                br(),
                p("This plot shows ..."),
                actionButton("updateLogit", label = "Create plot"),
-               shinyWidgets::awesomeCheckboxGroup("selectLogit", choices = NULL, label = NULL, inline = TRUE),
-               DT::dataTableOutput("logit_df")
+               shinyWidgets::awesomeCheckboxGroup(
+                 "selectLogit", choices = NULL, label = NULL, inline = TRUE)
                ),
 
       # TAB 4
@@ -101,7 +101,7 @@ fluidPage(theme = shinytheme("slate"),
                p("See which song your input music is the most similar to in which year! Select a song/list of songs, select a year and hover over the result to see song details! Songs that are clustered together indicate a weak similarity between them in terms of musical features, and songs that are closeby in the plot are strongly similar."),
                strong("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
-                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "")
+                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "", width = 1000)
                ),
 
       # TAB 5
