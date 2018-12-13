@@ -137,22 +137,22 @@ plot_songs_clusters <- function(songs,year_taken){
   return(response_fin)
 }
 
+# Spotify credentials
+Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
+
 shinyServer(function(input, output,session) {
 
-##SEARCH FUNCTION
+  # Get Spotify access token
   access_token <- reactive({
     spotifyr::get_spotify_access_token()
   })
 
-  # Get Spotify access token
-  Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
-  Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
-  access_token <- get_spotify_access_token()
-
+  ## SEARCH FUNCTION
   # Pulling list of tracks from Spotify
   tracks <- reactive({
     req(input$track)
-    get_tracks_artists(track_artist_name = input$track, access_token = access_token)
+    get_tracks_artists(track_artist_name = input$track, access_token = access_token())
   })
 
   # Displaying album image of first match
@@ -192,7 +192,7 @@ shinyServer(function(input, output,session) {
     filtered_tracks_unique <- subset(filtered_tracks, !duplicated(filtered_tracks[,1]))
 
     # Pulling audio features for the selected tracks from Spotify
-    track_features <- get_track_audio_features(tracks(), access_token = access_token)
+    track_features <- get_track_audio_features(tracks(), access_token = access_token())
 
     # Merging the track information and the audio features
     tracks_joined <- left_join(x = filtered_tracks_unique, y = track_features, by = "track_uri")
