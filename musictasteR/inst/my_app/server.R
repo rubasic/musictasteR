@@ -80,10 +80,10 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
   return(hover.plot)
 }
 
-
+'
 ## AKSHAY CLUSTER FUNCTION
 
-plot_songs_clusters <- function(songs,year_taken){
+plot_songs_clusters_2 <- function(songs,year_taken){
 
   #Process Columns for Mode and Key
   songs$mode <- ifelse(songs$mode=="Major",1,0)
@@ -141,7 +141,7 @@ plot_songs_clusters <- function(songs,year_taken){
                                                                                          color = "black")));
   return(response_fin)
 }
-
+'
 shinyServer(function(input, output,session) {
 
   # Get Spotify API access token

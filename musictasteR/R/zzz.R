@@ -15,7 +15,12 @@ globalVariables(
    "true_song_year_index",
    "year_int_col_index",
    "prob",
-   "year_int"
+   "year_int",
+   "Group",
+   "Primary",
+   "Secondary",
+   "bb_data",
+   "cluster_final"
   )
 )
 
