@@ -22,9 +22,6 @@ https://developer.spotify.com/documentation/web-api/
 
 
 ```{r}
-Sys.setenv(SPOTIFY_CLIENT_ID = '76b887bef35c47c3a2f163b4ef96ad06')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '14a6cf275d804cd5983ac7a3a7b1531a')
-
 access_token <- get_spotify_access_token()
 
 #Samples
@@ -77,17 +74,6 @@ get_track_id <- function(row) {
       }
     }
   )
-}
-
-# Iteratively try to get the spotify track id for every row in the `try` dataframe.
-try <- trial_df3
-for (i in 1:nrow(try)) {
-  if (i %% 500 == 0) {
-    print(i)
-  }
-  row <- try[i,]
-  value <- get_track_id(row)
-  try[i,]$spotify_uri <- value
 }
 ```
 
@@ -204,7 +190,6 @@ Sample_songs_edit is the final pre-processed dataframe used
 # Grabbing Data from Spotify
 
 The following functions were used to grab the audio features from spotify:
-
 ```{r}
 make_api_call <- function(audio_features_api,access_token) {
   analysis_result_call <- safely(RETRY)('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) 
@@ -214,6 +199,7 @@ make_api_call <- function(audio_features_api,access_token) {
   } else {
   analysis_result <- analysis_result_call$result %>% content
   track_href <- analysis_result$track_href
+  track_result_call <- safely(RETRY)('GET', url = track_href, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100)
   analysis_result <- analysis_result[c('danceability',
                                        'energy',
                                        'key',
@@ -231,6 +217,10 @@ make_api_call <- function(audio_features_api,access_token) {
                                        'analysis_url',
                                        'duration_ms',
                                        'time_signature')]
+    track_basic_trait_result <- track_result_call$result %>% content
+    analysis_result['artist_name'] <- track_basic_trait_result$artists[[1]]$name
+    analysis_result['track_name'] <- track_basic_trait_result$name
+    analysis_result['year'] <- track_basic_trait_result$album$release_date
   return(analysis_result)
   }
 }
@@ -315,11 +305,11 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
 
 ## Logistic Regression
 
-One of the features of the app was to predict how successful a song would perform. For this, we implemented a logistic regression, to find the probability of whether a song would be in the top charts or not. First, I needed to make sure that for every year, we had an equal proportion of non-billboard songs to billboard songs. Because the billboard songs quantity was relatively fixed across the years, we reduced the number of average songs in our sample per year. Variable selection for the logistic regression was performed using the stepwise method that used both the forward and backward procedure optimizing on the BIC criterion. We calibrated one model per year and saved it into a list of models, along with their fisher test scores to check global signficance of the model. The models were saved as a .rda object and is accessible in the package as "log_model_list."
+One of the features of the app is to predict how successful a song would perform. For this, we implemented a logistic regression to find the probability of whether a song would be in the top charts or not. First, we needed to make sure that for every year, we had an equal proportion of non-billboard songs to billboard songs. Because the billboard songs quantity was relatively fixed across the years, we reduced the number of average songs in our sample per year. Variable selection for the logistic regression was performed using the stepwise method that used both the forward and backward procedure optimizing on the BIC criterion. We calibrated one model per year and saved it into a list of models, along with their fisher test scores to check global signficance of the model. The models were saved as a .rda object and is accessible in the package as "log_model_list."
 
 ```{r}
 #load the large data
-df <- read_csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/150k_sample.csv')
+df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/150k_sample.csv')
 df <- df[!is.na(df$key),]
 billboard_df <- billboard::spotify_track_data
 
@@ -342,15 +332,15 @@ artist_test%>% group_by(year, artist_name) %>% summarise(count=n())
 artist_test <- artist_test %>% group_by(year) %>% slice(1:600) %>% ungroup() #limit each year to only have 600 average songs
 artist_test %>% group_by(year) %>% summarise(count=n()) 
 new_artist_test <-rbind(billboard_edit, artist_test) #finally, combine the average and the billboard songs
-
 per_year_test <- new_artist_test %>% group_by(year) %>% slice(1:600)
+```
+
+```{r fig.width=14}
+#Original Distribution of songs per year
+full_test %>% filter(!year%in% c(2015:2019)) %>% group_by(year, top_or_not) %>% summarise(count=n()) %>% ggplot(aes(x=year, y=count, fill=as.factor(top_or_not))) + geom_bar(stat="identity") + labs(title="Original Distribution of Average to Top Chart Songs")
 
 #Look at the distribution of songs per year
-new_artist_test %>% group_by(year, top_or_not) %>% summarise(count=n()) %>% ggplot(aes(x=year, y=count, fill=top_or_not)) + geom_bar(stat="identity", position=position_dodge())
-
-#quickly see the proportion of billboard to nonbillboard songs per year
-ggplot(data=df2, aes(x=dose, y=len, fill=supp)) +
-geom_bar(stat="identity", position=position_dodge())
+new_artist_test %>% filter((!year%in% c(2015:2019))) %>% group_by(year, top_or_not) %>% summarise(count=n()) %>% ggplot(aes(x=year, y=count, fill=as.factor(top_or_not))) + geom_bar(stat="identity") + labs(title="Filtered Distribution of Average to Top Chart Songs")
 
 #define function that runs logistic regression for one year
 run_l_reg <-function(full_test) {
@@ -367,8 +357,6 @@ get_all_reg_models <- function(full_test) {
   anova_list <- list()
   return_list <- list()
   for (year_input in 1960:2015) {
-    print(year_input)
-  # for (year_input in 1960:1960) {
     full_test_year <- full_test %>% filter(year == year_input)
     result <- run_l_reg(full_test_year)
     all_results[paste0('year', as.character(year_input))] <- result[1]
@@ -379,14 +367,82 @@ get_all_reg_models <- function(full_test) {
   return(return_list)
 }
 
+clean_up <- function(input) {
+                list(
+                  danceability = input$result$danceability,
+                  energy = input$result$energy,
+                  key = input$result$key,
+                  loudness = input$result$loudness,
+                  mode = input$result$mode,
+                  speechiness = input$result$speechiness,
+                  acousticness = input$result$acousticness,
+                  instrumentalness = input$result$instrumentalness,
+                  liveness = input$result$liveness,
+                  valence = input$result$valence,
+                  tempo = input$result$tempo,
+                  duration_ms =  input$result$duration_ms,
+                  # uri = final_list_filtered[[x]]["uri"],
+                  # track_href = final_list_filtered[[x]]["track_href"],
+                  # analysis_url = final_list_filtered[[x]]["analysis_url"],
+                  # duration_ms = final_list_filtered[[x]]["duration_ms"],
+                  # time_signature = final_list_filtered[[x]]["time_signature"],
+                  artist_name = input$result$artist_name,
+                  track_name = input$result$track_name,
+                  year = input$result$year
+                  # artist_id = final_list_filtered[[x]]["artist_uri"]
+                )
+  }
+
 get_all_reg_models(new_artist_test)
 
 save_result <- get_all_reg_models(new_artist_test)
 
 # saveRDS(save_result$model_list, file="all_models2.rda")
+
 ```
 
+All models had significant liklihood ratio test scores. 1972 has the highest Liklihood ratio test score of 2.86441e-09, meaning it is the least significant model. The models are saved in the package and can be accessed through an object called "log_model_list"
+```{r }
+anova_list <- unlist(save_result$anova_list)
+anova_df <- data.frame(anova_score = unlist(anova_list))
+anova_df['year'] <- sapply(rownames(anova_df), function(x) {return(substring(x,5,9))})
 
+# All anova scores
+a <- ggplot() + geom_point(data=anova_df,aes(x=year, y=anova_score))+labs(main="Anova score for models")
+b <- anova_df %>% filter(year != 1972) %>% ggplot()+ geom_point(aes(x=year, y=anova_score))+labs(main="Anova scores for models except 1972")
+grid.arrange(a,b, ncol=2)
+```
+
+Below is a sample output of one of the models (1960 model) in the model list object. For every year, we can see the variables that were relevant in the prediction of being a top billboard song or not.
+```{r}
+log_model_list$year1960
+```
+
+## How Logistic Regression Feature works in the app
+
+From the initially selected tracks, one can select tracks that they want to plot against time. The `get_probability_of_billboard() function takes in the spotify audio features of a track and runs it against the logistic regressions for each year to output the probability of a song being on the billboard per year. 
+
+Below is a sample of the dataframe of probabilities that feed into the dataframe for the plot.
+
+```{r}
+library(musictasteR)
+input_song <- new_song
+
+	
+probability_df <- get_probability_of_billboard(new_song2, log_model_list)
+probability_df <- 
+  
+probability_df['true_song_year_bool'] <- probability_df$true_song_year == probability_df$year_int
+max(probability_df)
+
+```
+
+The following plot shows a line graph of the probabilities that the song will be on the billboard throughout time. There are three points that are highlighted in the line graph, the probability of the release year, the highest probability and the lowest probability. 
+
+```{r}
+plot_probabilities(multiple_df, 3,2,4, 5)
+```
+Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
 # Clustering Functions -
 
@@ -454,7 +510,6 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
 }
 
 ```
-
 
 # Compilation functions
 
