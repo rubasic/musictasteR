@@ -155,7 +155,55 @@ nrow(a) == 20
 "track_artist" %in% colnames(a)
 
 #should return 20 rows 
+
+
+
 ```
 
 
+```{r}
+library(spotifyr)
+# Get Spotify access token
+  Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
+  Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
+  access_token <- get_spotify_access_token()
+
+get_tracks_and_features <- function(track_artist_name, access_token = get_spotify_access_token()) {
+  
+  access_token <- access_token
+  
+  # Search Spotify API
+  res <- GET('https://api.spotify.com/v1/search',
+             query = list(q = track_artist_name,
+                          type = 'track,artist',
+                          access_token = access_token)
+  ) %>% content
+  
+  if (length(res$tracks$items) >= 0) {
+    
+    tracks <- map_df(seq_len(length(res$tracks$items)), function(x) {
+      list(
+        track_artist_name = res$tracks$items[[x]]$name,
+        track_uri = gsub('spotify:track:', '', res$tracks$items[[x]]$uri),
+        artist_name = res$tracks$items[[x]]$artists[[1]]$name,
+        artist_uri = res$tracks$items[[x]]$artists[[1]]$id,
+        album_name = res$tracks$items[[x]]$album$name,
+        album_id = res$tracks$items[[x]]$album$id,
+        album_img = res$tracks$items[[x]]$album$images[[1]]$url,
+        release_date = res$tracks$items[[x]]$album$release_date,
+        track_artist = paste(res$tracks$items[[x]]$name, res$tracks$items[[x]]$artists[[1]]$name, sep = " - ") # Track and artist name combined
+      )
+    })
+    
+  } else {
+    tracks <- tibble()
+  }
+  
+  audio_features <- get_track_audio_features(tracks = tracks, access_token = access_token)
+  
+  all_info <- left_join(tracks, audio_features)
+}
+
+nirvana <- get_tracks_and_features("nirvana", access_token = access_token)
+```
 
