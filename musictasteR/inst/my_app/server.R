@@ -6,10 +6,14 @@ library(tidyverse)
 library(httr)
 library(reshape)
 library(shinythemes)
+library(shinyWidgets)
 library(shinycssloaders)
 library(data.table)
 data(averagesongs)
 
+# Set Spotify API credentials
+Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
 
 format_new_songs_logit <- function(songs){
   new_songs <- billboard::spotify_track_data[nrow(songs),]
@@ -137,25 +141,20 @@ plot_songs_clusters <- function(songs,year_taken){
   return(response_fin)
 }
 
-# Spotify credentials
-Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
-
 shinyServer(function(input, output,session) {
 
-  # Get Spotify access token
+  # Get Spotify API access token
   access_token <- reactive({
     spotifyr::get_spotify_access_token()
   })
 
-  ## SEARCH FUNCTION
-  # Pulling list of tracks from Spotify
   tracks <- reactive({
     req(input$track)
+    # Pulling track information from Spotify
     get_tracks_artists(track_artist_name = input$track, access_token = access_token())
   })
 
-  # Displaying album image of first match
+  # Displaying the album image of the first match from the search
   output$albumImage <- renderUI({
     if(length(tracks()$album_img[1]) != 0) {
       image_url <- tracks()$album_img[1]
@@ -163,29 +162,23 @@ shinyServer(function(input, output,session) {
     }
   })
 
-  # output$albumImage2 <- renderUI({
-  #   if(length(tracks()$album_img[2]) != 0) {
-  #     image_url <- tracks()$album_img[2]
-  #     tags$img(src = image_url, height = 200, width = 200)
-  #   }
-  # })
-
-  # Updating the checkboxes with top five matches
+  # Updating the checkboxes with top 5 matches from the search
   observeEvent(input$track, {
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
-      choices = choices[0:min(5,length(choices))], inline = TRUE
-    )
+      choices = choices[0:min(5,length(choices))], inline = TRUE)
   })
+
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
   master_df <- data_frame()
 
-  # Adding tracks to the master data frame
+  #
   observeEvent(input$addTracks, {
     req(input$track)
 
-    # Filtering the data frame with track information based on the tracks the user has selected
+    ## Updating the master dataframe
+    # Filtering the search results based on the tracks the user has selected
     filtered_tracks <- tracks() %>% filter(track_artist %in% input$selectTracks)
 
     # Removing duplicate tracks
@@ -203,30 +196,26 @@ shinyServer(function(input, output,session) {
     # Preventing user from adding same song twice
     master_df <<- unique(master_df)
 
-    #print(master_df)
-    # Displaying the output data frame
-    # Remove for final Shiny
+    ## Updating the tab "Your songs"
     output$masterDF <- DT::renderDataTable({
-      master_df
-      # master_dff <- master_df %>% select(track_artist_name, artist_name, album_name,
-      #                                    release_date)
-      # colnames(master_dff) <- c("Track", "Artist", "Album", "Release date")
-      # master_dff
+      master_df_selected <- master_df %>% select(track_artist_name, artist_name, album_name, release_date)
+      colnames(master_df_selected) <- c("Track", "Artist", "Album", "Release date")
+      master_df_selected
     })
 
+    ## Updating the table with added songs in the sidebar
     output$yourTracks <- renderTable({
       unique(master_df %>% select(track_artist))
     }, colnames = FALSE)
 
-    #View(master_df)
     #call plot to update
     new_music <<- format_new_songs_logit(master_df)
 
     output$plot <- plotly::renderPlotly({
       p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
     })
-    #AKSHAY
 
+    #AKSHAY
     output$plot_cluster <- plotly::renderPlotly({
       plot_songs_clusters(master_df,input$year_cluster)
     })
