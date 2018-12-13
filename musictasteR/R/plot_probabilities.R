@@ -35,11 +35,14 @@ plot_probabilities <- function(input_dataframe, year_int_col_index, prob_col_ind
     guides(size = "none",color=guide_legend("Track Name"), alpha="none")
 
   #highlight actual release year of the song
-  g <- g + geom_point(data=input_dataframe[input_dataframe$true_song_year_bool == T,],
-                      aes(x=input_dataframe[input_dataframe$true_song_year_bool == T,]$year_int,
-                          y=input_dataframe[input_dataframe$true_song_year_bool == T,]$prob
-                      ), color="black", size=4)
-
+  if (max(input_dataframe$true_song_year_bool) == 1) {
+    g <- g + geom_point(data=input_dataframe[input_dataframe$true_song_year_bool == T,],
+                        aes(x=input_dataframe[input_dataframe$true_song_year_bool == T,]$year_int,
+                            y=input_dataframe[input_dataframe$true_song_year_bool == T,]$prob
+                        ), color="black", size=4)
+    g <- g+ geom_text(data=input_dataframe[input_dataframe$true_song_year_bool == T,], aes(x=year_int,y=prob,label=paste0("release year: ", year_int) , alpha=0.8), hjust=-.06,vjust=-.06, size=3)
+    }
+  
   #highlight the point with minimum probability of song
   g <- g + geom_point(data=DT[ , .SD[which.min(prob)], by = track_name],
                       aes(x=DT[ , .SD[which.min(prob)], by = track_name]$year_int,
@@ -49,9 +52,7 @@ plot_probabilities <- function(input_dataframe, year_int_col_index, prob_col_ind
   g <- g + geom_point(data=DT[ , .SD[which.max(prob)], by = track_name],
                       aes(x=DT[ , .SD[which.max(prob)], by = track_name]$year_int,
                           y=DT[ , .SD[which.max(prob)], by = track_name]$prob), color="blue", shape=17, size=4)
-  g <- g+ geom_text(data=input_dataframe[input_dataframe$true_song_year_bool == T,], aes(x=year_int,y=prob,label=paste0("release year: ", year_int) , alpha=0.8), hjust=-.06,vjust=-.06, size=3)
   g <- g+ geom_text(data=DT[ , .SD[which.min(prob)]], aes(x=year_int,y=prob, label=paste0("min. probability year: ", year_int) ,alpha=0.8), hjust=-.06,vjust=-.06, size=3)
   g <- g+ geom_text(data=DT[ , .SD[which.max(prob)]], aes(x=year_int,y=prob,label=paste0("max. probability year: ", year_int) ,alpha=0.8), hjust=-.06,vjust=-.06, size=3)
-
   return(g)
 }
