@@ -1,4 +1,7 @@
-#' Get Tracks and features
+#' Get Tracks and Features
+#'
+#' get_tracks_and_features returns the 20 first matches of a string query to the spotify API.
+#' The returned dataframe contains all the characteristics needed to make use of the musictasteR plots
 #'
 #' @param search_string a string containing a name of the artist or song
 #' @param access_token the access token for to the Spotify API
@@ -8,6 +11,7 @@
 #' @export
 #'
 #' @examples
+#' get_tracks_and_features("thriller")
 get_tracks_and_features <- function(search_string, access_token = get_spotify_access_token()) {
 
   access_token <- access_token
