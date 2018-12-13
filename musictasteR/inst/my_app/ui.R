@@ -111,10 +111,10 @@ fluidPage(theme = shinytheme("slate"),
                DT::dataTableOutput("logit_df")
                ),
 
-      tabPanel(strong("Plot Akshay"),
+      tabPanel(strong("Yearwise Song Clusters"),
                plotly::plotlyOutput("plot_cluster"),
                br(),
-               p("This plot shows ..."),
+               p("See which song your input music is the most similar to in which year! Select a song/list of songs, select a year and hover over the result to see song details! Songs that are clustered together indicate a weak similarity between them in terms of musical features, and songs that are closeby in the plot are strongly similar."),
                strong("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
                            value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = ""
