@@ -54,10 +54,6 @@ format_new_songs_logit <- function(songs){
   new_songs$year <-  substr(songs$release_date, 1, 4)
   return(as.data.frame(new_songs))
 }
-#in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
-music_dataframe <- billboard::spotify_track_data
-
-new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
 hover.plot.shiny <- function(data,x,y,chosen_year)
 {
@@ -80,10 +76,10 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
   return(hover.plot)
 }
 
-'
+
 ## AKSHAY CLUSTER FUNCTION
 
-plot_songs_clusters_2 <- function(songs,year_taken){
+plot_songs_clusters <- function(songs,year_taken){
 
   #Process Columns for Mode and Key
   songs$mode <- ifelse(songs$mode=="Major",1,0)
@@ -141,7 +137,7 @@ plot_songs_clusters_2 <- function(songs,year_taken){
                                                                                          color = "black")));
   return(response_fin)
 }
-'
+
 shinyServer(function(input, output,session) {
 
   # Get Spotify API access token
@@ -174,10 +170,13 @@ shinyServer(function(input, output,session) {
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
   master_df <- data_frame()
 
-  # Creating a data frame that will hold formatted songs for logistic regression
-  songs_logit <- data_frame()
+  # Creating a data frame that will hold formatted songs for attributes plot
+  # Contains "Oops!... I Did It Again" by Britney Spears by default, which is removed when user adds new songs
+  new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
-  #
+  # Creating a data frame that will hold formatted songs for logistic regression
+  new_music_logit <- data_frame()
+
   observeEvent(input$addTracks, {
     req(input$track)
 
@@ -213,11 +212,12 @@ shinyServer(function(input, output,session) {
     }, colnames = FALSE)
 
     ## Updating the data frame with formatted data for logistic regression
-    songs_logit <<- format_new_songs_logit(master_df)
+    new_music_logit <<- format_new_songs_logit(master_df)
 
-    ##
+    ## Updating the data frame with formatted data for attributes plot
     new_music <<- format_new_songs(master_df)
 
+    ## Updating the attributes plot
     output$plot <- plotly::renderPlotly({
       p <- hover_plot_shiny(new_music, input$x,input$y,input$year)
     })
@@ -237,67 +237,62 @@ shinyServer(function(input, output,session) {
   ## Updating logistic regression plot
   observeEvent(input$updateLogit, {
     req(input$selectLogit)
-    input_song_df <- songs_logit %>% split(.$track_name) %>%
+    logit_input <- new_music_logit %>% split(.$track_name) %>%
       map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
-    input_song_df <- input_song_df %>% filter(track_name %in% input$selectLogit)
-    output$plot_logit <- renderPlot(
-      plot_probabilities(input_song_df, 3, 2, 4, 5)
+    logit_input <- logit_input %>% filter(track_name %in% input$selectLogit)
+    output$plotLogit <- renderPlot(
+      plot_probabilities(logit_input, 3, 2, 4, 5)
     )
+    print(logit_input)
   })
 
-  # Clearing the data frame with saved tracks
+  ## Clearing the songs the user has added
   observeEvent(input$clearTracks, {
-    master_df <<- tibble()
+    ## Replacing the master data frame with an empty data frame
+    master_df <<- data_frame()
 
-    # Displaying the output data frame
-    # Remove for final Shiny
+    ## Updating the tab "Your songs"
     output$masterDF <- DT::renderDataTable({
       master_df
     })
 
+    ## Updating the table with added songs in the sidebar
     output$yourTracks <- renderTable(
       master_df
     )
+
+    shinyWidgets::updateAwesomeCheckboxGroup(
+      session = session, inputId = "selectLogit",
+      choices = NULL, selected = NULL)
   })
-##END OF SEARCH FUNCTION
 
-
-  #default plots
- output$plot <- plotly::renderPlotly({
+  ## Attributes plot
+  output$plot <- plotly::renderPlotly({
     p <- hover_plot_shiny(new_music, input$x,input$y,input$year)
   })
 
- output$plot_cluster <- plotly::renderPlotly({
-   plot_songs_clusters(new_music,input$year_cluster)
- })
+  ## Cluster plot
+  output$plot_cluster <- plotly::renderPlotly({
+    plot_songs_clusters(new_music,input$year_cluster)
+  })
 
- ' output$event <- renderPrint({
-    d <- event_data("plotly_hover")
-    if (is.null(d)) {
-      "Hover to get information about songs"
-    }
-    else {
-      d
-    }
-  })'
+  ## Historical data plot
+  music_dataframe <- billboard::spotify_track_data # Historical Billboard data
+  # All the Spotify audio attributes
+  all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
+  output$attributes_time <- renderPlot({
+    req(input$attributes)
+    attributes_time(music_dataframe, "Billboard", 1, averagesongs,
+                    "Non Billboard", 4, input$attributes, input$boxplot,
+                    input$timerange, input$billboard)
+  })
 
- ## CLARA PLOT
- all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
-
- observe({
+  ## When user pulls the "boxplot" switch, the only attribute that is checked is "danceability"
+  observe({
    if(input$boxplot == TRUE) {
      updateCheckboxGroupInput(session = session,
                               inputId = "attributes", selected = "danceability",
                               choices = all_attributes)
-   }
- })
-
- output$attributes_time <- renderPlot({
-   req(input$attributes)
-   attributes_time(music_dataframe, "Billboard", 1, averagesongs,
-                   "Non Billboard", 4, input$attributes, input$boxplot,
-                   input$timerange, input$billboard)
- })
-
-
+     }
+    })
 })
