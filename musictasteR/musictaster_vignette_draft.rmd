@@ -95,12 +95,113 @@ for (i in 1:nrow(try)) {
 
 AKSHAY
 
+
+Script that searches by year based on top words in song titles
 ```{r}
+all_tracks_upd <- list()
+for (i in 1:98) {
+  for (year in 1960:2019) {
+    
+    # Top words is a list of top 100 songs, link given in the description
+    track_search <-  paste0('*',top_words[i,],'*')
+    
+    #URL to query
+    url_built <- str_glue('https://api.spotify.com/v1/search?q=track:{track_search}%20year:{year}&limit=50&offset=60&type=track')
+      res <- RETRY('GET', url = url_built, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) %>% content
+    if((!is.null(names(res)))){
+    res <- res %>% .$tracks %>% .$items
+    all_tracks_upd <- append(all_tracks_upd,res)
+    }
+  }
+  # Testing to see if the word was correctly used
+  print(top_words[i,])
+}
 
 ```
 
+```{r}
+#transforms list of results into a dataframe
+tracks_df_upd <- map_df(seq_len(length(all_tracks_upd)), function(x) {
+                list(
+                    track_name = all_tracks_upd[[x]]$name,
+                    track_uri = gsub('spotify:track:', '', all_tracks_upd[[x]]$uri),
+                    artist_name = all_tracks_upd[[x]]$artists[[1]]$name,
+                    artist_uri = all_tracks_upd[[x]]$artists[[1]]$id,
+                    album_name = all_tracks_upd[[x]]$album$name,
+                    album_id = all_tracks_upd[[x]]$album$id,
+                    album_year= all_tracks_upd[[x]]$album$release_date
+                )
+            })
+
+# Pulling the last 4 digits in the year, because some songs contain the full date of release
+sample_by_year_upd <- tracks_df_upd %>% mutate(album_year_4dgt=substr(album_year,1,4) ) 
+```
+
+Test to see if restriction at 7 songs per artist per year will cut down the total songs by a considerable amount -
+```{r}
+artist_freq <- sample_by_year_upd %>%
+  group_by(artist_name,album_year_4dgt) %>%
+  summarise(freq=n()) 
+
+artist_freq$recalc_songs=ifelse(artist_freq$freq>7,7,artist_freq$freq)
+
+#Total songs
+artist_freq %>%
+  ungroup() %>%
+  summarise(tots=sum(recalc_songs))
 
 
+ggplot(data=artist_freq, aes(x=freq)) + geom_histogram(bins=30) 
+```
+
+
+Restricting to 7 songs per artist per year, to prevent over-sampling from one artist. Selection of songs will be random -
+```{r}
+sample_songs_edit <- sampled_songs_worded %>%
+  select(-album_year) %>%
+  distinct() %>%
+  arrange(album_year_4dgt,artist_name) %>%
+  group_by(album_year_4dgt,artist_name) %>%
+  slice(1:7) %>%
+  ungroup()
+
+# Test to see distribution
+sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
+
+sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+```
+
+Applying a Max cap at 3000 songs per year -
+```{r}
+sample_songs_edit <- sample_songs_edit %>%
+  arrange(album_year_4dgt,artist_name)
+
+#First keep as many unique artists as possible
+sample_songs_edit$count=1
+
+# Setting a counter for each song by an artist in a year
+for(i in 2:nrow(sample_songs_edit)){
+  if(sample_songs_edit$artist_name[i]==sample_songs_edit$artist_name[i-1]&sample_songs_edit$album_year_4dgt[i]==sample_songs_edit$album_year_4dgt[i-1]){
+    sample_songs_edit$count[i]=sample_songs_edit$count[i-1]+1
+  }
+}
+
+# Selecting on the basis of the counter variable, so that 1 song from each artist is selected and then 2nd from each artist and so on
+sample_songs_edit <- sample_songs_edit %>%
+  arrange(album_year_4dgt,artist_name,count) %>%
+  group_by(album_year_4dgt) %>%
+  slice(1:3000) %>%
+  ungroup()
+
+sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
+
+sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
+```
+
+Sample_songs_edit is the final pre-processed dataframe used
+
+
+# Grabbing Data from Spotify
 
 The following functions were used to grab the audio features from spotify:
 
