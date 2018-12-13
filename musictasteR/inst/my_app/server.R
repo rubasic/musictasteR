@@ -15,6 +15,48 @@ data(averagesongs)
 Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
 Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
 
+plot_probabilities <- function(input_dataframe, year_int_col_index, prob_col_index, track_name_col_index,  true_song_year_index) {
+  #dataframe with year and probability
+  colnames(input_dataframe)[year_int_col_index] <-"year_int"
+  colnames(input_dataframe)[prob_col_index] <-"prob"
+  colnames(input_dataframe)[track_name_col_index] <-"track_name"
+  colnames(input_dataframe)[true_song_year_index] <- "true_song_year"
+  input_dataframe['true_song_year_bool'] <- input_dataframe$true_song_year == input_dataframe$year_int
+
+  DT <- data.table(input_dataframe)
+
+  #line graph of all the probabilities plotted across time
+  g <- ggplot(input_dataframe)+
+    geom_line(aes(x=input_dataframe$year_int, y=as.double(input_dataframe$prob),group =input_dataframe$track_name, color=input_dataframe$track_name))+
+    theme(legend.position="bottom", legend.direction="vertical")+
+    labs(x='year',y='probability', title='Probability of being a top song', legend='tracks')+
+    guides(size = "none",color=guide_legend("Track Name"), alpha="none")
+
+  print(max(input_dataframe$true_song_year_bool))
+
+  #highlight actual release year of the song
+  if (max(input_dataframe$true_song_year_bool) == 1) {
+    g <- g + geom_point(data=input_dataframe[input_dataframe$true_song_year_bool == T,],
+                        aes(x=input_dataframe[input_dataframe$true_song_year_bool == T,]$year_int,
+                            y=input_dataframe[input_dataframe$true_song_year_bool == T,]$prob
+                        ), color="black", size=4)
+    g <- g+ geom_text(data=input_dataframe[input_dataframe$true_song_year_bool == T,], aes(x=year_int,y=prob,label=paste0("release year: ", year_int) , alpha=0.8), hjust=-.06,vjust=-.06, size=3)
+  }
+
+  #highlight the point with minimum probability of song
+  g <- g + geom_point(data=DT[ , .SD[which.min(prob)], by = track_name],
+                      aes(x=DT[ , .SD[which.min(prob)], by = track_name]$year_int,
+                          y=DT[ , .SD[which.min(prob)], by = track_name]$prob), color="red", shape=25,size=4)
+
+  #highlight the point with maximum probability of the song
+  g <- g + geom_point(data=DT[ , .SD[which.max(prob)], by = track_name],
+                      aes(x=DT[ , .SD[which.max(prob)], by = track_name]$year_int,
+                          y=DT[ , .SD[which.max(prob)], by = track_name]$prob), color="blue", shape=17, size=4)
+  g <- g+ geom_text(data=DT[ , .SD[which.min(prob)]], aes(x=year_int,y=prob, label=paste0("min. probability year: ", year_int) ,alpha=0.8), hjust=-.06,vjust=-.06, size=3)
+  g <- g+ geom_text(data=DT[ , .SD[which.max(prob)]], aes(x=year_int,y=prob,label=paste0("max. probability year: ", year_int) ,alpha=0.8), hjust=-.06,vjust=-.06, size=3)
+
+  return(g)
+}
 
 format_new_songs_logit <- function(songs){
   new_songs <- billboard::spotify_track_data[nrow(songs),]
@@ -234,6 +276,23 @@ shinyServer(function(input, output,session) {
       choices = choicez, selected = choicez[1])
   })
 
+  ## Clearing the songs the user has added
+  observeEvent(input$clearTracks, {
+    ## Replacing the master data frame with an empty data frame
+    master_df <<- data_frame()
+    empty <- data_frame()
+
+    ## Updating the tab "Your songs"
+    output$masterDF <- DT::renderDataTable({
+      empty
+    })
+
+    ## Updating the table with added songs in the sidebar
+    output$yourTracks <- renderTable({
+      empty
+    })
+  })
+
   ## Updating logistic regression plot
   observeEvent(input$updateLogit, {
     req(input$selectLogit)
@@ -244,26 +303,6 @@ shinyServer(function(input, output,session) {
       plot_probabilities(logit_input, 3, 2, 4, 5)
     )
     print(logit_input)
-  })
-
-  ## Clearing the songs the user has added
-  observeEvent(input$clearTracks, {
-    ## Replacing the master data frame with an empty data frame
-    master_df <<- data_frame()
-
-    ## Updating the tab "Your songs"
-    output$masterDF <- DT::renderDataTable({
-      master_df
-    })
-
-    ## Updating the table with added songs in the sidebar
-    output$yourTracks <- renderTable(
-      master_df
-    )
-
-    shinyWidgets::updateAwesomeCheckboxGroup(
-      session = session, inputId = "selectLogit",
-      choices = NULL, selected = NULL)
   })
 
   ## Attributes plot
@@ -278,7 +317,7 @@ shinyServer(function(input, output,session) {
 
   ## Historical data plot
   music_dataframe <- billboard::spotify_track_data # Historical Billboard data
-  # All the Spotify audio attributes
+  # zAll the Spotify audio attributes
   all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
   output$attributes_time <- renderPlot({
     req(input$attributes)
