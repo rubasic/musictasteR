@@ -1,19 +1,25 @@
 #' Hover Plot Shiny
 #'
-#' @param data a dataframe containing music data, for example the list of the top 100 songs
-#' @param x the first characteristic the music should be plotted against
-#' @param y the second characteristic the music should be plotted against
+#' Hover Plot Shiny is a function that allows you to plot your favorite song against the top billboard charts from 1960 - 2015.
+#' @param new_music a dataframe
+#' @param x a column name of the billboard data frame the first characteristic the music should be plotted against
+#' @param y a column name of the billboard data frame the second characteristic the music should be plotted against
 #' @param chosen_year the year for which the songs are shown, between 1960 and 2015 if using the billboard data
 #'
-#' @return a plotly plot
+
 #' @importFrom plotly ggplotly config layout
 #' @importFrom glue glue
 #' @importFrom ggplot2 ggplot
+#'
+#' @return a plotly plot showing the top billboard charts filtered by year, plotted against x and y, and the songs added by the user
+#' @export
 #' @examples
-#' hover_plot_shiny(billboard_music_dataframe,energy,danceability,"1994")
-hover_plot_shiny <- function(data,x,y,chosen_year)
+#' \dontrun{
+#' hover_plot_shiny(new_music,energy,danceability,"1994")
+#' }
+hover_plot_shiny <- function(new_music,x,y,chosen_year)
 {
-  tracklist <- data %>%
+  tracklist <- billboard::spotify_track_data %>%
     filter(year == chosen_year) %>% select(artist_name,year,track_name,x,y)
 
   plot <- ggplot(tracklist,x=x,y=y) +
@@ -25,7 +31,7 @@ hover_plot_shiny <- function(data,x,y,chosen_year)
     scale_x_continuous(name=glue::glue("{x}"), limits=c(0, 1))+ scale_y_continuous(name=glue::glue("{y}"), limits=c(0, 1)) +
     theme(text = element_text(size=12),plot.background = element_rect(fill = "#f7f7f7"),panel.background = element_rect(fill = "#f7f7f7", colour = "grey50"))
 
-  hover.plot <- ggplotly(plot) %>% config(displayModeBar = F) %>%  layout(hoverlabel = list(font = list(family = "Helvetica Neue",
+  hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(font = list(family = "Helvetica Neue",
                                                                                                                                 size = 14,
                                                                                                                                 color = "black")));
 

@@ -54,27 +54,6 @@ music_dataframe <- billboard::spotify_track_data
 
 new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
-hover_plot_shiny <- function(data,x,y,chosen_year)
-{
-  tracklist <- data %>%
-    filter(year == chosen_year) %>% select(artist_name,year,track_name,x,y)
-
-  plot <- ggplot(tracklist,x=x,y=y) +
-    geom_point(aes_string(x=x,y = y,Trackname = as.factor(tracklist$track_name),Artist = as.factor(tracklist$artist_name)),color="#00c193",size=4.5,alpha = 0.5) +
-    geom_point(data = new_music,
-               mapping = aes_string(x = x, y = y,Trackname = as.factor(new_music$track_name),Artist = as.factor(new_music$artist_name)),color="#fd5bda",size=4.5) +
-
-
-    scale_x_continuous(name=glue::glue("{x}"), limits=c(0, 1))+ scale_y_continuous(name=glue::glue("{y}"), limits=c(0, 1)) +
-    theme(text = element_text(size=12),plot.background = element_rect(fill = "#f7f7f7"),panel.background = element_rect(fill = "#f7f7f7", colour = "grey50"))
-
-  hover.plot <- plotly::ggplotly(plot) %>% plotly::config(displayModeBar = F) %>%  plotly::layout(hoverlabel = list(font = list(family = "Helvetica Neue",
-                                                                                                                                size = 14,
-                                                                                                                                color = "black")));
-
-  return(hover.plot)
-}
-
 
 ## AKSHAY CLUSTER FUNCTION
 
@@ -220,10 +199,11 @@ shinyServer(function(input, output,session) {
 
     #View(master_df)
     #call plot to update
-    new_music <<- format_new_songs_logit(master_df)
+   # new_music <<- format_new_songs_logit(master_df)
+    new_music <<- format_new_songs(master_df)
 
     output$plot <- plotly::renderPlotly({
-      p <- hover_plot_shiny(billboard::spotify_track_data, input$x,input$y,input$year)
+      p <- hover_plot_shiny(new_music,input$x,input$y,input$year)
     })
     #AKSHAY
 
@@ -268,7 +248,7 @@ shinyServer(function(input, output,session) {
 
   #default plots
  output$plot <- plotly::renderPlotly({
-    p <- hover_plot_shiny(music_dataframe, input$x,input$y,input$year)
+    p <- hover_plot_shiny(new_music,input$x,input$y,input$year)
   })
 
  output$plot_cluster <- plotly::renderPlotly({
