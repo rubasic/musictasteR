@@ -170,13 +170,12 @@ shinyServer(function(input, output,session) {
   # Creating a master data frame that whill hold all information about the tracks selected and added by the user
   master_df <- data_frame()
 
+  # Creating a data frame that will hold formatted songs for attributes plot
+  # Contains "Oops!... I Did It Again" by Britney Spears by default, which is removed when user adds new songs
+  new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
+
   # Creating a data frame that will hold formatted songs for logistic regression
   new_music_logit <- data_frame()
-
-  #in the beginning, the user works with the spotify data frame that is then modified once he starts adding songsm
-  music_dataframe <- billboard::spotify_track_data
-
-  new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
   observeEvent(input$addTracks, {
     req(input$track)
@@ -241,13 +240,15 @@ shinyServer(function(input, output,session) {
     logit_input <- new_music_logit %>% split(.$track_name) %>%
       map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
     logit_input <- logit_input %>% filter(track_name %in% input$selectLogit)
-    output$plot_logit <- renderPlot(
+    output$plotLogit <- renderPlot(
       plot_probabilities(logit_input, 3, 2, 4, 5)
     )
+    print(logit_input)
   })
 
   ## Clearing the songs the user has added
   observeEvent(input$clearTracks, {
+    ## Replacing the master data frame with an empty data frame
     master_df <<- data_frame()
 
     ## Updating the tab "Your songs"
@@ -259,6 +260,10 @@ shinyServer(function(input, output,session) {
     output$yourTracks <- renderTable(
       master_df
     )
+
+    shinyWidgets::updateAwesomeCheckboxGroup(
+      session = session, inputId = "selectLogit",
+      choices = NULL, selected = NULL)
   })
 
   ## Attributes plot
@@ -268,11 +273,19 @@ shinyServer(function(input, output,session) {
 
   ## Cluster plot
   output$plot_cluster <- plotly::renderPlotly({
-   plot_songs_clusters(new_music,input$year_cluster)
+    plot_songs_clusters(new_music,input$year_cluster)
   })
 
+  ## Historical data plot
+  music_dataframe <- billboard::spotify_track_data # Historical Billboard data
   # All the Spotify audio attributes
   all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
+  output$attributes_time <- renderPlot({
+    req(input$attributes)
+    attributes_time(music_dataframe, "Billboard", 1, averagesongs,
+                    "Non Billboard", 4, input$attributes, input$boxplot,
+                    input$timerange, input$billboard)
+  })
 
   ## When user pulls the "boxplot" switch, the only attribute that is checked is "danceability"
   observe({
@@ -282,12 +295,4 @@ shinyServer(function(input, output,session) {
                               choices = all_attributes)
      }
     })
-
-  ## Historical data plot
-  output$attributes_time <- renderPlot({
-   req(input$attributes)
-   attributes_time(music_dataframe, "Billboard", 1, averagesongs,
-                   "Non Billboard", 4, input$attributes, input$boxplot,
-                   input$timerange, input$billboard)
-  })
 })
