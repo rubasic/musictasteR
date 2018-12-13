@@ -2,7 +2,6 @@ usethis::use_build_ignore("devtools_history.R")
 usethis::use_build_ignore("trying_out_functions.Rmd")
 usethis::use_build_ignore("musictaster_vignette_draft.Rmd")
 usethis::use_build_ignore("temp.R")
-usethis::use_build_ignore("plot_clusters_songs.R")
 
 #usethis::use_build_ignore("averagesongs-data")
 #usethis::use_build_ignore("data/averagesongs")
@@ -27,9 +26,12 @@ colnames(averagesongs)[4] <- "year"
 averagesongs <- averagesongs[complete.cases(averagesongs), ]
 usethis::use_data(averagesongs, overwrite = TRUE)
 
-#getting snippet from spotify API for testing
+#getting snippet from spotify API for testing with get_track_artists
 spotify_test_pull <- get_tracks_artists("Golddigger")
 usethis::use_data(spotify_test_pull, overwrite = TRUE)
+
+
+#getting snippet from spotify API for testing with get_track_and_features
 
 #models for logistic regression
 log_model_list <- readRDS(file = "data-raw/all_models2.rda")

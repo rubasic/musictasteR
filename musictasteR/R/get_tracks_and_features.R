@@ -1,28 +1,20 @@
-#' Get Tracks Artists
+#' Get Tracks and features
 #'
-#' This functions takes a string and returns a data frame with track information for 20 songs
-#' from Spotify's search endpoin
-#' @param track_artist_name A string with track name or an artist name
-#' @param access_token Spotify Web API token. Defaults to spotifyr::get_spotify_access_token()
+#' @param search_string a string containing a name of the artist or song
+#' @param access_token the access token for to the Spotify API
 #'
-#' @import dplyr
-#' @import httr
-#' @import spotifyr
-#' @import stringr
-#' @importFrom purrr map_df
-#' @return a dataframe containing the track information
+#' @importFrom httr GET
+#' @return a 23 x 20 dataframe containing the first 20 matches from spotify including music characteristics such as energy, danceability etc.
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #### Get track information for the top 20 Spotify matches for "Thriller"
-#' thriller <- get_tracks_artists(track_artist_name = "Thriller")
-#' }
-get_tracks_artists <- function(track_artist_name, access_token = get_spotify_access_token()) {
+get_tracks_and_features <- function(search_string, access_token = get_spotify_access_token()) {
+
+  access_token <- access_token
 
   # Search Spotify API
   res <- GET('https://api.spotify.com/v1/search',
-             query = list(q = track_artist_name,
+             query = list(q = search_string,
                           type = 'track,artist',
                           access_token = access_token)
   ) %>% content
@@ -31,7 +23,7 @@ get_tracks_artists <- function(track_artist_name, access_token = get_spotify_acc
 
     tracks <- map_df(seq_len(length(res$tracks$items)), function(x) {
       list(
-        track_artist_name = res$tracks$items[[x]]$name,
+        search_string = res$tracks$items[[x]]$name,
         track_uri = gsub('spotify:track:', '', res$tracks$items[[x]]$uri),
         artist_name = res$tracks$items[[x]]$artists[[1]]$name,
         artist_uri = res$tracks$items[[x]]$artists[[1]]$id,
@@ -47,5 +39,7 @@ get_tracks_artists <- function(track_artist_name, access_token = get_spotify_acc
     tracks <- tibble()
   }
 
-  return(tracks)
+  audio_features <- get_track_audio_features(tracks = tracks, access_token = access_token)
+
+  all_info <- left_join(tracks, audio_features)
 }
