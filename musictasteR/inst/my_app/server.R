@@ -215,8 +215,11 @@ shinyServer(function(input, output,session) {
     ## Updating the data frame with formatted data for logistic regression
     songs_logit <<- format_new_songs_logit(master_df)
 
+    ##
+    new_music <<- format_new_songs(master_df)
+
     output$plot <- plotly::renderPlotly({
-      p <- hover.plot.shiny(billboard::spotify_track_data, input$x,input$y,input$year)
+      p <- hover_plot_shiny(new_music, input$x,input$y,input$year)
     })
 
     ## Updating cluster plot
@@ -261,7 +264,7 @@ shinyServer(function(input, output,session) {
 
   #default plots
  output$plot <- plotly::renderPlotly({
-    p <- hover.plot.shiny(music_dataframe, input$x,input$y,input$year)
+    p <- hover_plot_shiny(new_music, input$x,input$y,input$year)
   })
 
  output$plot_cluster <- plotly::renderPlotly({
