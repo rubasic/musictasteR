@@ -91,11 +91,12 @@ attributes_time <- function(df1, df1_title, df1_year_col, df2, df2_title, df2_ye
   }
 }
 
+library(musictasteR)
 averagesongs
 topsongs <- billboard::spotify_track_data
 
 # last argument has to match names
-attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("danceability","energy"), FALSE, c(1960,2015), c("Billboard","Non Billboard"))
+attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("danceability","energy"), TRUE, c(1960,2015), c("Billboard","Non Billboard"))
 
 ```
 
@@ -112,7 +113,7 @@ ggplot(df) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text
 ```
 
 ```{r}
-attributes_time(c("danceability","energy"), FALSE, c(1960,2005))
+#attributes_time(c("danceability","energy"), FALSE, c(1960,2005))
 #ggplot(df, aes(x=year, y=value, color=variable, linetype = chart)) + ylim(0,1)  + geom_line(size=1) + xlim(timerange)
 #ggplot(df_boxplot) + geom_boxplot(aes(x=year, y=value, fill=variable)) + theme(axis.text.x = element_text(angle=90)) + ylim(0,1)  + facet_grid(. ~ chart)
 ```
