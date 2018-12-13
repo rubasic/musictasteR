@@ -1,4 +1,9 @@
-#' Title
+#' Plot Attributes Over Time
+#'
+#' This function plots the features of 2 different datasets (in dataframes) over time in the same graph.
+#' The dataframes should have overlapping features and contain a column "year" over which these features will be plotted.
+#' An example of 2 datasets are: top songs & average songs with "danceability" and "energy" attributes over years 1990 to 2010.
+#'
 #'
 #' @param df1 a data.frame
 #' @param df1_title title of your first df (ex: topsongs)
@@ -24,7 +29,6 @@
 #' c("energy","speechiness"), FALSE, c(1960,2015), c("Top Songs","Average Songs"))
 #' }
 attributes_time <- function(df1, df1_title, df1_year_col, df2, df2_title, df2_year_col, attributes, boxplot, timerange, title_vector) {
-
   # in case column names not called "year"
   colnames(df1)[df1_year_col] <- "year"
   colnames(df2)[df2_year_col] <- "year"
