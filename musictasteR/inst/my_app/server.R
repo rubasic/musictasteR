@@ -178,8 +178,6 @@ shinyServer(function(input, output,session) {
 
   new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
-
-  #
   observeEvent(input$addTracks, {
     req(input$track)
 

@@ -35,6 +35,7 @@ fluidPage(theme = shinytheme("slate"),
   mainPanel(
     tabsetPanel(
 
+      # TAB 1
       tabPanel(strong("Plot Roberta"),
                plotly::plotlyOutput("plot"),
                br(),
@@ -47,6 +48,7 @@ fluidPage(theme = shinytheme("slate"),
                  "y", label= NULL, selected  = "danceability", choices = all_attributes)
               ),
 
+      # TAB 2
       tabPanel(strong("Plot Clara"),
                plotOutput("attributes_time") %>% withSpinner(color = "#999b9e"),
                br(),
@@ -56,8 +58,7 @@ fluidPage(theme = shinytheme("slate"),
                         h4("Choose attribute(s)"),
                         shinyWidgets::awesomeCheckboxGroup(
                           "attributes", label = NULL,
-                          selected = c("danceability", "energy", "speechiness",
-                                       "acousticness", "instrumentalness", "liveness", "valence"),
+                          selected = "danceability",
                           choices = all_attributes)
                  ),
 
@@ -82,8 +83,8 @@ fluidPage(theme = shinytheme("slate"),
                           inputId = "boxplot", label = NULL, value = FALSE))
                )
       ),
-      # End tab 2
 
+      # TAB 3
       tabPanel(strong("Plot Mirae"),
                plotOutput("plot_logit"),
                br(),
@@ -93,6 +94,7 @@ fluidPage(theme = shinytheme("slate"),
                DT::dataTableOutput("logit_df")
                ),
 
+      # TAB 4
       tabPanel(strong("Yearwise Song Clusters"),
                plotly::plotlyOutput("plot_cluster"),
                br(),
@@ -102,10 +104,12 @@ fluidPage(theme = shinytheme("slate"),
                            value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "")
                ),
 
+      # TAB 5
       tabPanel(strong("Your songs"),
                DT::dataTableOutput("masterDF")
                ),
 
+      # TAB 6
       tabPanel(strong("About the app"))
     )
   )
