@@ -418,13 +418,13 @@ boxplot <- FALSE
 timerange <- c(1960,2015)
 title_vector <- c("Top Songs","Average Songs") # plot both
 
-attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
+musictasteR::attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
 ```
 
 Plot only billboard data:
 ```{r fig.width=7, warning = FALSE}
 title_vector <- "Average Songs"
-attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
+musictasteR::attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
 ```
 
 Plot as boxplots:
@@ -433,7 +433,7 @@ boxplot <- TRUE
 title_vector <- c("Billboard","Non Billboard")
 attributes <- c("danceability")
 # compare billboard and non billboard for "danceability""
-attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, attributes, TRUE, c(1960,2015), title_vector)
+musictasteR::attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, attributes, TRUE, c(1960,2015), title_vector)
 
 # compare "danceability" and "energy" for billboard data only
 attributes <- c("danceability","energy")

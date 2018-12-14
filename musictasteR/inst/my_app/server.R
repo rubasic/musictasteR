@@ -51,7 +51,8 @@ shinyServer(function(input, output,session) {
   new_music_logit <- data_frame()
 
   observeEvent(input$addTracks, {
-
+    req(input$selectTracks)
+    req(input$track)
     ## Updating the master dataframe
     # Filtering the search results based on the tracks the user has selected
     filtered_tracks <- tracks() %>% filter(track_artist %in% input$selectTracks)

@@ -1,6 +1,4 @@
 ^images$
-^musictaster_vignette\.Rmd$
-^musictaster_vignette_draft\.Rmd$
 ^plot_clusters_songs\.R$
 <<<<<<< HEAD
 ^Meta$
