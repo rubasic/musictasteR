@@ -9,8 +9,12 @@ vignette: >
 
 This vignette describes the MusicTasteR package, the process from its conception to its execution, and its final capabilities and use cases.
 
+<<<<<<< HEAD
 ```{r}
 library(gridExtra)
+=======
+```{r eval=F}
+>>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 library(spotifyr)
 library(dplyr)
 library(tidyverse)
@@ -21,6 +25,25 @@ library(purrr)
 The user needs to first go on spotify to get their Client ID:
 https://developer.spotify.com/documentation/web-api/
 
+<<<<<<< HEAD
+=======
+
+```{r eval=F}
+access_token <- get_spotify_access_token()
+
+#Samples
+#get ID for a song					 
+search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
+res <- RETRY('GET', url = str_glue(search),
+                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
+					 
+#get the audio feature for a song
+res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
+                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
+
+```
+
+>>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 ##Data Gathering
 
 We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types. We explored various sources of music data on the net, including MusicBrainz (https://musicbrainz.org), Discogs api (https://www.discogs.com/developers/), Echo Nest (http://the.echonest.com/) but eventually settled on Spotify due to their lenient API rate usage policies, and the simplicity of the music attribute outputs. 
@@ -173,7 +196,7 @@ sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggp
 Sample_songs_edit is the final pre-processed dataframe used
 
 The following functions were used to grab the audio features from spotify:
-```{r}
+```{r eval=F}
 make_api_call <- function(audio_features_api,access_token) {
   analysis_result_call <- safely(RETRY)('GET', url = audio_features_api, query = list(access_token = access_token), quiet = TRUE, times = 1, pause_min = 100) 
   if (is.null(analysis_result_call$result)) {
@@ -285,12 +308,101 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
                 )})
 ```
 
+### Attributes Over Time
+
+In order to visualize and compare the evolution of top and average song attributes (such as "valence", "danceability", etc.), we decided to implement the attributes_time function. 
+
+This function plots overlapping variables (chosen by the user) of 2 different data sets as a function of the "year" column. In our case these two dataframes correspond to top and average songs ("Billboard" and "Non Billboard" respectively).
+
+The song attributes can either be layed out as averages or as boxplots. The boxplot gives us more information about the data as it shows the distribution of each variable per year. Plotting averages on the other hand allows us to have a global overview of all the variables at the same time (boxplot plots only up to 2-3 variables clearly).
+
+The choice to take as arguments 2 dataframes instead of 1 (with an additional column specifying the category of each dataset) was to avoid unnecessary formatting in case of very different datasets. If the user only needs to plot one overlapping feature in his 2 datasets, he does not need to match every column name to each other before applying the rbind function in order to store them as one dataframe. 
+
+This was appropriate in our case as the billboard data was collected from a different source than that of average songs, but both contained the same music features from the Spotify API.
+
+The input arguments are as follows:
+
+First dataset characteristics:
+- df1: a data.frame 
+
+- df1_title: title of your first df (ex: topsongs) 
+
+- df1_year_col: a number (column number of the "year" column)  
+
+
+Second dataset characteristics: 
+
+- df2: a data.frame  
+
+- df2_title: title of your second df (ex: averagesongs) 
+
+- df2_year_col: a number (column number of the "year" column) 
+
+
+Plot characteristics: 
+- attributes: a vector containing strings, the column names to be plotted (ex: c("energy","danceability")) 
+
+- boxplot: a boolean, specifies the type of plot (TRUE = plot as boxplots, FALSE = plot as averages) 
+
+- timerange: a 2x1 vector, this defines xlims, years to be plotted over (ex: c(1990, 2010)) 
+
+- title_vector: a string vector with the df_title names (the strings have to match!). This defines what will be plotted, for example, c(df1_title) will plot only the first dataframe, and c(df1_title, df2_title) will plot both. Although this is a redundant input parameter, it was created to facilitate the synchronization with the shiny app (the user can choose from the "Billboard" or "Non Billboard" checkboxes).
+
+Example: 
+Load data & define inputs:
+```{r}
+library(musictasteR)
+library(dplyr)
+library(billboard)
+library(reshape)
+library(gridExtra)
+data("averagesongs")
+topsongs <- billboard::spotify_track_data
+```
+
+```{r}
+head(averagesongs)
+head(topsongs)
+```
+The variable "year" is in column 1 for topsongs and column 4 for average songs.
+
+Comparing averages for Billboard / Non Billboard data:
+```{r fig.width=8,}
+attributes <- c("danceability" ,"energy" ,"mode", "speechiness","acousticness", "instrumentalness" ,"liveness","valence" ,"tempo")
+boxplot <- FALSE
+timerange <- c(1960,2015)
+title_vector <- c("Top Songs","Average Songs") # plot both
+
+attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
+```
+
+Plot only billboard data:
+```{r fig.width=8,}
+title_vector <- "Average Songs"
+attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
+```
+
+Plot as boxplots:
+```{r fig.width=8,}
+boxplot <- TRUE
+title_vector <- c("Billboard","Non Billboard")
+attributes <- c("danceability")
+# compare billboard and non billboard for "danceability""
+attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, attributes, TRUE, c(1960,2015), title_vector)
+
+# compare "danceability" and "energy" for billboard data only
+attributes <- c("danceability","energy")
+title_vector <- c("Billboard")
+attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("danceability","energy"), TRUE, c(1960,2015), title_vector)
+
+```
+
 
 ## Logistic Regression
 
 One of the features of the app is to predict how successful a song would perform. For this, we implemented a logistic regression to find the probability of whether a song would be in the top charts or not. First, we needed to make sure that for every year, we had an equal proportion of non-billboard songs to billboard songs. Because the billboard songs quantity was relatively fixed across the years, we reduced the number of average songs in our sample per year. Variable selection for the logistic regression was performed using the stepwise method that used both the forward and backward procedure optimizing on the BIC criterion. We calibrated one model per year and saved it into a list of models, along with their fisher test scores to check global signficance of the model. The models were saved as a .rda object and is accessible in the package as "log_model_list."
 
-```{r}
+```{r eval=F}
 #load the large data
 df <- averagesongs
 df <- df[!is.na(df$key),]
@@ -317,7 +429,7 @@ new_artist_test <-rbind(billboard_edit, artist_test) #finally, combine the avera
 per_year_test <- new_artist_test %>% group_by(year) %>% slice(1:600)
 ```
 
-```{r fig.width=14}
+```{r fig.width=14, eval=F}
 #Original Distribution of songs per year
 full_test %>% filter(!year%in% c(2015:2019)) %>% group_by(year, top_or_not) %>% summarise(count=n()) %>% ggplot(aes(x=year, y=count, fill=as.factor(top_or_not))) + geom_bar(stat="identity") + labs(title="Original Distribution of Average to Top Chart Songs")
 
@@ -384,7 +496,11 @@ save_result <- get_all_reg_models(new_artist_test)
 ```
 
 All models had significant liklihood ratio test scores. 1972 has the highest Liklihood ratio test score of 2.86441e-09, meaning it is the least significant model. The models are saved in the package and can be accessed through an object called "log_model_list"
+<<<<<<< HEAD
 ```{r}
+=======
+```{r eval=F}
+>>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 anova_list <- unlist(save_result$anova_list)
 anova_df <- data.frame(anova_score = unlist(anova_list))
 anova_df['year'] <- sapply(rownames(anova_df), function(x) {return(substring(x,5,9))})
@@ -396,7 +512,7 @@ grid.arrange(a,b, ncol=2)
 ```
 
 Below is a sample output of one of the models (1960 model) in the model list object. For every year, we can see the variables that were relevant in the prediction of being a top billboard song or not.
-```{r}
+```{r eval=F}
 log_model_list$year1960
 ```
 
@@ -446,8 +562,14 @@ format_new_songs_logit <- function(songs){
 
 ```
 
+<<<<<<< HEAD
 ```{r}
 input_song <- format_new_songs_logit(spotify_test_pull_with_characteristics[1,])
+=======
+```{r eval=F}
+library(musictasteR)
+input_song <- new_song
+>>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 
 probability_df <- get_probability_of_billboard(input_song, log_model_list)
 probability_df['true_song_year_bool'] <- probability_df$true_song_year == probability_df$year_int
@@ -456,15 +578,20 @@ head(probability_df)
 
 The following plot shows a line graph of the probabilities that the song will be on the billboard throughout time. There are three points that are highlighted in the line graph, the probability of the release year, the highest probability and the lowest probability. 
 
+<<<<<<< HEAD
 ```{r}
 plot_probabilities(probability_df, 3,2,4, 5)
+=======
+```{r eval=F}
+plot_probabilities(multiple_df, 3,2,4, 5)
+>>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
 # Clustering Functions -
 
 Clustering through K-Means
-```{r}
+```{r eval=F}
 cluster_year_k <- function(objet,year_taken,clust_size){
   
   # Restricting the input object to the input year
@@ -483,7 +610,7 @@ cluster_year_k <- function(objet,year_taken,clust_size){
 ```
 
 Clustering through HCPC
-```{r}
+```{r eval=F}
 cluster_year_hcpc <- function(objet,year_taken,clust_num){
   
   # Restricting the input object to the input year
@@ -503,7 +630,7 @@ cluster_year_hcpc <- function(objet,year_taken,clust_num){
 
 
 Clustering through HCPC with pre PCA (2 principal dimensions)
-```{r}
+```{r eval=F}
 
 cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
   
@@ -531,7 +658,7 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
 # Compilation functions
 
 K means clusters database
-```{r}
+```{r eval=F}
 
 # Setting range for the processing yearly
 min_year <- min(features_sample$year)
@@ -550,7 +677,7 @@ for (year in min_year:max_year) {
 ```
 
 HCPC clusters database
-```{r}
+```{r eval=F}
 features_clustered_hcpc <- data.frame()
 model_hcpc_clusters <- list()
     
@@ -563,7 +690,7 @@ for (year in min_year:max_year) {
 ```
 
 HCPC with pre PCA clusters database
-```{r}
+```{r eval=F}
 features_clustered_hcpc_pca <- data.frame()
 model_hcpc_pca_clusters <- list()
     
@@ -576,7 +703,7 @@ for (year in min_year:max_year) {
 ```
 
 Combination of Cluster databases
-```{r}
+```{r eval=F}
 # Creating a combined database with all the three clustering types
 combined_clusters <- features_clustered_hcpc_pca
 combined_clusters$hcpc_cluster <- features_clustered_hcpc$hcpc_cluster
@@ -590,7 +717,7 @@ combined_clusters$k_cluster <- features_clustered_k$k_cluster
 # Create PCA linear models -
 
 PCA components as linear components of Variables - Yearwise
-```{r}
+```{r eval=F}
 
 pc_as_lm <- function(objet,year_taken){
   
@@ -608,7 +735,7 @@ pc_as_lm <- function(objet,year_taken){
 ```
 
 Creating Yearly model
-```{r}
+```{r eval=F}
 bb_pc_lm_dim1 <- list()
 bb_pc_lm_dim2 <- list()
     
