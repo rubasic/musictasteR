@@ -11,8 +11,23 @@ To respond to this problem, we assembled more than 50k top songs (songs which ha
 
 The main functionality of this package is the Shiny application, which allows to visualise, compare and cluster top and average songs according to their music characteristics. To be able to run the app, the user has to provide Spotify API credentials. This process is explained in the package vignette.
 
-![Caption](images/1musictaster.png)
+``` r
+# install.packages("devtools")
+devtools::install_github(rubasic/musictasteR)
+```
 
-![](images/2musictaster.png)
+#### Compare
 
-![](images/3musictaster.png) ![](images/4musictaster.png)
+Comparing the audio attributes of Billboard songs to the songs added by the user. ![](images/1musictaster.png)
+
+#### Rewind
+
+Analyze the evolution of song characteristics over the past 60 years. ![](images/2musictaster.png)
+
+#### Predict
+
+Get the probability of the added songs reaching the top 100 Billboard chart over time. ![](images/3musictaster.png)
+
+#### Match
+
+Visualizing the similarity of top songs by grouping them together in clusters. Added songs will show up on the plot and allow the user to analyze which group of songs it is most similar to. ![](images/4musictaster.png)
