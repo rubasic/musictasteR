@@ -49,4 +49,7 @@ Imports:
     stringr,
     readr,
     data.table,
-    gridExtra
+    gridExtra,
+    shinycssloaders,
+    shinyWidgets,
+    shinythemes

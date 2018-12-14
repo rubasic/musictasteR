@@ -1,15 +1,5 @@
 library(musictasteR)
 library(shiny)
-library(billboard)
-library(spotifyr)
-library(tidyverse)
-library(httr)
-library(reshape)
-library(shinythemes)
-library(shinyWidgets)
-library(shinycssloaders)
-library(data.table)
-data(averagesongs)
 
 # Set Spotify API credentials
 Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
@@ -70,7 +60,7 @@ shinyServer(function(input, output,session) {
     filtered_tracks_unique <- subset(filtered_tracks, !duplicated(filtered_tracks[,1]))
 
     # Pulling audio features for the selected tracks from Spotify
-    track_features <- get_track_audio_features(tracks(), access_token = access_token())
+    track_features <- spotifyr::get_track_audio_features(tracks(), access_token = access_token())
 
     # Merging the track information and the audio features
     tracks_joined <- left_join(x = filtered_tracks_unique, y = track_features, by = "track_uri")
