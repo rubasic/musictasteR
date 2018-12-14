@@ -354,8 +354,10 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
 # Package Functions
 
 ### Search
-[Jorgen] get_tracks_artist
-Description of function, use cases (what are the inputs/outputs or examples)
+
+The get_tracks_artists function takes a string and returns a data frame with track information for the 20 best matches from Spotify's search endpoint. It was created to allow the user of the musictasteR app to search for tracks and/or artists. The input is the string that is used in the search, and a Spotify access token that allows access to the Spotify API.
+
+Example: if the user inputs the string "Thriller", the function will return a data frame with information about the 20 best matches for this string in the Spotify database.
 
 ### Compare: Hover Plot
 
