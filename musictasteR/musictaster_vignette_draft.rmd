@@ -10,6 +10,7 @@ vignette: >
 This vignette describes the MusicTasteR package, the process from its conception to its execution, and its final capabilities and use cases.
 
 ```{r}
+library(gridExtra)
 library(spotifyr)
 library(dplyr)
 library(tidyverse)
@@ -20,23 +21,8 @@ library(purrr)
 The user needs to first go on spotify to get their Client ID:
 https://developer.spotify.com/documentation/web-api/
 
-
-```{r}
-access_token <- get_spotify_access_token()
-
-#Samples
-#get ID for a song					 
-search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
-res <- RETRY('GET', url = str_glue(search),
-                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
-					 
-#get the audio feature for a song
-res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
-                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
-
-```
-
 ##Data Gathering
+
 We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types. We explored various sources of music data on the net, including MusicBrainz (https://musicbrainz.org), Discogs api (https://www.discogs.com/developers/), Echo Nest (http://the.echonest.com/) but eventually settled on Spotify due to their lenient API rate usage policies, and the simplicity of the music attribute outputs. 
 
 For the top charts data, we found the following package: https://cran.r-project.org/web/packages/billboard/index.html, which gave us a dataset of about 90-100 top charts songs froom 1960 to 2015. It already had the spotify uri and the audio features included in the dataframe, which was very convenient for us to use.
@@ -46,13 +32,13 @@ In order to build a database of "average" songs, we searched on the internet for
 Spotify api search track function that had a wildcard feature, and it also provided a filter on the album year. We decided to leverage these features to sample random songs directly from spotify. 
 
 Below is the function that we used to match the songs from the one million song database to the spotify data.
-```{r}
+```{r eval=F}
 get_track_id <- function(row) {
   track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['song']))
   artist_name =gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['artist']))
   api <- str_glue('https://api.spotify.com/v1/search/?q=track:{track_name}%20artist:{artist_name}&type=track&limit=1')
   access_token <- get_spotify_access_token()
-  result <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+  result <- RETRY('GET', url = api, query = list(access_token = <INSERT_ACCESS_TOKEN>), quiet = TRUE, times = 1, pause_min = 1) %>% content 
     tryCatch({
       final_id <- suppressWarnings(result$tracks$items[[1]]$id)
       return (final_id)
@@ -63,7 +49,7 @@ get_track_id <- function(row) {
     }
     , error=function(error_cond) {
       if (error_cond$message =='$ operator is invalid for atomic vectors') {
-        result2 <- RETRY('GET', url = api, query = list(access_token = 'BQDr1sA9pws_6bByOakxnSbATrTqusyyRrHsYQhxQWZ4-jlBqzk7WbhTB4Q3rJbrdp_9EhiV4wOoU6xOiK8'), quiet = TRUE, times = 1, pause_min = 1) %>% content 
+        result2 <- RETRY('GET', url = api, query = list(access_token = <INSERT_ACCESS_TOKEN>), quiet = TRUE, times = 1, pause_min = 1) %>% content 
         print(error_cond$message)
         print(api)
         return(result2$tracks$items[[1]]$id)
@@ -83,7 +69,7 @@ AKSHAY
 
 
 Script that searches by year based on top words in song titles
-```{r}
+```{r eval=F}
 all_tracks_upd <- list()
 for (i in 1:98) {
   for (year in 1960:2019) {
@@ -105,7 +91,7 @@ for (i in 1:98) {
 
 ```
 
-```{r}
+```{r eval=F}
 #transforms list of results into a dataframe
 tracks_df_upd <- map_df(seq_len(length(all_tracks_upd)), function(x) {
                 list(
@@ -124,7 +110,7 @@ sample_by_year_upd <- tracks_df_upd %>% mutate(album_year_4dgt=substr(album_year
 ```
 
 Test to see if restriction at 7 songs per artist per year will cut down the total songs by a considerable amount -
-```{r}
+```{r eval=F}
 artist_freq <- sample_by_year_upd %>%
   group_by(artist_name,album_year_4dgt) %>%
   summarise(freq=n()) 
@@ -142,7 +128,7 @@ ggplot(data=artist_freq, aes(x=freq)) + geom_histogram(bins=30)
 
 
 Restricting to 7 songs per artist per year, to prevent over-sampling from one artist. Selection of songs will be random -
-```{r}
+```{r eval=F}
 sample_songs_edit <- sampled_songs_worded %>%
   select(-album_year) %>%
   distinct() %>%
@@ -158,7 +144,7 @@ sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggp
 ```
 
 Applying a Max cap at 3000 songs per year -
-```{r}
+```{r eval=F}
 sample_songs_edit <- sample_songs_edit %>%
   arrange(album_year_4dgt,artist_name)
 
@@ -185,9 +171,6 @@ sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggp
 ```
 
 Sample_songs_edit is the final pre-processed dataframe used
-
-
-# Grabbing Data from Spotify
 
 The following functions were used to grab the audio features from spotify:
 ```{r}
@@ -309,15 +292,14 @@ One of the features of the app is to predict how successful a song would perform
 
 ```{r}
 #load the large data
-df <- read.csv('/Users/miraekim/workspace/coursework/map535r/rubasic/working_files/150k_sample.csv')
+df <- averagesongs
 df <- df[!is.na(df$key),]
 billboard_df <- billboard::spotify_track_data
 
 #prepare large dataframes, align columns and combine the datasets
 #this is the average songs data
-df_edit <- df[c("track_uri","album_year_4dgt","track_name", "artist_name","duration_ms", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
+df_edit <- df[c("track_uri","year","track_name", "artist_name","duration_ms", "danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo")]
 colnames(df_edit)[1] <- "track_id"
-colnames(df_edit)[2] <- "year"
 df_edit["top_or_not"] <- 0
 
 #this is the billboard data
@@ -402,7 +384,7 @@ save_result <- get_all_reg_models(new_artist_test)
 ```
 
 All models had significant liklihood ratio test scores. 1972 has the highest Liklihood ratio test score of 2.86441e-09, meaning it is the least significant model. The models are saved in the package and can be accessed through an object called "log_model_list"
-```{r }
+```{r}
 anova_list <- unlist(save_result$anova_list)
 anova_df <- data.frame(anova_score = unlist(anova_list))
 anova_df['year'] <- sapply(rownames(anova_df), function(x) {return(substring(x,5,9))})
@@ -419,28 +401,63 @@ log_model_list$year1960
 ```
 
 ## How Logistic Regression Feature works in the app
-
 From the initially selected tracks, one can select tracks that they want to plot against time. The `get_probability_of_billboard() function takes in the spotify audio features of a track and runs it against the logistic regressions for each year to output the probability of a song being on the billboard per year. 
 
 Below is a sample of the dataframe of probabilities that feed into the dataframe for the plot.
+```{r eval=F, include=F}
+format_new_songs_logit <- function(songs){
+  new_songs <- billboard::spotify_track_data[nrow(songs),]
+  new_songs <- ""
+  new_songs$artist_name <- songs$artist_name
+  new_songs$track_name <- songs$track_artist_name
+  new_songs$duration_ms <- songs$duration_ms
+  new_songs$danceability <- songs$danceability
+  new_songs$energy <- songs$energy
+  new_songs$key <- case_when(
+    songs$key=="C"~0,
+    songs$key=="C#"~1,
+    songs$key=="Db"~1,
+    songs$key=="D"~2,
+    songs$key=="D#"~3,
+    songs$key=="Eb"~3,
+    songs$key=="E"~4,
+    songs$key=="F"~5,
+    songs$key=="F#"~6,
+    songs$key=="Gb"~6,
+    songs$key=="G"~7,
+    songs$key=="G#"~8,
+    songs$key=="Ab"~8,
+    songs$key=="A"~9,
+    songs$key=="A#"~10,
+    songs$key=="Bb"~10,
+    songs$key=="B"~11,
+    TRUE~-1)
+  new_songs$loudness <- songs$loudness
+  new_songs$mode <- ifelse(songs$mode=="Major",1,0)
+  new_songs$speechiness<- songs$speechiness
+  new_songs$acousticness <- songs$acousticness
+  new_songs$instrumentalness <- songs$instrumentalness
+  new_songs$liveness <- songs$liveness
+  new_songs$valence <- songs$valence
+  new_songs$tempo <- songs$tempo
+  new_songs$year <-  substr(songs$release_date, 1, 4)
+  return(as.data.frame(new_songs))
+}
+
+```
 
 ```{r}
-library(musictasteR)
-input_song <- new_song
+input_song <- format_new_songs_logit(spotify_test_pull_with_characteristics[1,])
 
-	
-probability_df <- get_probability_of_billboard(new_song2, log_model_list)
-probability_df <- 
-  
+probability_df <- get_probability_of_billboard(input_song, log_model_list)
 probability_df['true_song_year_bool'] <- probability_df$true_song_year == probability_df$year_int
-max(probability_df)
-
+head(probability_df)
 ```
 
 The following plot shows a line graph of the probabilities that the song will be on the billboard throughout time. There are three points that are highlighted in the line graph, the probability of the release year, the highest probability and the lowest probability. 
 
 ```{r}
-plot_probabilities(multiple_df, 3,2,4, 5)
+plot_probabilities(probability_df, 3,2,4, 5)
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
