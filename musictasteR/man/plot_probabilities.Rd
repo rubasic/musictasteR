@@ -2,13 +2,14 @@
 % Please edit documentation in R/plot_probabilities.R
 \name{plot_probabilities}
 \alias{plot_probabilities}
-\title{Title}
+\title{Plot Probabilities}
 \usage{
 plot_probabilities(input_dataframe, year_int_col_index, prob_col_index,
   track_name_col_index, true_song_year_index)
 }
 \arguments{
-\item{input_dataframe}{the input song has the following attributes: "trackname", "year_int", "prob", "true_song_year"}
+\item{input_dataframe}{the input song has the following attributes: "trackname", "year_int", "prob", "true_song_year".
+this dataframe is generated from the function get_probability_of_billboard of the musictasteR package}
 
 \item{year_int_col_index}{index for year_int col in the dataframe}
 
@@ -22,11 +23,11 @@ plot_probabilities(input_dataframe, year_int_col_index, prob_col_index,
 return a ggplot
 }
 \description{
-Title
+The plot probabilities plots the probability of a song being in the top charts by year.
 }
 \examples{
 \dontrun{
-plot_probabilities(input_dataframe)
+plot_probabilities(logit_input, 3, 2, 4, 5)
 }
 
 }

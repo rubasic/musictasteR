@@ -6,7 +6,7 @@
 #' @param search_string a string containing a name of the artist or song
 #' @param access_token the access token for to the Spotify API
 #'
-#' @importFrom httr GET
+#' @importFrom httr GET content RETRY
 #' @return a 23 x 20 dataframe containing the first 20 matches from spotify including music characteristics such as energy, danceability etc.
 #' @export
 #'
