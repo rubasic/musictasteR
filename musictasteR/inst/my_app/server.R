@@ -240,9 +240,6 @@ shinyServer(function(input, output,session) {
   # Creating a data frame that will hold formatted songs for logistic regression
   new_music_logit <- data_frame()
 
-  # Data frame with example track in the correct format for plotting
-  bb <- billboard::spotify_track_data[1,]
-
   observeEvent(input$addTracks, {
 
     ## Updating the master dataframe
