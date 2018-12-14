@@ -12,10 +12,13 @@ fluidPage(theme = shinytheme("slate"),
           shinyWidgets::chooseSliderSkin("Shiny", color = "#00c193"),
 
   ## HEADER
-  headerPanel("", tags$head(tags$img(
-      src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrrr.png",
-      height = 60, style = "display: block; margin-left: 40px;
-      margin-top:25px; margin-bottom: -15px;"))
+  headerPanel("",
+              tags$head(tags$img(
+                src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrrr.png",
+                height = 60, style = "display: block; margin-left: 40px; margin-top:25px; margin-bottom: -15px;"),
+              tags$style(
+                type="text/css",
+                "#albumImage img {max-width: 100%; width: 100%; height: auto}"))
       ),
 
 
@@ -119,4 +122,3 @@ fluidPage(theme = shinytheme("slate"),
     )
   )
 )
-

@@ -15,8 +15,6 @@ data(averagesongs)
 Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
 Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
 
-
-
 plot_probabilities <- function(input_dataframe, year_int_col_index, prob_col_index, track_name_col_index,  true_song_year_index) {
   #dataframe with year and probability
   colnames(input_dataframe)[year_int_col_index] <-"year_int"
@@ -213,7 +211,7 @@ shinyServer(function(input, output,session) {
   output$albumImage <- renderUI({
     if(length(tracks()$album_img[1]) != 0) {
       image_url <- tracks()$album_img[1]
-      tags$img(src = image_url, height = 250, width = 250)
+      tags$img(src = image_url)
     }
   })
 

@@ -705,7 +705,7 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
 
 ```
 
-### Compilation functions
+#### Compilation functions
 
 The clustering functions were applied to each year to create a list of model objects, so as to predict the cluster of a song based on its features for any given year. This is for all of the three models shown in the previous section.
 
