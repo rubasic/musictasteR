@@ -46,13 +46,13 @@ launch.shiny()
 
 The app contains a sidebar on the left which allows the user to search any song, add it to his save tracks and compare it with other all others songs. The search function takes as input any string and returns a list of the songs most related to this string. The user simply ticks the song(s) he wishes to add to his saved tracks.
 
-The first tab, [NAME] plots billboard songs according to 2 attributes entered by the user for a given year. The user may also add any input song(s) for comparison and they will be displayed in pink.
+The first tab, "Compare" plots billboard songs according to 2 attributes entered by the user for a given year. The user may also add any input song(s) for comparison and they will be displayed in pink.
 
-The second tab, [NAME] plots the music characteristics of top and/or average (Billboard vs. Non Billboard) songs over time. The user can specify the attributes, the time range, type of popularity and type of plot to be displayed. The boxplots gives more information about the data as it shows the distribution of each variable per year, whereas the average plots allow a global visualisation of multiple attributes. It is recommended to plot only up to 2-3 features for boxplot as the plot rapidly gets packed.
+The second tab, "Rewind" plots the music characteristics of top and/or average (Billboard vs. Non Billboard) songs over time. The user can specify the attributes, the time range, type of popularity and type of plot to be displayed. The boxplots gives more information about the data as it shows the distribution of each variable per year, whereas the average plots allow a global visualisation of multiple attributes. It is recommended to plot only up to 2-3 features for boxplot as the plot rapidly gets packed.
 
-The third tab, [NAME] plots the probabilities for the user's saved tracks to be in the top 100. The minimum and maximum probabilities, along with the release year are labeled.
+The third tab, "Predict" plots the probabilities for the user's saved tracks to be in the top 100. The minimum and maximum probabilities, along with the release year are labeled.
 
-The fourth tab, [NAME] plots the clusters of the billboard songs according to the first two principal components. The user may also add any input song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.
+The fourth tab, "Match" plots the clusters of the billboard songs according to the first two principal components. The user may also add any input song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.
 
 ##Functions
 
@@ -83,11 +83,7 @@ Below is the function that we used to match the songs from the one million song 
 
 ```{r}
 library(gridExtra)
-library(spotifyr)
 library(dplyr)
-library(tidyverse)
-library(httr)
-library(purrr)
 library(musictasteR)
 library(billboard)
 library(reshape)
@@ -125,13 +121,17 @@ get_track_id <- function(row) {
 ```
 
 ###Sampling the Data:
-Script that searches by year based on top words in song titles
+
+Script that searches by year based on top words in song titles -
+
+The Spotify API was queried with an input in the search bar and an input year. The search bar input was looped on a list of all the top 99 words in song titles. The total list of responses were recorded for processing.
+
 ```{r eval=F}
 all_tracks_upd <- list()
 for (i in 1:98) {
   for (year in 1960:2019) {
     
-    # Top words is a list of top 100 songs, link given in the description
+    # Top words is a list of top 99 words appearing frequently in song title, link given in the description
     track_search <-  paste0('*',top_words[i,],'*')
     
     #URL to query
@@ -184,7 +184,8 @@ ggplot(data=artist_freq, aes(x=freq)) + geom_histogram(bins=30)
 ```
 
 
-Restricting to 7 songs per artist per year, to prevent over-sampling from one artist. Selection of songs will be random -
+The list of tracks was restricted to 7 songs per artist per year, to prevent over-sampling from one artist. Selection of songs was a random process.
+
 ```{r eval=F}
 sample_songs_edit <- sampled_songs_worded %>%
   select(-album_year) %>%
@@ -200,7 +201,8 @@ sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
 sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
 ```
 
-Applying a Max cap at 3000 songs per year -
+A Max cap of 3000 songs was applied per year, to prevent excess processing.
+
 ```{r eval=F}
 sample_songs_edit <- sample_songs_edit %>%
   arrange(album_year_4dgt,artist_name)
@@ -227,7 +229,8 @@ sample_songs_edit %>% distinct(artist_name) %>% summarise(total_artists=n())
 sample_songs_edit %>% group_by(album_year_4dgt) %>% summarise(count=n()) %>% ggplot(aes(x=album_year_4dgt,y=count)) + geom_bar(stat='identity')
 ```
 
-Sample_songs_edit is the final pre-processed dataframe used
+Sample_songs_edit is the final pre-processed dataframe used.
+
 
 The following functions were used to grab the audio features from spotify:
 ```{r eval=F}
@@ -621,9 +624,16 @@ Because there are only logistic regression models until 2015, if a song has a re
 ### Clustering
 
 #### Description
-[Maybe add a brief description text of your cluster function before digging into the code]
 
-Clustering through K-Means
+A clustering was done on the billboard top songs on a yearly basis. These models were created for each year separately to identify potential similar groupings with respect to the track features. 
+
+Three methods were used for clustering to determine which one had maximum stability-
+1) K Means Clustering
+2) HCPC - Hierarchical Clustering on Principal Components
+3) HCPC with Pre PCA - Hierarchical Clustering on Principal Components precluded by reduction into 2 dimensions using a PCA
+
+Clustering through K-Means Method -
+
 ```{r eval=F}
 cluster_year_k <- function(objet,year_taken,clust_size){
   
@@ -642,7 +652,8 @@ cluster_year_k <- function(objet,year_taken,clust_size){
 }
 ```
 
-Clustering through HCPC
+Clustering through HCPC Method -
+
 ```{r eval=F}
 cluster_year_hcpc <- function(objet,year_taken,clust_num){
   
@@ -662,7 +673,8 @@ cluster_year_hcpc <- function(objet,year_taken,clust_num){
 ```
 
 
-Clustering through HCPC with pre PCA (2 principal dimensions)
+Clustering through HCPC precluded with PCA (2 principal dimensions) -
+
 ```{r eval=F}
 
 cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
@@ -688,9 +700,13 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
 
 ```
 
-### Compilation functions
+#### Compilation functions
 
-K means clusters database
+The clustering functions were applied to each year to create a list of model objects, so as to predict the cluster of a song based on its features for any given year. This is for all of the three models shown in the previous section.
+
+These clusters was also created on the billboard dataframe.
+
+K means clusters database -
 ```{r eval=F}
 
 # Setting range for the processing yearly
@@ -709,7 +725,7 @@ for (year in min_year:max_year) {
 }
 ```
 
-HCPC clusters database
+HCPC clusters database-
 ```{r eval=F}
 features_clustered_hcpc <- data.frame()
 model_hcpc_clusters <- list()
@@ -722,7 +738,7 @@ for (year in min_year:max_year) {
 }
 ```
 
-HCPC with pre PCA clusters database
+HCPC with pre PCA clusters database-
 ```{r eval=F}
 features_clustered_hcpc_pca <- data.frame()
 model_hcpc_pca_clusters <- list()
@@ -735,6 +751,8 @@ for (year in min_year:max_year) {
 }
 ```
 
+The databases with individual clusters were combined into one containing all three.
+
 Combination of Cluster databases
 ```{r eval=F}
 # Creating a combined database with all the three clustering types
@@ -743,11 +761,13 @@ combined_clusters$hcpc_cluster <- features_clustered_hcpc$hcpc_cluster
 combined_clusters$k_cluster <- features_clustered_k$k_cluster
 ```
 
-"combined_clusters" is the output database
+The "combined_clusters" data frame is the output database
 
 #### Create PCA linear models
 
-PCA components as linear components of Variables - Yearwise
+The prediction of clusters and plotting on principal dimensions requires each newly added song to have its principal dimensions in the dataframe. This has been done for each individual song through a linear model, predicting the principal dimensions using the quantitative variables, on each year separately. The output of this is 2 models, one each for the first two principal dimensions of the track, for each year, stored as a list of models.
+
+Function to create the linear models for PCA given a year -
 ```{r eval=F}
 
 pc_as_lm <- function(objet,year_taken){
@@ -765,7 +785,7 @@ pc_as_lm <- function(objet,year_taken){
 
 ```
 
-Creating Yearly model
+Run loop on a yearly basis to create list of linear models for first two principal dimensions-
 ```{r eval=F}
 bb_pc_lm_dim1 <- list()
 bb_pc_lm_dim2 <- list()
