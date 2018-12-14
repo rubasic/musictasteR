@@ -92,8 +92,7 @@ fluidPage(theme = shinytheme("slate"),
                br(),
                p("Get the probability of your song(s) reaching the top 100 billboard chart over time! For each song, get the maximum and minimum probabilities."),
                actionButton("updateLogit", label = "Create plot"),
-               shinyWidgets::awesomeCheckboxGroup("selectLogit", choices = NULL, label = NULL, inline = TRUE),
-               DT::dataTableOutput("logit_df")
+               shinyWidgets::awesomeCheckboxGroup("selectLogit", choices = NULL, label = NULL, inline = TRUE)
                ),
 
       tabPanel(strong("MATCH"),
