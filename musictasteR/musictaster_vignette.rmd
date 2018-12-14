@@ -61,11 +61,16 @@ Our package contains a set functions created to build our shiny application whic
 The user needs to first go on spotify to get their Client ID:
 https://developer.spotify.com/documentation/web-api/
 
-attributes_time
-plot_logit
-plot_cluster
+Prior to running the Shiny App or using the functions in the musictasteR package the user must set his/her client credentials in the following way on the console -
 
-#
+```{r eval=FALSE}
+Sys.setenv(SPOTIFY_CLIENT_ID = 'client id')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'client secret')
+```
+
+The app will then generate an access token to query the Spotify API with.
+
+
 #Data Gathering
 
 We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types. We explored various sources of music data on the net, including MusicBrainz (https://musicbrainz.org), Discogs api (https://www.discogs.com/developers/), Echo Nest (http://the.echonest.com/) but eventually settled on Spotify due to their lenient API rate usage policies, and the simplicity of the music attribute outputs. 
