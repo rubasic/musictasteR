@@ -100,7 +100,7 @@ fluidPage(theme = shinytheme("slate"),
                p("See which song your input music is the most similar to in which year! Select a song/list of songs, select a year and hover over the result to see song details! Songs clustered together indicate a slight similarity in terms of musical features, and songs closeby in the plot are strongly similar."),
                strong("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
-                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "")
+                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "", width = 1000)
                ),
 
       tabPanel(strong("Your songs"),
