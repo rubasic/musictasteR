@@ -566,8 +566,7 @@ From the initially selected tracks, one can select tracks that they want to plot
 Below is a sample of the dataframe of probabilities that feed into the dataframe for the plot.
 ```{r include=F}
 format_new_songs_logit_test <- function(songs){
-  new_songs <- billboard::spotify_track_data[nrow(songs),]
-  new_songs <- ""
+  new_songs <- list()
   new_songs$artist_name <- songs$artist_name
   new_songs$track_name <- songs$track_uri #in the app this is track_name
   new_songs$duration_ms <- songs$duration_ms
@@ -608,7 +607,6 @@ format_new_songs_logit_test <- function(songs){
 
 
 ```{r}
-library(musictasteR)
 input_song <- format_new_songs_logit_test(spotify_test_pull_with_characteristics[3,])
 probability_df <- get_probability_of_billboard(input_song, log_model_list)
 probability_df['true_song_year_bool'] <- probability_df$true_song_year == probability_df$year_int
