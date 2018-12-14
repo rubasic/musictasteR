@@ -354,12 +354,4 @@ shinyServer(function(input, output,session) {
                     input$timerange, input$billboard)
   })
 
-  ## When user pulls the "boxplot" switch, the only attribute that is checked is "danceability"
-  observe({
-   if(input$boxplot == TRUE) {
-     updateCheckboxGroupInput(session = session,
-                              inputId = "attributes", selected = "danceability",
-                              choices = all_attributes)
-     }
-    })
 })
