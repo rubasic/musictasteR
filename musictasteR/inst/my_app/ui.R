@@ -1,4 +1,3 @@
-
 all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness" ,"Liveness" = "liveness","Valence" = "valence")
 
 library(shiny)
@@ -6,6 +5,7 @@ library(shinythemes)
 library(shinyWidgets)
 library(shinycssloaders)
 library(dplyr)
+library(DT)
 
 fluidPage(theme = shinytheme("slate"),
           includeCSS("www/styles.css"),
@@ -103,7 +103,8 @@ fluidPage(theme = shinytheme("slate"),
                ),
 
       tabPanel(strong("Your songs"),
-               DT::dataTableOutput("masterDF")
+               DT::dataTableOutput("masterDF"),
+               tags$head(tags$style("#masterDF{color: black}"))
                ),
 
       tabPanel(strong("About the app"),
