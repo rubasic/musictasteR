@@ -353,21 +353,21 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
 #
 # Package Functions
 
-### Search
+## Search
 
 The get_tracks_artists function takes a string and returns a data frame with track information for the 20 best matches from Spotify's search endpoint. It was created to allow the user of the musictasteR app to search for tracks and/or artists. The input is the string that is used in the search, and a Spotify access token that allows access to the Spotify API.
 
-Example: if the user inputs the string "Thriller", the function will return a data frame with information about the 20 best matches for this string in the Spotify database.
+Example: if the user inputs the string "Thriller", the function will return a data frame with information about the 20 best matches for this string in the Spotify database. In the Shiny App, the user simply needs to tick the songs he wishes to save and it will be added it to his tracks.
 
-### Compare: Hover Plot
+## Compare: Hover Plot
 
-To [Roberta] 
+We initially wanted to explore the moods of the different songs by plotting them according to “energy” and “valence” (high energy and high valence are happy songs, high energy and low valence are any, etc.). As we have access to many more music characteristics with the Spotify API, we decided to expand this plot and make it functional with any characteristics. 
 
-Description of function, use cases (what are the inputs/outputs or examples)
+The function hover_plot_shiny displays a scatter plot according to 2 music characteristics and a given year chosen by the user. It also takes any song selected by the user and adds it to the scatter plot for comparison.   
 
-### Rewind: Attributes Over Time
+## Rewind: Attributes Over Time
 
-#### Description
+### Description
 
 In order to visualize and compare the evolution of top and average song attributes (such as "valence", "danceability", etc.), we decided to implement the attributes_time function. 
 
@@ -379,7 +379,7 @@ The choice to take as arguments 2 dataframes instead of 1 (with an additional co
 
 This was appropriate in our case as the billboard data was collected from a different source than that of average songs, but both contained the same music features from the Spotify API.
 
-#### Inputs
+### Inputs
 The input arguments are as follows:
 
 First dataset characteristics:
@@ -408,7 +408,7 @@ Plot characteristics:
 
 - title_vector: a string vector with the df_title names (the strings have to match!). This defines what will be plotted, for example, c(df1_title) will plot only the first dataframe, and c(df1_title, df2_title) will plot both. Although this is a redundant input parameter, it was created to facilitate the synchronization with the shiny app (the user can choose from the "Billboard" or "Non Billboard" checkboxes).
 
-#### Examples: 
+### Examples: 
 Load data & define inputs:
 
 ```{r}
@@ -451,9 +451,9 @@ attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("d
 ```
 
 
-### Predict: Logistic Regression
+## Predict: Logistic Regression
 
-#### Description
+### Description
 
 One of the features of the app is to predict how successful a song would perform. For this, we implemented a logistic regression to find the probability of whether a song would be in the top charts or not. First, we needed to make sure that for every year, we had an equal proportion of non-billboard songs to billboard songs. Because the billboard songs quantity was relatively fixed across the years, we reduced the number of average songs in our sample per year. Variable selection for the logistic regression was performed using the stepwise method that used both the forward and backward procedure optimizing on the BIC criterion. We calibrated one model per year and saved it into a list of models, along with their fisher test scores to check global signficance of the model. The models were saved as a .rda object and is accessible in the package as "log_model_list."
 
@@ -568,7 +568,7 @@ Below is a sample output of one of the models (1960 model) in the model list obj
 log_model_list$year1960
 ```
 
-#### How Logistic Regression Feature works in the app
+### How Logistic Regression Feature works in the app
 From the initially selected tracks, one can select tracks that they want to plot against time. The `get_probability_of_billboard() function takes in the spotify audio features of a track and runs it against the logistic regressions for each year to output the probability of a song being on the billboard per year. 
 
 Below is a sample of the dataframe of probabilities that feed into the dataframe for the plot.
@@ -630,7 +630,7 @@ plot_probabilities(probability_df, 3,2,4, 5)
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
-### Match: Clustering
+## Match: Clustering
 
 #### Description
 
@@ -709,7 +709,7 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
 
 ```
 
-#### Compilation functions
+### Compilation functions
 
 The clustering functions were applied to each year to create a list of model objects, so as to predict the cluster of a song based on its features for any given year. This is for all of the three models shown in the previous section.
 
@@ -772,7 +772,7 @@ combined_clusters$k_cluster <- features_clustered_k$k_cluster
 
 The "combined_clusters" data frame is the output database
 
-#### Create PCA linear models
+### Create PCA linear models
 
 The prediction of clusters and plotting on principal dimensions requires each newly added song to have its principal dimensions in the dataframe. This has been done for each individual song through a linear model, predicting the principal dimensions using the quantitative variables, on each year separately. The output of this is 2 models, one each for the first two principal dimensions of the track, for each year, stored as a list of models.
 
