@@ -46,13 +46,13 @@ launch.shiny()
 
 The app contains a sidebar on the left which allows the user to search any song, add it to his save tracks and compare it with other all others songs. The search function takes as input any string and returns a list of the songs most related to this string. The user simply ticks the song(s) he wishes to add to his saved tracks.
 
-The first tab, [NAME] plots billboard songs according to 2 attributes entered by the user for a given year. The user may also add any input song(s) for comparison and they will be displayed in pink.
+The first tab, "Compare" plots billboard songs according to 2 attributes entered by the user for a given year. The user may also add any input song(s) for comparison and they will be displayed in pink.
 
-The second tab, [NAME] plots the music characteristics of top and/or average (Billboard vs. Non Billboard) songs over time. The user can specify the attributes, the time range, type of popularity and type of plot to be displayed. The boxplots gives more information about the data as it shows the distribution of each variable per year, whereas the average plots allow a global visualisation of multiple attributes. It is recommended to plot only up to 2-3 features for boxplot as the plot rapidly gets packed.
+The second tab, "Rewind" plots the music characteristics of top and/or average (Billboard vs. Non Billboard) songs over time. The user can specify the attributes, the time range, type of popularity and type of plot to be displayed. The boxplots gives more information about the data as it shows the distribution of each variable per year, whereas the average plots allow a global visualisation of multiple attributes. It is recommended to plot only up to 2-3 features for boxplot as the plot rapidly gets packed.
 
-The third tab, [NAME] plots the probabilities for the user's saved tracks to be in the top 100. The minimum and maximum probabilities, along with the release year are labeled.
+The third tab, "Predict" plots the probabilities for the user's saved tracks to be in the top 100. The minimum and maximum probabilities, along with the release year are labeled.
 
-The fourth tab, [NAME] plots the clusters of the billboard songs according to the first two principal components. The user may also add any input song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.
+The fourth tab, "Match" plots the clusters of the billboard songs according to the first two principal components. The user may also add any input song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.
 
 ##Functions
 
@@ -83,11 +83,7 @@ Below is the function that we used to match the songs from the one million song 
 
 ```{r}
 library(gridExtra)
-library(spotifyr)
 library(dplyr)
-library(tidyverse)
-library(httr)
-library(purrr)
 library(musictasteR)
 library(billboard)
 library(reshape)
