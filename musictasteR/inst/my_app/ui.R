@@ -57,8 +57,7 @@ fluidPage(theme = shinytheme("slate"),
                         h4("Choose attribute(s)"),
                         shinyWidgets::awesomeCheckboxGroup(
                           "attributes", label = NULL,
-                          selected = c("danceability", "energy", "speechiness",
-                                       "acousticness", "instrumentalness", "liveness", "valence"),
+                          selected = "danceability",
                           choices = all_attributes)
                  ),
 
