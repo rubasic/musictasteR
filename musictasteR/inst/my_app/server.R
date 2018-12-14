@@ -45,7 +45,7 @@ shinyServer(function(input, output,session) {
 
   # Creating a data frame that will hold formatted songs for attributes plot
   # Contains "Oops!... I Did It Again" by Britney Spears by default, which is removed when user adds new songs
-  new_music <- spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
+  new_music <- billboard::spotify_track_data %>% filter(artist_name=="Britney Spears") %>% filter(dplyr::row_number()==1)
 
   # Creating a data frame that will hold formatted songs for logistic regression
   new_music_logit <- data_frame()
@@ -136,7 +136,7 @@ shinyServer(function(input, output,session) {
       print(" ")
     } else {
     logit_input <- new_music_logit %>% split(.$track_name) %>%
-      map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
+      purrr::map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
     logit_input <- logit_input %>% filter(track_name %in% input$selectLogit)
     output$plot_logit <- renderPlot(
       plot_probabilities(logit_input, 3, 2, 4, 5))
@@ -155,7 +155,7 @@ shinyServer(function(input, output,session) {
 
   ## Historical data plot
   music_dataframe <- billboard::spotify_track_data # Historical Billboard data
-  # zAll the Spotify audio attributes
+  # All the Spotify audio attributes
   all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness", "Instrumentalness" = "instrumentalness" ,"Liveness" = "liveness","Valence" = "valence")
   output$attributes_time <- renderPlot({
     req(input$attributes)

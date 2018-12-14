@@ -1,37 +1,37 @@
 ---
-title: "MusictasteR"
+title: "musictasteR"
 author: "Roberta Conrad, Clara Dionet, Mirae Kim, Jorgen Lund, Akshay Sundar"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{dplyr compatibility}
+  %\VignetteIndexEntry{musictasteR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette describes the MusicTasteR package, the process from its conception to its execution, and its final capabilities and use cases.
+This vignette describes the musictasteR package, the process from its conception to its execution, and its final capabilities and use cases.
 
 #
 #Table of Contents
 ###Overview
-- Data
-- The App
-- Functions
+* Data
+* The App
+* Functions
 
 ###Data Grabbing
-- Top Songs
-- Average Songs
+* Top Songs
+* Average Songs
 
 ###Package functions
-- Search
-- Hover Plot
-- Attributes Over Time
-- Logistic Regression
-- Clustering
+* Search Songs
+* Compare: Hover Plot
+* Rewind: Attributes Over Time
+* Predict: Logistic Regression
+* Match: Clustering
 
-# 
+#
 #Overview
 
-The package musictasteR was designed to compare and contrast the music features of top and average songs. We wanted to answer questions such as: what are the characteristics of popular songs? Are we able to predict the popularity of a given song? What songs are similar to each other in terms of their attrbiutes? 
+The package musictasteR was designed to compare and contrast the music features of top and average songs. We wanted to answer questions such as: what are the characteristics of popular songs? Are we able to predict the popularity of a given song? What songs are similar to each other in terms of their attributes? 
 
 ##Data
 To respond to this problem, we assembled more than 50k top songs (songs which have been featured in the Top100 Billboard chart) and 150k average songs over the years 1960 to 2015. How the data was collected is explained in detail in the "Data Grabbing" section.
@@ -71,6 +71,7 @@ Sys.setenv(SPOTIFY_CLIENT_SECRET = 'client secret')
 The app will then generate an access token to query the Spotify API with.
 
 
+#
 #Data Gathering
 
 We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types. We explored various sources of music data on the net, including MusicBrainz (https://musicbrainz.org), Discogs api (https://www.discogs.com/developers/), Echo Nest (http://the.echonest.com/) but eventually settled on Spotify due to their lenient API rate usage policies, and the simplicity of the music attribute outputs. 
@@ -86,7 +87,7 @@ Spotify api search track function that had a wildcard feature, and it also provi
 
 Below is the function that we used to match the songs from the one million song database to the spotify data.
 
-```{r}
+```{r warning = FALSE, message = FALSE}
 library(gridExtra)
 library(dplyr)
 library(musictasteR)
@@ -350,20 +351,25 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
                 )})
 ```
 
+
 #
 # Package Functions
 
-### Search
-[Jorgen]
-Description of function, use cases (what are the inputs/outputs or examples)
+## Search Songs
 
-### Hover Plot
-[Roberta]
-Description of function, use cases (what are the inputs/outputs or examples)
+The get_tracks_artists function takes a string and returns a data frame with track information for the 20 best matches from Spotify's search endpoint. It was created to allow the user of the musictasteR app to search for tracks and/or artists. The input is the string that is used in the search, and a Spotify access token that allows access to the Spotify API.
 
-### Attributes Over Time
+Example: if the user inputs the string "Thriller", the function will return a data frame with information about the 20 best matches for this string in the Spotify database. In the Shiny App, the user simply needs to tick the songs he wishes to save and it will be added it to his tracks.
 
-#### Description
+## Compare: Hover Plot
+
+We initially wanted to explore the moods of the different songs by plotting them according to “energy” and “valence” (high energy and high valence are happy songs, high energy and low valence are any, etc.). As we have access to many more music characteristics with the Spotify API, we decided to expand this plot and make it functional with any characteristics. 
+
+The function hover_plot_shiny displays a scatter plot according to 2 music characteristics and a given year chosen by the user. It also takes any song selected by the user and adds it to the scatter plot for comparison.   
+
+## Rewind: Attributes Over Time
+
+### Description
 
 In order to visualize and compare the evolution of top and average song attributes (such as "valence", "danceability", etc.), we decided to implement the attributes_time function. 
 
@@ -375,36 +381,26 @@ The choice to take as arguments 2 dataframes instead of 1 (with an additional co
 
 This was appropriate in our case as the billboard data was collected from a different source than that of average songs, but both contained the same music features from the Spotify API.
 
-#### Inputs
+### Inputs
 The input arguments are as follows:
 
 First dataset characteristics:
-- df1: a data.frame 
-
-- df1_title: title of your first df (ex: topsongs) 
-
-- df1_year_col: a number (column number of the "year" column)  
-
+* df1: a data.frame 
+* df1_title: title of your first df (ex: topsongs) 
+* df1_year_col: a number (column number of the "year" column)  
 
 Second dataset characteristics: 
-
-- df2: a data.frame  
-
-- df2_title: title of your second df (ex: averagesongs) 
-
-- df2_year_col: a number (column number of the "year" column) 
-
+* df2: a data.frame  
+* df2_title: title of your second df (ex: averagesongs) 
+* df2_year_col: a number (column number of the "year" column) 
 
 Plot characteristics: 
-- attributes: a vector containing strings, the column names to be plotted (ex: c("energy","danceability")) 
+* attributes: a vector containing strings, the column names to be plotted (ex: c("energy","danceability")) 
+* boxplot: a boolean, specifies the type of plot (TRUE = plot as boxplots, FALSE = plot as averages) 
+* timerange: a 2x1 vector, this defines xlims, years to be plotted over (ex: c(1990, 2010)) 
+* title_vector: a string vector with the df_title names (the strings have to match!). This defines what will be plotted, for example, c(df1_title) will plot only the first dataframe, and c(df1_title, df2_title) will plot both. Although this is a redundant input parameter, it was created to facilitate the synchronization with the shiny app (the user can choose from the "Billboard" or "Non Billboard" checkboxes).
 
-- boxplot: a boolean, specifies the type of plot (TRUE = plot as boxplots, FALSE = plot as averages) 
-
-- timerange: a 2x1 vector, this defines xlims, years to be plotted over (ex: c(1990, 2010)) 
-
-- title_vector: a string vector with the df_title names (the strings have to match!). This defines what will be plotted, for example, c(df1_title) will plot only the first dataframe, and c(df1_title, df2_title) will plot both. Although this is a redundant input parameter, it was created to facilitate the synchronization with the shiny app (the user can choose from the "Billboard" or "Non Billboard" checkboxes).
-
-#### Examples: 
+### Examples: 
 Load data & define inputs:
 
 ```{r}
@@ -416,7 +412,7 @@ colnames(topsongs)
 The variable "year" is in column 1 for topsongs and column 4 for average songs.
 
 Comparing averages for Billboard / Non Billboard data:
-```{r fig.width=7}
+```{r fig.width=7, warning = FALSE}
 attributes <- c("danceability" ,"energy" ,"mode", "speechiness","acousticness", "instrumentalness" ,"liveness","valence" ,"tempo")
 boxplot <- FALSE
 timerange <- c(1960,2015)
@@ -426,7 +422,7 @@ attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attr
 ```
 
 Plot only billboard data:
-```{r fig.width=7}
+```{r fig.width=7, warning = FALSE}
 title_vector <- "Average Songs"
 attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
 ```
@@ -447,9 +443,9 @@ attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("d
 ```
 
 
-### Logistic Regression
+## Predict: Logistic Regression
 
-#### Description
+### Description
 
 One of the features of the app is to predict how successful a song would perform. For this, we implemented a logistic regression to find the probability of whether a song would be in the top charts or not. First, we needed to make sure that for every year, we had an equal proportion of non-billboard songs to billboard songs. Because the billboard songs quantity was relatively fixed across the years, we reduced the number of average songs in our sample per year. Variable selection for the logistic regression was performed using the stepwise method that used both the forward and backward procedure optimizing on the BIC criterion. We calibrated one model per year and saved it into a list of models, along with their fisher test scores to check global signficance of the model. The models were saved as a .rda object and is accessible in the package as "log_model_list."
 
@@ -564,7 +560,7 @@ Below is a sample output of one of the models (1960 model) in the model list obj
 log_model_list$year1960
 ```
 
-#### How Logistic Regression Feature works in the app
+### How Logistic Regression Feature works in the app
 From the initially selected tracks, one can select tracks that they want to plot against time. The `get_probability_of_billboard() function takes in the spotify audio features of a track and runs it against the logistic regressions for each year to output the probability of a song being on the billboard per year. 
 
 Below is a sample of the dataframe of probabilities that feed into the dataframe for the plot.
@@ -626,18 +622,21 @@ plot_probabilities(probability_df, 3,2,4, 5)
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
-### Clustering
+## Match: Clustering
 
-#### Description
+The plot_songs_cluster function displays the clusters of the billboard songs according to the first two principal components created on the basis of quantitative features. It also allows the user to add his own song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.
 
 A clustering was done on the billboard top songs on a yearly basis. These models were created for each year separately to identify potential similar groupings with respect to the track features. 
 
-Three methods were used for clustering to determine which one had maximum stability-
-1) K Means Clustering
-2) HCPC - Hierarchical Clustering on Principal Components
-3) HCPC with Pre PCA - Hierarchical Clustering on Principal Components precluded by reduction into 2 dimensions using a PCA
+### Cluster functions for a given year
 
-Clustering through K-Means Method -
+Three methods were used for clustering to determine which one had maximum stability:
+
+1.  K Means Clustering
+2.  HCPC: Hierarchical Clustering on Principal Components
+3.  HCPC with Pre PCA: Hierarchical Clustering on Principal Components precluded by reduction into 2 dimensions using a PCA
+
+#### 1. Clustering through K-Means Method
 
 ```{r eval=F}
 cluster_year_k <- function(objet,year_taken,clust_size){
@@ -657,7 +656,7 @@ cluster_year_k <- function(objet,year_taken,clust_size){
 }
 ```
 
-Clustering through HCPC Method -
+#### 2. Clustering through HCPC Method
 
 ```{r eval=F}
 cluster_year_hcpc <- function(objet,year_taken,clust_num){
@@ -678,7 +677,7 @@ cluster_year_hcpc <- function(objet,year_taken,clust_num){
 ```
 
 
-Clustering through HCPC precluded with PCA (2 principal dimensions) -
+#### 3. Clustering through HCPC precluded with PCA (2 principal dimensions)
 
 ```{r eval=F}
 
@@ -705,13 +704,13 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
 
 ```
 
-#### Compilation functions
+### Get cluster models for all years
 
 The clustering functions were applied to each year to create a list of model objects, so as to predict the cluster of a song based on its features for any given year. This is for all of the three models shown in the previous section.
 
 These clusters was also created on the billboard dataframe.
 
-K means clusters database -
+#### 1. K means clusters database
 ```{r eval=F}
 
 # Setting range for the processing yearly
@@ -730,7 +729,7 @@ for (year in min_year:max_year) {
 }
 ```
 
-HCPC clusters database-
+#### 2. HCPC clusters database
 ```{r eval=F}
 features_clustered_hcpc <- data.frame()
 model_hcpc_clusters <- list()
@@ -743,7 +742,7 @@ for (year in min_year:max_year) {
 }
 ```
 
-HCPC with pre PCA clusters database-
+#### 3. HCPC with pre PCA clusters database
 ```{r eval=F}
 features_clustered_hcpc_pca <- data.frame()
 model_hcpc_pca_clusters <- list()
@@ -766,13 +765,13 @@ combined_clusters$hcpc_cluster <- features_clustered_hcpc$hcpc_cluster
 combined_clusters$k_cluster <- features_clustered_k$k_cluster
 ```
 
-The "combined_clusters" data frame is the output database
+The "combined_clusters" data frame is the output database.
 
-#### Create PCA linear models
+### Create PCA linear models
 
 The prediction of clusters and plotting on principal dimensions requires each newly added song to have its principal dimensions in the dataframe. This has been done for each individual song through a linear model, predicting the principal dimensions using the quantitative variables, on each year separately. The output of this is 2 models, one each for the first two principal dimensions of the track, for each year, stored as a list of models.
 
-Function to create the linear models for PCA given a year -
+Function to create the linear models for PCA given a year:
 ```{r eval=F}
 
 pc_as_lm <- function(objet,year_taken){
@@ -790,7 +789,7 @@ pc_as_lm <- function(objet,year_taken){
 
 ```
 
-Run loop on a yearly basis to create list of linear models for first two principal dimensions-
+Run loop on a yearly basis to create list of linear models for first two principal dimensions:
 ```{r eval=F}
 bb_pc_lm_dim1 <- list()
 bb_pc_lm_dim2 <- list()
@@ -803,6 +802,6 @@ for (years in min_year:max_year) {
 }
 ```
 
-"bb_pc_lm_dim1" and "bb_pc_lm_dim2" are the R objects for the list of linear models on a yearly basis
+
 
 

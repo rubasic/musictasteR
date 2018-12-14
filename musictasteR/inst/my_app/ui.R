@@ -1,9 +1,12 @@
 all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness" ,"Liveness" = "liveness","Valence" = "valence")
 
 library(shiny)
+library(dplyr)
+library(shinycssloaders)
+library(shinyWidgets)
+library(shinythemes)
 
-
-fluidPage(theme = shinytheme("slate"),
+fluidPage(theme = shinythemes::shinytheme("slate"),
           includeCSS("www/styles.css"),
           shinyWidgets::chooseSliderSkin("Shiny", color = "#00c193"),
 
@@ -48,7 +51,7 @@ fluidPage(theme = shinytheme("slate"),
               ),
 
       tabPanel(strong("REWIND"),
-               plotOutput("attributes_time") %>% withSpinner(color = "#999b9e"),
+               plotOutput("attributes_time") %>% shinycssloaders::withSpinner(color = "#999b9e"),
                br(),
                p("Plot the music characteristics of billboard songs and/or average songs over time! Select the attributes, timerange, and type of plot you want to see! Up to 2 features recommended for the boxplot option."),
                fluidRow(
