@@ -211,8 +211,7 @@ shinyServer(function(input, output,session) {
   output$albumImage <- renderUI({
     if(length(tracks()$album_img[1]) != 0) {
       image_url <- tracks()$album_img[1]
-      tags$img(src = image_url, height = 250, width = 250)
-      # HTML(stringr::str_glue('<img src={image_url}, height = 200>'))
+      tags$img(src = image_url)
     }
   })
 
