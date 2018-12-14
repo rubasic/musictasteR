@@ -1,4 +1,3 @@
-
 all_attributes <- c("Danceability" = "danceability" ,"Energy" = "energy",  "Speechiness"  = "speechiness","Acousticness" = "acousticness" ,"Liveness" = "liveness","Valence" = "valence")
 
 library(shiny)
@@ -6,6 +5,7 @@ library(shinythemes)
 library(shinyWidgets)
 library(shinycssloaders)
 library(dplyr)
+library(DT)
 
 fluidPage(theme = shinytheme("slate"),
           includeCSS("www/styles.css"),
@@ -57,8 +57,7 @@ fluidPage(theme = shinytheme("slate"),
                         h4("Choose attribute(s)"),
                         shinyWidgets::awesomeCheckboxGroup(
                           "attributes", label = NULL,
-                          selected = c("danceability", "energy", "speechiness",
-                                       "acousticness", "instrumentalness", "liveness", "valence"),
+                          selected = "danceability",
                           choices = all_attributes)
                  ),
 
@@ -100,11 +99,12 @@ fluidPage(theme = shinytheme("slate"),
                p("See which song your input music is the most similar to in which year! Select a song/list of songs, select a year and hover over the result to see song details! Songs clustered together indicate a slight similarity in terms of musical features, and songs closeby in the plot are strongly similar."),
                strong("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
-                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "")
+                           value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "", width = 1000)
                ),
 
       tabPanel(strong("Your songs"),
-               DT::dataTableOutput("masterDF")
+               DT::dataTableOutput("masterDF"),
+               tags$head(tags$style("#masterDF{color: black}"))
                ),
 
       tabPanel(strong("About the app"),

@@ -15,6 +15,8 @@ data(averagesongs)
 Sys.setenv(SPOTIFY_CLIENT_ID = 'a98864ad510b4af6851331638eec170f')
 Sys.setenv(SPOTIFY_CLIENT_SECRET = '6445326414dd4bf381afbc779b182223')
 
+
+
 plot_probabilities <- function(input_dataframe, year_int_col_index, prob_col_index, track_name_col_index,  true_song_year_index) {
   #dataframe with year and probability
   colnames(input_dataframe)[year_int_col_index] <-"year_int"
@@ -123,29 +125,40 @@ hover.plot.shiny <- function(data,x,y,chosen_year)
 
 plot_songs_clusters <- function(songs,year_taken){
 
-  #Process Columns for Mode and Key
-  songs$mode <- ifelse(songs$mode=="Major",1,0)
-  songs$key <- case_when(
-    songs$key=="C"~0,
-    songs$key=="C#"~1,
-    songs$key=="Db"~1,
-    songs$key=="D"~2,
-    songs$key=="D#"~3,
-    songs$key=="Eb"~3,
-    songs$key=="E"~4,
-    songs$key=="F"~5,
-    songs$key=="F#"~6,
-    songs$key=="Gb"~6,
-    songs$key=="G"~7,
-    songs$key=="G#"~8,
-    songs$key=="Ab"~8,
-    songs$key=="A"~9,
-    songs$key=="A#"~10,
-    songs$key=="Bb"~10,
-    songs$key=="B"~11,
-    TRUE~-1
-  )
-  colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+  if (nrow(songs)!=0) {
+
+    #Process Columns for Mode and Key
+    songs$mode <- ifelse(songs$mode=="Major",1,0)
+    songs$key <- case_when(
+      songs$key=="C"~0,
+      songs$key=="C#"~1,
+      songs$key=="Db"~1,
+      songs$key=="D"~2,
+      songs$key=="D#"~3,
+      songs$key=="Eb"~3,
+      songs$key=="E"~4,
+      songs$key=="F"~5,
+      songs$key=="F#"~6,
+      songs$key=="Gb"~6,
+      songs$key=="G"~7,
+      songs$key=="G#"~8,
+      songs$key=="Ab"~8,
+      songs$key=="A"~9,
+      songs$key=="A#"~10,
+      songs$key=="Bb"~10,
+      songs$key=="B"~11,
+      TRUE~-1
+    )
+    colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+
+
+
+
+
+    songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
+    songs_edit$cluster_final <- "Manual Input songs"
+    songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  }
 
   #Test years for 2 samples
   temp <- bb_data %>% filter(year!=1983) %>% filter(year!=2000)
@@ -155,14 +168,16 @@ plot_songs_clusters <- function(songs,year_taken){
   temp2$year=2000
   restr <- rbind(temp,temp1,temp2)
 
-
   restr <- restr %>% filter(year==year_taken)
   restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
-  songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
-  songs_edit$cluster_final <- "Manual Input songs"
-  songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
   restr <- restr %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
-  combined <- rbind(restr,songs_edit)
+
+  if (nrow(songs)!=0) {
+    combined <- rbind(restr,songs_edit)
+  }
+  if (nrow(songs)==0) {
+    combined <- restr
+  }
   combined$Primary <- round(combined$dim_1,2)
   combined$Secondary <- round(combined$dim_2,2)
   combined$Group <- combined$cluster_final
@@ -179,6 +194,7 @@ plot_songs_clusters <- function(songs,year_taken){
                                                                                          color = "black")));
   return(response_fin)
 }
+
 
 shinyServer(function(input, output,session) {
 
@@ -203,6 +219,11 @@ shinyServer(function(input, output,session) {
 
   # Updating the checkboxes with top 5 matches from the search
   observeEvent(input$track, {
+    if(input$track == "") {
+      shinyWidgets::updateAwesomeCheckboxGroup(
+        session = session, inputId = "selectTracks",
+        choices = character(0))
+    }
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
@@ -218,10 +239,8 @@ shinyServer(function(input, output,session) {
 
   # Creating a data frame that will hold formatted songs for logistic regression
   new_music_logit <- data_frame()
-  bb <- billboard::spotify_track_data[1,]
 
   observeEvent(input$addTracks, {
-    req(input$track)
 
     ## Updating the master dataframe
     # Filtering the search results based on the tracks the user has selected
@@ -267,11 +286,7 @@ shinyServer(function(input, output,session) {
 
     ## Updating cluster plot
     output$plot_cluster <- plotly::renderPlotly({
-      if(nrow(master_df) == 0) {
-        plot_songs_clusters(bb,input$year_cluster)
-      } else {
-        plot_songs_clusters(new_music,input$year_cluster)
-      }
+      plot_songs_clusters(master_df,input$year_cluster)
     })
 
     ## Updating checkbox choices for logistic regression
@@ -296,21 +311,25 @@ shinyServer(function(input, output,session) {
     output$yourTracks <- renderTable({
       empty
     })
+
+    ## Clearing checkbox
+    choices <- character(0)
+    shinyWidgets::updateAwesomeCheckboxGroup(
+      session = session, inputId = "selectLogit",
+      choices = choices, selected = NULL)
   })
 
-  foo <- function() {
-  }
   ## Updating logistic regression plot
   observeEvent(input$updateLogit, {
     req(input$selectLogit)
     if(nrow(master_df) == 0) {
-      foo()
+      print(" ")
     } else {
-      logit_input <- new_music_logit %>% split(.$track_name) %>%
-        map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
-      logit_input <- logit_input %>% filter(track_name %in% input$selectLogit)
-      output$plotLogit <- renderPlot(
-        plot_probabilities(logit_input, 3, 2, 4, 5))
+    logit_input <- new_music_logit %>% split(.$track_name) %>%
+      map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
+    logit_input <- logit_input %>% filter(track_name %in% input$selectLogit)
+    output$plot_logit <- renderPlot(
+      plot_probabilities(logit_input, 3, 2, 4, 5))
     }
   })
 
@@ -321,11 +340,7 @@ shinyServer(function(input, output,session) {
 
   ## Cluster plot
   output$plot_cluster <- plotly::renderPlotly({
-    if(nrow(master_df) == 0) {
-      plot_songs_clusters(bb, input$year_cluster)
-    } else {
       plot_songs_clusters(new_music,input$year_cluster)
-    }
   })
 
   ## Historical data plot
@@ -339,12 +354,4 @@ shinyServer(function(input, output,session) {
                     input$timerange, input$billboard)
   })
 
-  ## When user pulls the "boxplot" switch, the only attribute that is checked is "danceability"
-  observe({
-   if(input$boxplot == TRUE) {
-     updateCheckboxGroupInput(session = session,
-                              inputId = "attributes", selected = "danceability",
-                              choices = all_attributes)
-     }
-    })
 })

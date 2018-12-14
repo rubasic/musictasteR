@@ -50,11 +50,17 @@ df2 <- df2[complete.cases(df2), ]
 # difference: a 2x2 vector containing characterstic of df1, df2
     
 attributes_time <- function(df1, df1_title, df1_year_col, df2, df2_title, df2_year_col, vars, boxplot, timerange, title_vector) {
-
-  # in case column names not called "year"
+    # in case column names not called "year"
   colnames(df1)[df1_year_col] <- "year"
   colnames(df2)[df2_year_col] <- "year"
-  if(boxplot == FALSE) {
+  
+  if (is.null(vars)) {
+    df <- data.frame()
+    value <- c(0,1)
+    ggplot(df) + ylim(0,1) + xlim(timerange) + xlab("year") + ylab("value") + geom_blank() 
+  }
+
+  else if(boxplot == FALSE) {
     # get mean for each attribute
     df1_avg <- aggregate(df1[,vars], df1[,df1_year_col], mean)
     df2_avg <- aggregate(df2[,vars], df2[,df2_year_col], mean)
@@ -95,9 +101,13 @@ library(musictasteR)
 averagesongs
 topsongs <- billboard::spotify_track_data
 
-# last argument has to match names
-attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("danceability","energy"), TRUE, c(1960,2015), c("Billboard","Non Billboard"))
 
+```
+
+```{r}
+
+# last argument has to match names
+attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, vars=NULL, FALSE, c(1960,2015), c("Billboard","Non Billboard"))
 ```
 
 If function returns df -> what kind of plot:

@@ -32,7 +32,15 @@ attributes_time <- function(df1, df1_title, df1_year_col, df2, df2_title, df2_ye
   # in case column names not called "year"
   colnames(df1)[df1_year_col] <- "year"
   colnames(df2)[df2_year_col] <- "year"
-  if(boxplot == FALSE) {
+
+  # add default grid if no attributes are selected
+  if (is.null(vars)) {
+    df <- data.frame()
+    value <- c(0,1)
+    ggplot(df) + ylim(0,1) + xlim(timerange) + xlab("year") + ylab("value") + geom_blank()
+  }
+
+  else if(boxplot == FALSE) {
     # get mean for each attribute
     df1_avg <- aggregate(df1[,attributes], df1[,df1_year_col], mean)
     df2_avg <- aggregate(df2[,attributes], df2[,df2_year_col], mean)
