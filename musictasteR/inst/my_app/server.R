@@ -218,6 +218,7 @@ shinyServer(function(input, output,session) {
 
   # Creating a data frame that will hold formatted songs for logistic regression
   new_music_logit <- data_frame()
+  bb <- billboard::spotify_track_data[1,]
 
   observeEvent(input$addTracks, {
     req(input$track)
@@ -266,7 +267,11 @@ shinyServer(function(input, output,session) {
 
     ## Updating cluster plot
     output$plot_cluster <- plotly::renderPlotly({
-      plot_songs_clusters(master_df,input$year_cluster)
+      if(nrow(master_df) == 0) {
+        plot_songs_clusters(bb,input$year_cluster)
+      } else {
+        plot_songs_clusters(new_music,input$year_cluster)
+      }
     })
 
     ## Updating checkbox choices for logistic regression
@@ -293,16 +298,20 @@ shinyServer(function(input, output,session) {
     })
   })
 
+  foo <- function() {
+  }
   ## Updating logistic regression plot
   observeEvent(input$updateLogit, {
     req(input$selectLogit)
-    logit_input <- new_music_logit %>% split(.$track_name) %>%
-      map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
-    logit_input <- logit_input %>% filter(track_name %in% input$selectLogit)
-    output$plotLogit <- renderPlot(
-      plot_probabilities(logit_input, 3, 2, 4, 5)
-    )
-    print(logit_input)
+    if(nrow(master_df) == 0) {
+      foo()
+    } else {
+      logit_input <- new_music_logit %>% split(.$track_name) %>%
+        map_df(function(x) {return(get_probability_of_billboard(x, log_model_list)) })
+      logit_input <- logit_input %>% filter(track_name %in% input$selectLogit)
+      output$plotLogit <- renderPlot(
+        plot_probabilities(logit_input, 3, 2, 4, 5))
+    }
   })
 
   ## Attributes plot
@@ -312,7 +321,11 @@ shinyServer(function(input, output,session) {
 
   ## Cluster plot
   output$plot_cluster <- plotly::renderPlotly({
-    plot_songs_clusters(new_music,input$year_cluster)
+    if(nrow(master_df) == 0) {
+      plot_songs_clusters(bb, input$year_cluster)
+    } else {
+      plot_songs_clusters(new_music,input$year_cluster)
+    }
   })
 
   ## Historical data plot
