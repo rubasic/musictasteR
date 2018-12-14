@@ -21,6 +21,8 @@ usethis::use_package("shiny")
 usethis::use_package("shinythemes")
 usethis::use_package("reshape")
 usethis::use_build_ignore("plot_time_avg.R")
+usethis::use_build_ignore("images")
+usethis::use_build_ignore("README.md")
 #devtools::load_all(".")
 usethis::use_pipe
 
