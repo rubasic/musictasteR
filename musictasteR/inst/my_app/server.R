@@ -219,6 +219,11 @@ shinyServer(function(input, output,session) {
 
   # Updating the checkboxes with top 5 matches from the search
   observeEvent(input$track, {
+    if(input$track == "") {
+      shinyWidgets::updateAwesomeCheckboxGroup(
+        session = session, inputId = "selectTracks",
+        choices = character(0))
+    }
     choices <- paste(tracks()$track_artist_name, tracks()$artist_name, sep = " - ")
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectTracks",
@@ -234,6 +239,8 @@ shinyServer(function(input, output,session) {
 
   # Creating a data frame that will hold formatted songs for logistic regression
   new_music_logit <- data_frame()
+
+  # Data frame with example track in the correct format for plotting
   bb <- billboard::spotify_track_data[1,]
 
   observeEvent(input$addTracks, {
@@ -308,7 +315,7 @@ shinyServer(function(input, output,session) {
       empty
     })
 
-    ## Clearing checkboxes
+    ## Clearing checkbox
     choices <- character(0)
     shinyWidgets::updateAwesomeCheckboxGroup(
       session = session, inputId = "selectLogit",
