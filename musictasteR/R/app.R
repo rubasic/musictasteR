@@ -2,7 +2,11 @@
 #'
 #' @return a shiny app
 #' @export
-#'
+#' @import shinycssloaders
+#' @import shinyWidgets
+#' @import shinycssloaders
+#' @import shinythemes
+#' @import shiny
 #' @examples
 #' \dontrun{
 #' launch.shiny()
