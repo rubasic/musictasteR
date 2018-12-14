@@ -9,12 +9,10 @@ vignette: >
 
 This vignette describes the MusicTasteR package, the process from its conception to its execution, and its final capabilities and use cases.
 
-<<<<<<< HEAD
-```{r}
-library(gridExtra)
-=======
+
 ```{r eval=F}
->>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
+
+library(gridExtra)
 library(spotifyr)
 library(dplyr)
 library(tidyverse)
@@ -25,25 +23,6 @@ library(purrr)
 The user needs to first go on spotify to get their Client ID:
 https://developer.spotify.com/documentation/web-api/
 
-<<<<<<< HEAD
-=======
-
-```{r eval=F}
-access_token <- get_spotify_access_token()
-
-#Samples
-#get ID for a song					 
-search <- 'https://api.spotify.com/v1/search/?q=track:dancing%20queen%20artist:abba&type=track&limit=1'
-res <- RETRY('GET', url = str_glue(search),
-                     query = list(access_token = access_token), quiet = TRUE, times = 1) %>% content
-					 
-#get the audio feature for a song
-res <- RETRY('GET', url = 'https://api.spotify.com/v1/audio-features/?ids=5ghIJDpPoe3CfHMGu71E6T',
-                     query = list(access_token = access_token), quiet = TRUE, times = 10) %>% content
-
-```
-
->>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 ##Data Gathering
 
 We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types. We explored various sources of music data on the net, including MusicBrainz (https://musicbrainz.org), Discogs api (https://www.discogs.com/developers/), Echo Nest (http://the.echonest.com/) but eventually settled on Spotify due to their lenient API rate usage policies, and the simplicity of the music attribute outputs. 
@@ -429,7 +408,8 @@ new_artist_test <-rbind(billboard_edit, artist_test) #finally, combine the avera
 per_year_test <- new_artist_test %>% group_by(year) %>% slice(1:600)
 ```
 
-```{r fig.width=14, eval=F}
+The following code shows the analysis we did to tailor the number of average and billboard songs per year before running the logistic regression ont he data.
+```{r fig.width=8, eval=F}
 #Original Distribution of songs per year
 full_test %>% filter(!year%in% c(2015:2019)) %>% group_by(year, top_or_not) %>% summarise(count=n()) %>% ggplot(aes(x=year, y=count, fill=as.factor(top_or_not))) + geom_bar(stat="identity") + labs(title="Original Distribution of Average to Top Chart Songs")
 
@@ -496,11 +476,7 @@ save_result <- get_all_reg_models(new_artist_test)
 ```
 
 All models had significant liklihood ratio test scores. 1972 has the highest Liklihood ratio test score of 2.86441e-09, meaning it is the least significant model. The models are saved in the package and can be accessed through an object called "log_model_list"
-<<<<<<< HEAD
-```{r}
-=======
 ```{r eval=F}
->>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 anova_list <- unlist(save_result$anova_list)
 anova_df <- data.frame(anova_score = unlist(anova_list))
 anova_df['year'] <- sapply(rownames(anova_df), function(x) {return(substring(x,5,9))})
@@ -525,7 +501,7 @@ format_new_songs_logit <- function(songs){
   new_songs <- billboard::spotify_track_data[nrow(songs),]
   new_songs <- ""
   new_songs$artist_name <- songs$artist_name
-  new_songs$track_name <- songs$track_artist_name
+  new_songs$track_name <- songs$track_uri #in the app this is track_name
   new_songs$duration_ms <- songs$duration_ms
   new_songs$danceability <- songs$danceability
   new_songs$energy <- songs$energy
@@ -562,15 +538,10 @@ format_new_songs_logit <- function(songs){
 
 ```
 
-<<<<<<< HEAD
-```{r}
-input_song <- format_new_songs_logit(spotify_test_pull_with_characteristics[1,])
-=======
-```{r eval=F}
-library(musictasteR)
-input_song <- new_song
->>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 
+```{r}
+library(musictasteR)
+input_song <- format_new_songs_logit(spotify_test_pull_with_characteristics[3,])
 probability_df <- get_probability_of_billboard(input_song, log_model_list)
 probability_df['true_song_year_bool'] <- probability_df$true_song_year == probability_df$year_int
 head(probability_df)
@@ -578,13 +549,8 @@ head(probability_df)
 
 The following plot shows a line graph of the probabilities that the song will be on the billboard throughout time. There are three points that are highlighted in the line graph, the probability of the release year, the highest probability and the lowest probability. 
 
-<<<<<<< HEAD
-```{r}
+```{r fig.width=8}
 plot_probabilities(probability_df, 3,2,4, 5)
-=======
-```{r eval=F}
-plot_probabilities(multiple_df, 3,2,4, 5)
->>>>>>> d0381351660992b8d89cb7c23e447a54258a542c
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
