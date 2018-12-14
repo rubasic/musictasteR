@@ -13,7 +13,7 @@ The main functionality of this package is the Shiny application, which allows to
 
 ``` r
 # install.packages("devtools")
-devtools::install_github(rubasic/musictasteR)
+devtools::install_github(rubasic/rubasic/musictasteR)
 ```
 
 #### Compare
