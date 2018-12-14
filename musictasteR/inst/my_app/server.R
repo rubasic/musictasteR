@@ -307,6 +307,12 @@ shinyServer(function(input, output,session) {
     output$yourTracks <- renderTable({
       empty
     })
+
+    ## Clearing checkboxes
+    choices <- character(0)
+    shinyWidgets::updateAwesomeCheckboxGroup(
+      session = session, inputId = "selectLogit",
+      choices = choices, selected = NULL)
   })
 
   ## Updating logistic regression plot
