@@ -1,6 +1,9 @@
-#' Title
+#' Plot Probabilities
 #'
-#' @param input_dataframe the input song has the following attributes: "trackname", "year_int", "prob", "true_song_year"
+#' The plot probabilities plots the probability of a song being in the top charts by year.
+#'
+#' @param input_dataframe the input song has the following attributes: "trackname", "year_int", "prob", "true_song_year".
+#' this dataframe is generated from the function get_probability_of_billboard of the musictasteR package
 #' @param year_int_col_index index for year_int col in the dataframe
 #' @param prob_col_index index for prob col in the dataframe
 #' @param track_name_col_index index for track_name col in the dataframe
@@ -13,7 +16,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' plot_probabilities(input_dataframe)
+#' plot_probabilities(logit_input, 3, 2, 4, 5)
 #' }
 #'
 
@@ -42,7 +45,7 @@ plot_probabilities <- function(input_dataframe, year_int_col_index, prob_col_ind
                         ), color="black", size=4)
     g <- g+ geom_text(data=input_dataframe[input_dataframe$true_song_year_bool == T,], aes(x=year_int,y=prob,label=paste0("release year: ", year_int) , alpha=0.8), hjust=-.06,vjust=-.06, size=3)
     }
-  
+
   #highlight the point with minimum probability of song
   g <- g + geom_point(data=DT[ , .SD[which.min(prob)], by = track_name],
                       aes(x=DT[ , .SD[which.min(prob)], by = track_name]$year_int,
