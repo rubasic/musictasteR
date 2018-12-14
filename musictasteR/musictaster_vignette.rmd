@@ -83,11 +83,7 @@ Below is the function that we used to match the songs from the one million song 
 
 ```{r}
 library(gridExtra)
-library(spotifyr)
 library(dplyr)
-library(tidyverse)
-library(httr)
-library(purrr)
 library(musictasteR)
 library(billboard)
 library(reshape)
