@@ -3,53 +3,54 @@ Title: Analyze Your Taste Of Music
 Version: 0.0.0.9000
 Authors@R: 
     c(person(given = "Roberta",
-           family = "Conrad",
-           role = c("aut", "cre"),
-           email = "roberta.conrad@polytechnique.edu"),
+             family = "Conrad",
+             role = c("aut", "cre"),
+             email = "roberta.conrad@polytechnique.edu"),
       person(given = "Clara",
-           family = "Dionet",
-           role = c("aut", "ctb"),
-           email = "clara.dionet@polytechnique.edu"),
+             family = "Dionet",
+             role = c("aut", "ctb"),
+             email = "clara.dionet@polytechnique.edu"),
       person(given = "Mirae",
-           family = "Kim",
-           role = c("aut", "ctb"),
-           email = "mirae.kim@polytechique.edu"),
+             family = "Kim",
+             role = c("aut", "ctb"),
+             email = "mirae.kim@polytechique.edu"),
       person(given = "Jorgen",
-           family = "Lund",
-           role = c("aut", "ctb"),
-           email = "jorgen.lund@polytechnique.edu"),
+             family = "Lund",
+             role = c("aut", "ctb"),
+             email = "jorgen.lund@polytechnique.edu"),
       person(given = "Akshay",
-           family = "Sundar",
-           role = c("aut", "ctb"),
-           email = "akshay.sundar3@gmail.com"))
-Description: Compare your song to the last 50 years top chart music.
-Depends: R (>= 3.5.0)
+             family = "Sundar",
+             role = c("aut", "ctb"),
+             email = "akshay.sundar3@gmail.com"))
+Description: Compare your song to the last 50 years top chart
+    music.
 License: MIT + file LICENSE
-Encoding: UTF-8
-LazyData: true
-Suggests: 
-    testthat,
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+Depends: 
+    R (>= 3.5.0)
 Imports: 
-    magrittr,
-    reshape,
+    billboard,
+    data.table,
     dplyr,
     ggplot2,
-    stats,
-    spotifyr,
-    billboard,
-    plotly,
     glue,
-    shiny,
-    purrr,
     httr,
-    stringr,
-    readr,
-    data.table,
-    gridExtra,
+    plotly,
+    purrr,
+    reshape,
+    shiny,
     shinycssloaders,
+    shinythemes,
     shinyWidgets,
-    shinythemes
+    spotifyr,
+    stats,
+    stringr
+Suggests: 
+    gridExtra,
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: 
+    knitr
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1

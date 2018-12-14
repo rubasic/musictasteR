@@ -74,3 +74,5 @@ usethis::use_data(bb_data, overwrite = TRUE)
 #save billboard music data into .data repo in order to test functions on it
 billboard_music_dataframe <- billboard::spotify_track_data
 usethis::use_data(billboard_music_dataframe, overwrite = TRUE)
+
+attachment::att_to_description()
