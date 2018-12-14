@@ -20,7 +20,8 @@ globalVariables(
    "Primary",
    "Secondary",
    "bb_data",
-   "cluster_final"
+   "cluster_final",
+   "content"
   )
 )
 
