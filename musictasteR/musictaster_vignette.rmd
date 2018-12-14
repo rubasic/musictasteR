@@ -23,10 +23,10 @@ This vignette describes the MusicTasteR package, the process from its conception
 
 ###Package functions
 - Search
-- Hover Plot
-- Attributes Over Time
-- Logistic Regression
-- Clustering
+- Compare: Hover Plot
+- Rewind: Attributes Over Time
+- Predict: Logistic Regression
+- Match: Clustering
 
 # 
 #Overview
@@ -354,14 +354,16 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
 # Package Functions
 
 ### Search
-[Jorgen]
+[Jorgen] get_tracks_artist
 Description of function, use cases (what are the inputs/outputs or examples)
 
-### Hover Plot
-[Roberta]
+### Compare: Hover Plot
+
+To [Roberta] 
+
 Description of function, use cases (what are the inputs/outputs or examples)
 
-### Attributes Over Time
+### Rewind: Attributes Over Time
 
 #### Description
 
@@ -447,7 +449,7 @@ attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("d
 ```
 
 
-### Logistic Regression
+### Predict: Logistic Regression
 
 #### Description
 
@@ -626,7 +628,7 @@ plot_probabilities(probability_df, 3,2,4, 5)
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
-### Clustering
+### Match: Clustering
 
 #### Description
 
@@ -802,7 +804,5 @@ for (years in min_year:max_year) {
     bb_pc_lm_dim2 <- append(bb_pc_lm_dim2,temp[3])
 }
 ```
-
-"bb_pc_lm_dim1" and "bb_pc_lm_dim2" are the R objects for the list of linear models on a yearly basis
 
 
