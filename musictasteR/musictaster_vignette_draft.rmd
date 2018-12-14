@@ -549,7 +549,7 @@ head(probability_df)
 
 The following plot shows a line graph of the probabilities that the song will be on the billboard throughout time. There are three points that are highlighted in the line graph, the probability of the release year, the highest probability and the lowest probability. 
 
-```{r fig.width=8}
+```{r fig.width=8, fig.height=6}
 plot_probabilities(probability_df, 3,2,4, 5)
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
