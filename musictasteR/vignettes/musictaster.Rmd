@@ -564,8 +564,8 @@ log_model_list$year1960
 From the initially selected tracks, one can select tracks that they want to plot against time. The `get_probability_of_billboard() function takes in the spotify audio features of a track and runs it against the logistic regressions for each year to output the probability of a song being on the billboard per year. 
 
 Below is a sample of the dataframe of probabilities that feed into the dataframe for the plot.
-```{r eval=F, include=F}
-format_new_songs_logit <- function(songs){
+```{r include=F}
+format_new_songs_logit_test <- function(songs){
   new_songs <- billboard::spotify_track_data[nrow(songs),]
   new_songs <- ""
   new_songs$artist_name <- songs$artist_name
@@ -609,7 +609,7 @@ format_new_songs_logit <- function(songs){
 
 ```{r}
 library(musictasteR)
-input_song <- format_new_songs_logit(spotify_test_pull_with_characteristics[3,])
+input_song <- format_new_songs_logit_test(spotify_test_pull_with_characteristics[3,])
 probability_df <- get_probability_of_billboard(input_song, log_model_list)
 probability_df['true_song_year_bool'] <- probability_df$true_song_year == probability_df$year_int
 head(probability_df)
