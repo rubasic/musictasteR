@@ -41,7 +41,7 @@ fluidPage(theme = shinythemes::shinytheme("slate"),
       tabPanel(strong("COMPARE"),
                plotly::plotlyOutput("plot"),
                br(),
-               p("Visualize the top 100 songs in terms of 2 music characteristics for each year! Add your own songs for comparison by using the search bar on the left - they will show up in pink."),
+               p("Visualize the top 100 songs in terms of 2 music characteristics for each year. Add your own songs for comparison by using the search bar on the left - they will show up in pink."),
                sliderInput("year", label = NULL, min = 1960, max = 2015,
                  value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "",width = 1000),
                shinyWidgets::radioGroupButtons(
@@ -53,7 +53,7 @@ fluidPage(theme = shinythemes::shinytheme("slate"),
       tabPanel(strong("REWIND"),
                plotOutput("attributes_time") %>% shinycssloaders::withSpinner(color = "#999b9e"),
                br(),
-               p("Plot the music characteristics of billboard songs and/or average songs over time! Select the attributes, timerange, and type of plot you want to see! Up to 2 features recommended for the boxplot option."),
+               p("Visualize the music characteristics of billboard songs and/or average songs over time. Select the attributes, timerange, and type of plot you want to see. Up to 2 features recommended for the boxplot option."),
                fluidRow(
                  column(3,
                         h4("Choose attribute(s)"),
@@ -89,7 +89,7 @@ fluidPage(theme = shinythemes::shinytheme("slate"),
       tabPanel(strong("PREDICT"),
                plotOutput("plot_logit"),
                br(),
-               p("Get the probability of your song(s) reaching the top 100 billboard chart over time! For each song, get the maximum and minimum probabilities."),
+               p("Get the probability of your song(s) reaching the top 100 billboard chart over time. Your songs are listed below. See in which year they were most and least likely to reach the top 100."),
                actionButton("updateLogit", label = "Create plot"),
                shinyWidgets::awesomeCheckboxGroup("selectLogit", choices = NULL, label = NULL, inline = TRUE)
                ),
@@ -97,7 +97,7 @@ fluidPage(theme = shinythemes::shinytheme("slate"),
       tabPanel(strong("MATCH"),
                plotly::plotlyOutput("plot_cluster"),
                br(),
-               p("See which song your input music is the most similar to in which year! Select a song/list of songs, select a year and hover over the result to see song details! Songs clustered together indicate a slight similarity in terms of musical features, and songs closeby in the plot are strongly similar."),
+               p("See which song your input music is the most similar to in which year. Select a song/list of songs, select a year and hover over the result to see song details. Songs clustered together indicate a slight similarity in terms of musical features, and songs closeby in the plot are strongly similar."),
                strong("Select a year"),
                sliderInput("year_cluster", label = NULL, min = 1960, max = 2015,
                            value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "", width = 1000)
@@ -110,12 +110,12 @@ fluidPage(theme = shinythemes::shinytheme("slate"),
 
       tabPanel(strong("ABOUT"),
       p(" "),
-      p("This Shiny app allows to visualise, compare and cluster top and average songs according to their music characteristics. Top songs correspond to ones which have been featured in the Top100 Billboard chart over the years 1960 to 2015."),
+      p("This Shiny app allows to visualize, compare and cluster top and average songs according to their music characteristics. Top songs correspond to ones which have been featured in the Top100 Billboard chart over the years 1960 to 2015."),
       p("The sidebar on the left displays all the songs added by the user. The search function takes as input any string and returns a list of the songs most related to this string. The user simply ticks the song(s) he wishes to add to his saved tracks."),
-      p("The first tab, Compare, plots billboard songs according to 2 attributes entered by the user for a given year. The user may also add any input song(s) for comparison and they will be displayed in pink."),
-      p("The second tab, Rewind, plots the music characteristics of top and/or average (Billboard vs. Non Billboard) songs over time. The user can specify the attributes, the time range, type of popularity and type of plot to be displayed. The boxplots gives more information about the data as it shows the distribution of each variable per year, whereas the average plots allow a global visualisation of multiple attributes. It is recommended to plot only up to 2-3 features for boxplot as the plot rapidly gets packed."),
-      p("The third tab, Predict, plots the probabilities for the user's saved tracks to be in the top 100. The minimum and maximum probabilities, along with the release year are labeled."),
-      p("The fourth tab, Match, plots the clusters of the billboard songs according to the first two principal components. The user may also add any input song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.")
+      p("The first tab, COMPARE, plots billboard songs according to 2 attributes entered by the user for a given year. The user may also add any input song(s) for comparison and they will be displayed in pink."),
+      p("The second tab, REWIND, plots the music characteristics of top and/or average (Billboard vs. Non Billboard) songs over time. The user can specify the attributes, the time range, type of popularity and type of plot to be displayed. The boxplots gives more information about the data as it shows the distribution of each variable per year, whereas the average plots allow a global visualisation of multiple attributes. It is recommended to plot only up to 2-3 features for boxplot as the plot rapidly gets packed."),
+      p("The third tab, PREDICT, plots the probabilities for the user's saved tracks to be in the top 100. The minimum and maximum probabilities, along with the release year are labeled."),
+      p("The fourth tab, MATCH, plots the clusters of the billboard songs according to the first two principal components. The user may also add any input song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.")
       )
     )
   )
