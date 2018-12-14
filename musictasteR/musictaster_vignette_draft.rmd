@@ -1,5 +1,5 @@
 ---
-title: "Getting the data from spotify"
+title: "MusictasteR"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{dplyr compatibility}
@@ -9,21 +9,41 @@ vignette: >
 
 This vignette describes the MusicTasteR package, the process from its conception to its execution, and its final capabilities and use cases.
 
+# 
+#Overview
+
+The package musictasteR was designed to compare and contrast the music features of top and average songs. We wanted to answer questions such as: what are the characteristics of popular songs? Are we able to predict the popularity of a given song? What songs are similar to each other in terms of their attrbiutes? 
+
+##Data
+To respond to this problem, we assembled more than 50k top songs (songs which have been featured in the Top100 Billboard chart) and 150k average songs over the years 1960 to 2015. How the data was collected is explained in detail in the "Data Grabbing" section.
+
+##The App
+
+The main functionality of this package is the shiny application, which allows to visualise, compare and cluster top and average songs according to their music characteristics. The user can access it by running the following command:
 
 ```{r eval=F}
-
-library(gridExtra)
-library(spotifyr)
-library(dplyr)
-library(tidyverse)
-library(httr)
-library(purrr)
+launch.shiny()
 ```
+
+The app contains a sidebar on the left which allows the user to search any song, add it to his save tracks and compare it with other all others songs. The search function takes as input any string and returns a list of the songs most related to this string. The user simply ticks the song(s) he wishes to add to his saved tracks.
+
+The first tab, [NAME] plots billboard songs according to 2 attributes entered by the user for a given year. The user may also add any input song(s) for comparison and they will be displayed in pink.
+
+The second tab, [NAME] plots the music characteristics of top and/or average (Billboard vs. Non Billboard) songs over time. The user can specify the attributes, the time range, type of popularity and type of plot to be displayed. The boxplots gives more information about the data as it shows the distribution of each variable per year, whereas the average plots allow a global visualisation of multiple attributes. It is recommended to plot only up to 2-3 features for boxplot as the plot rapidly gets packed.
+
+The third tab, [NAME] plots the probabilities for the user's saved tracks to be in the top 100. The minimum and maximum probabilities, along with the release year are labeled.
+
+The fourth tab, [NAME] plots the clusters of the billboard songs according to the first two principal components. The user may also add any input song(s) for comparison. Songs clustered together (of the same color) are slightly similar in terms of musical features, whereas songs closeby in the plot are strongly similar.
+
+##Functions
+
+Our package contains a set functions created to build our shiny application. They can be run directly by the user and are listed below. All functions (motivations, input arguments, use cases) are described in detail in the "Package Functions" section.
 
 The user needs to first go on spotify to get their Client ID:
 https://developer.spotify.com/documentation/web-api/
 
-##Data Gathering
+#
+#Data Gathering
 
 We needed a sample of average and top chart songs that we could analyse and see if there were different characteristics between the two song types. We explored various sources of music data on the net, including MusicBrainz (https://musicbrainz.org), Discogs api (https://www.discogs.com/developers/), Echo Nest (http://the.echonest.com/) but eventually settled on Spotify due to their lenient API rate usage policies, and the simplicity of the music attribute outputs. 
 
@@ -34,6 +54,19 @@ In order to build a database of "average" songs, we searched on the internet for
 Spotify api search track function that had a wildcard feature, and it also provided a filter on the album year. We decided to leverage these features to sample random songs directly from spotify. 
 
 Below is the function that we used to match the songs from the one million song database to the spotify data.
+
+```{r}
+library(gridExtra)
+library(spotifyr)
+library(dplyr)
+library(tidyverse)
+library(httr)
+library(purrr)
+library(musictasteR)
+library(billboard)
+library(reshape)
+```
+
 ```{r eval=F}
 get_track_id <- function(row) {
   track_name = gsub(' ','%20', gsub("[^[:alnum:][:space:]]",'',row['song']))
@@ -66,9 +99,6 @@ get_track_id <- function(row) {
 ```
 
 ### Sampling the Data
-
-AKSHAY
-
 
 Script that searches by year based on top words in song titles
 ```{r eval=F}
@@ -287,6 +317,9 @@ massive <- map_df(seq_len(length(final_list_filtered)), function(x) {
                 )})
 ```
 
+#
+# Package Functions
+
 ### Attributes Over Time
 
 In order to visualize and compare the evolution of top and average song attributes (such as "valence", "danceability", etc.), we decided to implement the attributes_time function. 
@@ -329,24 +362,17 @@ Plot characteristics:
 
 Example: 
 Load data & define inputs:
-```{r}
-library(musictasteR)
-library(dplyr)
-library(billboard)
-library(reshape)
-library(gridExtra)
-data("averagesongs")
-topsongs <- billboard::spotify_track_data
-```
 
 ```{r}
-head(averagesongs)
-head(topsongs)
+data("averagesongs")
+topsongs <- billboard::spotify_track_data
+colnames(averagesongs)
+colnames(topsongs)
 ```
 The variable "year" is in column 1 for topsongs and column 4 for average songs.
 
 Comparing averages for Billboard / Non Billboard data:
-```{r fig.width=8,}
+```{r fig.width=7}
 attributes <- c("danceability" ,"energy" ,"mode", "speechiness","acousticness", "instrumentalness" ,"liveness","valence" ,"tempo")
 boxplot <- FALSE
 timerange <- c(1960,2015)
@@ -356,13 +382,13 @@ attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attr
 ```
 
 Plot only billboard data:
-```{r fig.width=8,}
+```{r fig.width=7}
 title_vector <- "Average Songs"
 attributes_time(topsongs, "Top Songs", 1, averagesongs, "Average Songs", 4, attributes, boxplot, timerange, title_vector)
 ```
 
 Plot as boxplots:
-```{r fig.width=8,}
+```{r fig.width=7}
 boxplot <- TRUE
 title_vector <- c("Billboard","Non Billboard")
 attributes <- c("danceability")
@@ -377,7 +403,7 @@ attributes_time(topsongs, "Billboard", 1, averagesongs, "Non Billboard", 4, c("d
 ```
 
 
-## Logistic Regression
+### Logistic Regression
 
 One of the features of the app is to predict how successful a song would perform. For this, we implemented a logistic regression to find the probability of whether a song would be in the top charts or not. First, we needed to make sure that for every year, we had an equal proportion of non-billboard songs to billboard songs. Because the billboard songs quantity was relatively fixed across the years, we reduced the number of average songs in our sample per year. Variable selection for the logistic regression was performed using the stepwise method that used both the forward and backward procedure optimizing on the BIC criterion. We calibrated one model per year and saved it into a list of models, along with their fisher test scores to check global signficance of the model. The models were saved as a .rda object and is accessible in the package as "log_model_list."
 
@@ -554,7 +580,7 @@ plot_probabilities(probability_df, 3,2,4, 5)
 ```
 Because there are only logistic regression models until 2015, if a song has a release year after 2016, the release year will not be highlighted in the app.
 
-# Clustering Functions -
+### Clustering
 
 Clustering through K-Means
 ```{r eval=F}
@@ -621,7 +647,7 @@ cluster_year_hcpc_pca <- function(objet,year_taken,clust_num){
 
 ```
 
-# Compilation functions
+### Compilation functions
 
 K means clusters database
 ```{r eval=F}
@@ -680,7 +706,7 @@ combined_clusters$k_cluster <- features_clustered_k$k_cluster
 
 
 
-# Create PCA linear models -
+### Create PCA linear models -
 
 PCA components as linear components of Variables - Yearwise
 ```{r eval=F}
