@@ -15,9 +15,11 @@ fluidPage(theme = shinytheme("slate"),
   headerPanel("", tags$head(tags$img(
       src="https://raw.githubusercontent.com/rubasic/rubasic/master/musictasteR/inst/my_app/www/headrrrr.png",
       height = 60, style = "display: block; margin-left: 40px;
-      margin-top:25px; margin-bottom: -15px;"))
-      ),
-
+      margin-top:25px; margin-bottom: -15px;"), tags$style(
+        type="text/css",
+        "#albumImage img {max-width: 100%; width: 100%; height: auto}"
+      ))
+    ),
 
   ## SIDEBAR
   sidebarPanel(width = 3,
