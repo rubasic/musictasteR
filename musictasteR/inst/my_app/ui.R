@@ -91,8 +91,10 @@ fluidPage(theme = shinytheme("slate"),
                plotOutput("plot_logit"),
                br(),
                p("What is the probability of your song(s) reaching the top 100 billboard chart over the years? Your saved songs are listed below. Select songs and see in which year they are the most and least likely to be in the top 100."),
+               p("Select the song(s) you want to analyze and click 'Create plot'"),
                actionButton("updateLogit", label = "Create plot"),
-               shinyWidgets::awesomeCheckboxGroup("selectLogit", choices = NULL, label = NULL, inline = TRUE)
+               shinyWidgets::awesomeCheckboxGroup("selectLogit",
+                                                  choices = NULL, label = NULL, inline = TRUE)
                ),
 
       tabPanel(strong("MATCH"),
