@@ -1,44 +1,55 @@
-#' Plot Songs Cluster
+#' Plot Songs Clusters
 #'
 #' Return a plot element for a song and a year, in comparison to other billboard tracks in that year
 #'
 #'
-#' @param songs a new song pulled from an API
-#' @param year_taken the year to be compared with
+#' @param songs a dataframe containing the new songs pulled from an API formated with format_new_songs
+#' @param year_taken an integer containting the year to be compared with
 #' @import stringr
 #' @importFrom stats dist
 #'
 #' @return the dataframe with additional column for cluster
 #' @export
 #' @examples
-#' \dontrun{
-#' plot_songs_clusters(songs,year_taken)
+#'  \dontrun{
+#' plot_songs_clusters(songs,1991)
 #' }
 plot_songs_clusters <- function(songs,year_taken){
 
-  #Process Columns for Mode and Key
-  songs$mode <- ifelse(songs$mode=="Major",1,0)
-  songs$key <- case_when(
-    songs$key=="C"~0,
-    songs$key=="C#"~1,
-    songs$key=="Db"~1,
-    songs$key=="D"~2,
-    songs$key=="D#"~3,
-    songs$key=="Eb"~3,
-    songs$key=="E"~4,
-    songs$key=="F"~5,
-    songs$key=="F#"~6,
-    songs$key=="Gb"~6,
-    songs$key=="G"~7,
-    songs$key=="G#"~8,
-    songs$key=="Ab"~8,
-    songs$key=="A"~9,
-    songs$key=="A#"~10,
-    songs$key=="Bb"~10,
-    songs$key=="B"~11,
-    TRUE~-1
-  )
-  colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+  if (nrow(songs)!=0) {
+
+    #Process Columns for Mode and Key
+    songs$mode <- ifelse(songs$mode=="Major",1,0)
+    songs$key <- case_when(
+      songs$key=="C"~0,
+      songs$key=="C#"~1,
+      songs$key=="Db"~1,
+      songs$key=="D"~2,
+      songs$key=="D#"~3,
+      songs$key=="Eb"~3,
+      songs$key=="E"~4,
+      songs$key=="F"~5,
+      songs$key=="F#"~6,
+      songs$key=="Gb"~6,
+      songs$key=="G"~7,
+      songs$key=="G#"~8,
+      songs$key=="Ab"~8,
+      songs$key=="A"~9,
+      songs$key=="A#"~10,
+      songs$key=="Bb"~10,
+      songs$key=="B"~11,
+      TRUE~-1
+    )
+    colnames(songs)[colnames(songs)=="track_artist_name"]="track_name"
+
+
+
+
+
+    songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
+    songs_edit$cluster_final <- "Manual Input songs"
+    songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
+  }
 
   #Test years for 2 samples
   temp <- bb_data %>% filter(year!=1983) %>% filter(year!=2000)
@@ -48,14 +59,16 @@ plot_songs_clusters <- function(songs,year_taken){
   temp2$year=2000
   restr <- rbind(temp,temp1,temp2)
 
-
   restr <- restr %>% filter(year==year_taken)
   restr$cluster_final <- paste0("Cluster ",substr(restr$hcpc_pca_cluster,6,7))
-  songs_edit <- predict_pc_lm(songs,year_taken,dim_pc_1,dim_pc_2)
-  songs_edit$cluster_final <- "Manual Input songs"
-  songs_edit <- songs_edit %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
   restr <- restr %>% select(track_name,artist_name,dim_1,dim_2,cluster_final)
-  combined <- rbind(restr,songs_edit)
+
+  if (nrow(songs)!=0) {
+    combined <- rbind(restr,songs_edit)
+  }
+  if (nrow(songs)==0) {
+    combined <- restr
+  }
   combined$Primary <- round(combined$dim_1,2)
   combined$Secondary <- round(combined$dim_2,2)
   combined$Group <- combined$cluster_final

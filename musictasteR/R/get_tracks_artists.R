@@ -6,7 +6,7 @@
 #' @param access_token Spotify Web API token. Defaults to spotifyr::get_spotify_access_token()
 #'
 #' @import dplyr
-#' @import httr
+#' @importFrom httr GET content RETRY
 #' @import spotifyr
 #' @import stringr
 #' @importFrom purrr map_df

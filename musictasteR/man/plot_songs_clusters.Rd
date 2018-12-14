@@ -2,14 +2,14 @@
 % Please edit documentation in R/plot_songs_clusters.R
 \name{plot_songs_clusters}
 \alias{plot_songs_clusters}
-\title{Plot Songs Cluster}
+\title{Plot Songs Clusters}
 \usage{
 plot_songs_clusters(songs, year_taken)
 }
 \arguments{
-\item{songs}{a new song pulled from an API}
+\item{songs}{a dataframe containing the new songs pulled from an API formated with format_new_songs}
 
-\item{year_taken}{the year to be compared with}
+\item{year_taken}{an integer containting the year to be compared with}
 }
 \value{
 the dataframe with additional column for cluster
@@ -18,7 +18,7 @@ the dataframe with additional column for cluster
 Return a plot element for a song and a year, in comparison to other billboard tracks in that year
 }
 \examples{
-\dontrun{
-plot_songs_clusters(songs,year_taken)
+ \dontrun{
+plot_songs_clusters(songs,1991)
 }
 }

@@ -13,6 +13,7 @@ usethis::use_package("reshape")
 usethis::use_package("ggplot2")
 usethis::use_package("stats")
 usethis::use_package("billboard")'
+usethis::use_package("gridExtra")
 usethis::use_build_ignore("plot_time_avg.R")
 #devtools::load_all(".")
 usethis::use_pipe
@@ -34,6 +35,10 @@ usethis::use_data(spotify_test_pull, overwrite = TRUE)
 #getting snippet from spotify API for testing with get_track_and_features
 spotify_test_pull_with_characteristics <- get_tracks_and_features("Golddigger")
 usethis::use_data(spotify_test_pull_with_characteristics, overwrite = TRUE)
+
+#formatting spotify_test_pull_with_characteristics to fit into hover plot and cluste rplot
+spotify_test_pull_formated_1 <- format_new_songs(spotify_test_pull_with_characteristics)
+usethis::use_data(spotify_test_pull_formated_1, overwrite = TRUE)
 
 
 #models for logistic regression
