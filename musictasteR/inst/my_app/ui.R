@@ -39,7 +39,7 @@ fluidPage(theme = shinytheme("slate"),
   mainPanel(
     tabsetPanel(
 
-      tabPanel(strong("Compare"),
+      tabPanel(strong("COMPARE"),
                plotly::plotlyOutput("plot"),
                br(),
                p("Visualize the top 100 songs in terms of 2 music characteristics for each year! Add your own songs for comparison by using the search bar on the left - they will show up in pink."),
@@ -51,7 +51,7 @@ fluidPage(theme = shinytheme("slate"),
                  "y", label= NULL, selected  = "danceability", choices = all_attributes)
               ),
 
-      tabPanel(strong("Rewind"),
+      tabPanel(strong("REWIND"),
                plotOutput("attributes_time") %>% withSpinner(color = "#999b9e"),
                br(),
                p("Plot the music characteristics of billboard songs and/or average songs over time! Select the attributes, timerange, and type of plot you want to see! Up to 2 features recommended for the boxplot option."),
@@ -87,7 +87,7 @@ fluidPage(theme = shinytheme("slate"),
       ),
       # End tab 2
 
-      tabPanel(strong("Predict"),
+      tabPanel(strong("PREDICT"),
                plotOutput("plot_logit"),
                br(),
                p("Get the probability of your song(s) reaching the top 100 billboard chart over time! For each song, get the maximum and minimum probabilities."),
@@ -96,7 +96,7 @@ fluidPage(theme = shinytheme("slate"),
                DT::dataTableOutput("logit_df")
                ),
 
-      tabPanel(strong("Match"),
+      tabPanel(strong("MATCH"),
                plotly::plotlyOutput("plot_cluster"),
                br(),
                p("See which song your input music is the most similar to in which year! Select a song/list of songs, select a year and hover over the result to see song details! Songs clustered together indicate a slight similarity in terms of musical features, and songs closeby in the plot are strongly similar."),
@@ -105,12 +105,12 @@ fluidPage(theme = shinytheme("slate"),
                            value = 2015, animate = TRUE, round = TRUE, ticks = FALSE, sep = "", width = 1000)
                ),
 
-      tabPanel(strong("Your songs"),
+      tabPanel(strong("YOUR TRACKS"),
                DT::dataTableOutput("masterDF"),
                tags$head(tags$style("#masterDF{color: black}"))
                ),
 
-      tabPanel(strong("About the app"),
+      tabPanel(strong("ABOUT"),
       p(" "),
       p("This Shiny app allows to visualise, compare and cluster top and average songs according to their music characteristics. Top songs correspond to ones which have been featured in the Top100 Billboard chart over the years 1960 to 2015."),
       p("The sidebar on the left displays all the songs added by the user. The search function takes as input any string and returns a list of the songs most related to this string. The user simply ticks the song(s) he wishes to add to his saved tracks."),
