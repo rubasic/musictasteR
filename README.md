@@ -18,7 +18,7 @@ devtools::install_github(rubasic/musictasteR)
 
 #### Compare
 
-Comparing the audio attributes of Billboard songs to the songs added by the user. ![](images/1musictaster.png)
+Comparing the audio attributes of Billboard songs to the songs added by the user. ![](/musictaster/images/1musictaster.png)
 
 #### Rewind
 
